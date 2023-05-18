@@ -23,7 +23,7 @@ LEFT_SIDEBAR = dmc.Stack(
             label="Console",
             href=dash.get_relative_path("/dbx-console"),
             variant="subtle",
-            rightSection=DashIconify(icon="ri:pie-chart-fill", width=20),
+            icon=DashIconify(icon="ri:pie-chart-fill", width=20),
         ),
         dmc.NavLink(
             label="Delta Optimizer",
@@ -33,17 +33,13 @@ LEFT_SIDEBAR = dmc.Stack(
                     label="Config",
                     href=dash.get_relative_path("/optimizer"),
                     variant="subtle",
-                    rightSection=DashIconify(
-                        icon="mingcute:presentation-2-fill", width=20
-                    ),
+                    icon=DashIconify(icon="mingcute:presentation-2-fill", width=20),
                 ),
                 dmc.NavLink(
                     label="Results",
                     href=dash.get_relative_path("/optimizer-results"),
                     variant="subtle",
-                    rightSection=DashIconify(
-                        icon="mingcute:presentation-2-fill", width=20
-                    ),
+                    icon=DashIconify(icon="mingcute:presentation-2-fill", width=20),
                 ),
             ],
         ),
@@ -51,7 +47,7 @@ LEFT_SIDEBAR = dmc.Stack(
             label="Admin Settings",
             href=dash.get_relative_path("/settings"),
             variant="subtle",
-            rightSection=DashIconify(icon="material-symbols:settings", width=20),
+            icon=DashIconify(icon="material-symbols:settings", width=20),
         ),
     ],
 )

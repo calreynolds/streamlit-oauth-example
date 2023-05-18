@@ -48,71 +48,6 @@ schema_engine = create_engine(
 userstmt = f"Select * FROM main.dbxdashstudio.engines;"
 dataframe = pd.read_sql_query(userstmt, main_engine)
 
-
-def generate_table(dataframe, max_rows=10):
-    return html.Table(
-        # Header
-        [html.Tr([html.Th(col) for col in dataframe.columns])]
-        +
-        # Body
-        [
-            html.Tr([html.Td(dataframe.iloc[i][col]) for col in dataframe.columns])
-            for i in range(min(len(dataframe), max_rows))
-        ]
-    )
-
-
-def generate_ag_grid(dataframe):
-    columnDefs = [
-        {
-            "headerName": x,
-            "field": x,
-            "filter": True,
-            "floatingFilter": True,
-            "filterParams": {"buttons": ["apply", "reset"]},
-        }
-        for x in dataframe.columns
-    ]
-    rowData = dataframe.to_dict("records")
-    return html.Div(
-        [
-            ddk.Card(
-                width=100,
-                children=[
-                    dag.AgGrid(
-                        id="downloadable-grid",
-                        enableEnterpriseModules=True,
-                        columnDefs=columnDefs,
-                        rowData=rowData,
-                        # theme='alpine',
-                        enableCellTextSelection=True,
-                        dashGridOptions={"rowSelection": "multiple"},
-                        suppressCopyRowsToClipboard=True,
-                        suppressRowClickSelection=True,
-                        enableRangeSelection=True,
-                        rowSelection="multiple",
-                        pagination=True,
-                        paginationPageSize=50,
-                        style={"height": "550px"},
-                        enableBrowserTooltips=True,
-                        suppressMovableColumns=True,
-                        enableCellChangeFlash=True,
-                        # columnSize='autoSizeAll', # 'autoSizeAll' slows things down significantly
-                        defaultColDef=dict(
-                            resizable=True,
-                            editable=True,
-                            sortable=True,
-                            autoHeight=True,
-                            width=90,
-                        ),
-                        sideBar=True,
-                    ),
-                ],
-            ),
-        ]
-    )
-
-
 db = SQLAlchemy()
 
 
@@ -166,6 +101,8 @@ def layout():
                                         placeholder="This can be whatever your want",
                                     ),
                                     dmc.Space(h=20),
+                                    dmc.Text(id="intermediate_engine", align="center"),
+                                    dmc.Space(h=20),
                                     dmc.Group(
                                         grow=True,
                                         children=[
@@ -188,9 +125,6 @@ def layout():
                 ],
             ),
             dmc.Space(h=20),
-            html.Div([html.Div(id="intermediate_engine")], className="col-12 col-xl-8"),
-            html.Div([html.Div(id="df_tester")], className="col-12 col-xl-8"),
-            html.Div(id="table"),
             dmc.Select(
                 label="Listed Users:",
                 placeholder="Select user to test connection",
@@ -198,48 +132,42 @@ def layout():
                 searchable=True,
                 style={"width": 200, "marginBottom": 10},
             ),
-            # html.Div(
-            #     [
-            #         html.H6("Listed Users:"),
-            #         dcc.RadioItems(id="username-dpdn", options=[], inline=True),
-            #     ]
-            # ),
-            html.Div(
-                [
-                    html.H6("Connected Engines:"),
-                    dcc.RadioItems(id="engine-dpdn", options=[]),
-                ]
+            dmc.LoadingOverlay(
+                overlayOpacity=0.95,
+                loaderProps=dict(color="orange", variant="bars"),
+                children=dmc.RadioGroup(
+                    id="radio-group-engine-dpdn",
+                    label="Connected Engines:",
+                    size="md",
+                    mt=10,
+                ),
             ),
-            html.Div(id="table-container"),
-            dmc.Button(
-                "Test Connection",
-                id="testconn",
+            dmc.Text("Tables in Selected Engine:", weight=500, mt=10),
+            dmc.LoadingOverlay(
+                overlayOpacity=0.95,
+                loaderProps=dict(color="orange", variant="bars"),
+                children=dmc.List(
+                    id="user-tables",
+                    size="md",
+                    mt=10,
+                ),
             ),
-            html.Div(
-                [
-                    html.H6("Connection Status:"),
-                    html.Div(id="tablefound"),
-                ]
-            ),
-            dcc.RadioItems(id="tableoptions-dpdn", options=[]),
-            dcc.Store(id="df_test"),
-            dcc.Store(id="username_dpdn", storage_type="memory"),
         ]
     )
 
 
 @callback(
     Output("intermediate_engine", "children"),
-    Input("token", "value"),
-    Input("hostname", "value"),
-    Input("path", "value"),
-    Input("catalog", "value"),
-    Input("schema", "value"),
     Input("createconn", "n_clicks"),
-    Input("username", "value"),
+    State("token", "value"),
+    State("hostname", "value"),
+    State("path", "value"),
+    State("catalog", "value"),
+    State("schema", "value"),
+    State("username", "value"),
     prevent_initial_call=True,
 )
-def create_connection(token, hostname, path, catalog, schema, n_clicks, username):
+def create_connection(n_clicks, token, hostname, path, catalog, schema, username):
     conn_str = f"databricks://token:{token}@{hostname}?http_path={path}&catalog={catalog}&schema={schema}"
     extra_connect_args = {
         "_tls_verify_hostname": True,
@@ -257,8 +185,8 @@ def create_connection(token, hostname, path, catalog, schema, n_clicks, username
         conn.execute(ins)
         conn.close()
     if not n_clicks:
-        return dash.no_update
-    return f"Output: ADDED USER AND ENGINE TO SESSION SUCCESSFULLY!"
+        return "Action failed, please check your inputs and try again."
+    return f"Successfully added user and engine to session!"
 
 
 @callback(
@@ -268,15 +196,11 @@ def create_connection(token, hostname, path, catalog, schema, n_clicks, username
 def getuserlist(n_clicks):
     userstmt = f"Select * FROM main.dbxdashstudio.engines;"
     df = pd.read_sql_query(userstmt, main_engine)
-    if not n_clicks:
-        return dash.no_update
-
     return [{"label": c, "value": c} for c in sorted(df.username.unique())]
 
 
 @callback(
-    Output("table-container", "children"),
-    Output("engine-dpdn", "options"),
+    Output("radio-group-engine-dpdn", "children"),
     Input("username-dpdn", "value"),
     prevent_initial_call=True,
 )
@@ -287,25 +211,24 @@ def set_engine_value(available_options):
         ),
         main_engine,
     )
-    return generate_table(dff), [
-        {"label": x, "value": x} for x in sorted(dff.engine_name.unique())
-    ]
+    return [dmc.Radio(name, value=name) for name in sorted(dff.engine_name.unique())]
 
 
 @callback(
-    Output("tablefound", "children"),
-    Output("tableoptions-dpdn", "options"),
-    Input("engine-dpdn", "value"),
-    Input("testconn", "n_clicks"),
+    Output("user-tables", "children"),
+    Input("radio-group-engine-dpdn", "value"),
     prevent_initial_call=True,
 )
-def checkfortables(available_options, n_clicks):
+def checkfortables(available_options):
     tableoption_init_statement = (
         f"SELECT * FROM main.INFORMATION_SCHEMA.tables LIMIT 1;"
     )
-    tablecheck_list = pd.read_sql_query(tableoption_init_statement, available_options)
-    if not n_clicks:
-        return dash.no_update
-    return f"USER CONNECTED AND TABLES FOUND!", [
-        {"label": d, "value": d} for d in sorted(tablecheck_list.table_name.unique())
-    ]
+    try:
+        tablecheck_list = pd.read_sql_query(
+            tableoption_init_statement, available_options
+        )
+        return [
+            dmc.ListItem(name) for name in sorted(tablecheck_list.table_name.unique())
+        ]
+    except:
+        return dmc.Text("No Tables Found")
