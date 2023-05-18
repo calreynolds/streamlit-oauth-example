@@ -1,0 +1,119 @@
+.hide {
+    display: none !important; 
+}
+.show {
+    display: block !important;
+}
+
+.modal-card {
+    width: 400px;
+    background: #fff !important;
+    max-height: 502px !important;
+    box-shadow: 0 4px 16px rgba(31, 39, 45, .12) !important;
+    font-family: -apple-system, BlinkMacSystemFont, sans-serif !important;
+    font-style: normal !important;
+    line-height: 20px !important;
+}
+
+.modal-card .messages {
+    /* padding-left: 16px !important; */
+    max-height: 402px !important;
+    font-weight: 400 !important;
+    font-size: 13px !important;
+    overflow-y: scroll !important;
+    margin: 16px !important;
+}
+
+.modal-card .card-title {
+    background-color: #fff !important;
+    color: #000 !important;
+    padding: 16px !important;
+    border-bottom: 1px solid #cddae5 !important;
+    font-family: -apple-system, BlinkMacSystemFont, sans-serif !important;
+    font-weight: 600 !important;
+    font-size: 14px !important;
+}
+
+
+.rcw-message {
+    font-weight: 400 !important;
+    font-size: 13px !important;
+    margin-bottom: 16px;
+    display: flex;
+    word-wrap: break-word;
+}
+.rcw-message-response {
+    margin-left: 0 !important;
+    max-width: 300px !important;
+}
+
+.rcw-avatar {
+    padding: 8px;
+    padding-left: 0 !important;
+    margin: 0 8px !important;
+    background: #fff5f7 !important;
+    position: inherit !important;
+    width: 16px !important;
+    height: 16px !important;
+    box-sizing: unset !important;
+    border-radius: 100%;
+}
+.rcw-response {
+    padding: 12px 16px !important;
+    color: #1f272d !important;
+    background-color: #f2f5f7 !important;
+    max-width: 300px !important;
+    border-radius: 8px !important;
+}
+
+.client-question {
+    background: #fff !important;
+    border-radius: 8px !important;
+    padding: 12px 16px !important;
+    max-width: 240px !important;
+    margin-right: 8px;
+    margin-left: auto;
+    color: #fff !important;
+}
+.blue-bg {
+    background: #0e538b !important;
+}
+
+.rcw-sender {
+    bottom: 0 !important;
+    padding: 16px !important;
+    height: 32px !important;
+    border-bottom-left-radius: 8px !important;
+    border-bottom-right-radius: 8px !important;
+    border-top: 1px solid #cddae5 !important;
+    box-sizing: unset !important;
+    background-color: #fff !important;
+    border-radius: 0;
+    flex-shrink: 0;
+    align-items: center;
+    display: flex;
+    margin: 0;
+}
+
+.rcw-new-message {
+    
+    padding: 0 !important;
+    height: 20px !important;
+    background-color: #fff !important;
+    font-size: 13px !important;
+    border: none !important;
+    box-shadow: none !important;
+    color: #000;
+    display: inline-block;
+    transition: border 0.3s linear;
+    border-radius: 0;
+    width: 100%;
+}
+.rcw-send {
+    background-color: #fff !important;
+    padding: 0 !important;
+    background: #f4f7f9;
+    border: 0;
+    font-size: 100%;
+    margin: 0;
+}
