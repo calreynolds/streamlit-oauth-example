@@ -5,10 +5,12 @@ import dash
 from dash_iconify import DashIconify
 
 app = Dash(__name__, use_pages=True)
-server = app.server  # expose server variable for Procfile
+server = app.server
 
 LEFT_SIDEBAR = dmc.Stack(
-    style={"backgroundColor": dmc.theme.DEFAULT_COLORS["yellow"][1]},
+    style={
+        "backgroundColor": "#1f2937",
+    },
     p=20,
     children=[
         dmc.Button(
@@ -23,7 +25,8 @@ LEFT_SIDEBAR = dmc.Stack(
             label="Console",
             href=dash.get_relative_path("/dbx-console"),
             variant="subtle",
-            icon=DashIconify(icon="ri:pie-chart-fill", width=20),
+            icon=DashIconify(icon="ri:pie-chart-fill", width=20, color="#9ca3af"),
+            className="nav-link-component",
         ),
         dmc.NavLink(
             label="Delta Optimizer",
@@ -33,21 +36,39 @@ LEFT_SIDEBAR = dmc.Stack(
                     label="Config",
                     href=dash.get_relative_path("/optimizer"),
                     variant="subtle",
-                    icon=DashIconify(icon="mingcute:presentation-2-fill", width=20),
+                    icon=DashIconify(
+                        icon="mingcute:presentation-2-fill", width=20, color="#9ca3af"
+                    ),
+                    style={
+                        "color": "#fff",
+                    },
                 ),
                 dmc.NavLink(
                     label="Results",
                     href=dash.get_relative_path("/optimizer-results"),
                     variant="subtle",
-                    icon=DashIconify(icon="mingcute:presentation-2-fill", width=20),
+                    icon=DashIconify(
+                        icon="mingcute:presentation-2-fill", width=20, color="#9ca3af"
+                    ),
+                    style={
+                        "color": "#fff",
+                    },
                 ),
             ],
+            style={
+                "color": "#fff",
+            },
         ),
         dmc.NavLink(
             label="Admin Settings",
             href=dash.get_relative_path("/settings"),
             variant="subtle",
-            icon=DashIconify(icon="material-symbols:settings", width=20),
+            icon=DashIconify(
+                icon="material-symbols:settings", width=20, color="#9ca3af"
+            ),
+            style={
+                "color": "#fff",
+            },
         ),
     ],
 )
@@ -55,16 +76,22 @@ FOOTER = dmc.Footer(height=50, fixed=True, children=[dmc.Text("© 2023-Plotly In
 
 app.layout = dmc.MantineProvider(
     withGlobalStyles=True,
-    #  theme={"colorScheme": "dark"},
     children=[
         dmc.Grid(
             children=[
-                dmc.Col(LEFT_SIDEBAR, span=2),
                 dmc.Col(
-                    dmc.Stack(align="stretch", children=[dash.page_container, FOOTER]),
+                    LEFT_SIDEBAR,
+                    span=2,
+                    style={"backgroundColor": "#1f2937"},
+                ),
+                dmc.Col(
+                    dmc.Stack(
+                        align="stretch", children=[dash.page_container]
+                    ),  # , FOOTER
                     span=10,
                 ),
-            ]
+            ],
+            style={"height": "100vh"},
         )
     ],
 )

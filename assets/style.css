@@ -1,0 +1,13 @@
+.nav-link-component {
+    color: #fff !important;
+    font-size: 1rem !important;
+    font-family: "Inter",sans-serif !important;
+}
+.nav-link-component:hover {
+    background-color: #374151 !important;
+    border-radius: 20 !important;
+    -webkit-border-radius: 20 !important;
+    -moz-border-radius: 20 !important;
+    -ms-border-radius: 20 !important;
+    -o-border-radius: 20 !important;
+}

@@ -142,40 +142,73 @@ def layout():
                     width=90,
                 ),
             ),
-            dmc.TextInput(
-                id="outputdb",
-                label="Enter Delta Optimizer Output DB:",
-                placeholder="cataloge.database",
+            dmc.Space(h=15),
+            dmc.SimpleGrid(
+                cols=3,
+                children=[
+                    html.Div(
+                        [
+                            dmc.Text("Catalogs", align="center", weight=550),
+                            dmc.Text(id="catalog_selection_output", align="center"),
+                        ]
+                    ),
+                    html.Div(
+                        [
+                            dmc.Text("DBs", align="center", weight=550),
+                            dmc.Text(id="schema_selection_output", align="center"),
+                        ]
+                    ),
+                    html.Div(
+                        [
+                            dmc.Text("Tables", align="center", weight=550),
+                            dmc.Text(id="table_selection_output", align="center"),
+                        ]
+                    ),
+                ],
             ),
-            dmc.TextInput(
-                id="optimizehostname",
-                label="Enter Server Hostname:",
-                placeholder="dbc-a2c61234-1234.cloud.databricks.com",
-            ),
-            dmc.TextInput(
-                id="optimizewarehouse",
-                label="Enter SQL Warehouse ID:",
-                placeholder="1234-123456-pane123",
-            ),
-            dmc.TextInput(
-                id="optimizetoken",
-                label="Enter Access Token:",
-                placeholder="token",
-            ),
-            dmc.NumberInput(
-                id="optimizelookback",
-                label="Enter Lookback Period in days:",
-                stepHoldDelay=500,
-                stepHoldInterval=100,
-                value=3,
-            ),
-            dmc.Checkbox(
-                id="startover", label="Start Over", mb=10
-            ),  # todo change input
-            html.Div(id="table_selection_output"),
-            html.Div(id="schema_selection_output"),
-            html.Div(id="catalog_selection_output"),
             dmc.Space(h=20),
+            dmc.Divider(variant="dashed", color="orange"),
+            dmc.Space(h=5),
+            dmc.SimpleGrid(
+                [
+                    dmc.TextInput(
+                        id="outputdb",
+                        label="Enter Delta Optimizer Output DB:",
+                        placeholder="cataloge.database",
+                    ),
+                    dmc.TextInput(
+                        id="optimizehostname",
+                        label="Enter Server Hostname:",
+                        placeholder="dbc-a2c61234-1234.cloud.databricks.com",
+                    ),
+                    dmc.TextInput(
+                        id="optimizewarehouse",
+                        label="Enter SQL Warehouse ID:",
+                        placeholder="1234-123456-pane123",
+                    ),
+                    dmc.TextInput(
+                        id="optimizetoken",
+                        label="Enter Access Token:",
+                        placeholder="token",
+                    ),
+                    dmc.Group(
+                        [
+                            dmc.NumberInput(
+                                id="optimizelookback",
+                                label="Enter Lookback Period in days:",
+                                stepHoldDelay=500,
+                                stepHoldInterval=100,
+                                min=1,
+                                value=3,
+                                style={"width": "300px"},
+                            ),
+                            dmc.Checkbox(id="startover", label="Start Over", mb=10),
+                        ]
+                    ),
+                ],
+                cols=2,
+            ),
+            dmc.Space(h=40),
             # Stepper
             html.Div(
                 [
@@ -183,6 +216,7 @@ def layout():
                         id="stepper-basic-usage",
                         active=0,
                         breakpoint="sm",
+                        color="orange",
                         children=[
                             dmc.StepperStep(
                                 label="First Step",
@@ -221,9 +255,17 @@ def layout():
                         mt="xl",
                         children=[
                             dmc.Button(
-                                "Restart", id="stepper-restart", variant="default"
+                                "Restart",
+                                id="stepper-restart",
+                                variant="default",
+                                color="orange",
                             ),
-                            dmc.Button("Next step", id="next-basic-usage"),
+                            dmc.Button(
+                                "Next step",
+                                id="stepper-next",
+                                variant="outline",
+                                color="orange",
+                            ),
                         ],
                     ),
                 ]
@@ -249,7 +291,7 @@ def restart_stepper(restart):
     Output("stepper-step-1", "loading"),
     Output("stepper-step-2", "loading"),
     Output("stepper-step-3", "loading"),
-    Input("next-basic-usage", "n_clicks"),
+    Input("stepper-next", "n_clicks"),
     State("stepper-basic-usage", "active"),
     prevent_initial_call=True,
 )
@@ -269,7 +311,7 @@ def selected(selected):
     if selected:
         selected_tables = [s["table_name"] for s in selected]
         json_tables = json.dumps(selected_tables)
-        return f"You selected tables: {selected_tables}", json_tables
+        return ", ".join(selected_tables), json_tables
     return "No selections", dash.no_update
 
 
@@ -284,7 +326,7 @@ def selected(selected):
         selected_schema_unique = set(selected_schema)
         selected_schema_unique_list = list(selected_schema_unique)
         json_tables = json.dumps(selected_schema_unique_list)
-        return f"You selected databases: {selected_schema_unique}", json_tables
+        return ", ".join(selected_schema_unique_list), json_tables
     return "No selections", dash.no_update
 
 
@@ -299,7 +341,7 @@ def selected(selected):
         selected_catalog_unique = set(selected_catalog)
         selected_catalog_unique_list = list(selected_catalog_unique)
         json_tables = json.dumps(selected_catalog_unique_list)
-        return f"You selected catalogs: {selected_catalog_unique}", json_tables
+        return ", ".join(selected_catalog_unique_list), json_tables
     return "No selections", dash.no_update
 
 
@@ -307,7 +349,7 @@ def selected(selected):
     Output("stepper-step-2", "children"),
     Output("stepper-step-1", "loading", allow_duplicate=True),
     Output("stepper-basic-usage", "active", allow_duplicate=True),
-    Output("next-basic-usage", "disabled", allow_duplicate=True),
+    Output("stepper-next", "disabled", allow_duplicate=True),
     Input("stepper-step-1", "loading"),
     State("optimizelookback", "value"),
     State("outputdb", "value"),
@@ -416,7 +458,7 @@ def delta_step_1_optimizer(
     Output("stepper-step-3", "children"),
     Output("stepper-step-2", "loading", allow_duplicate=True),
     Output("stepper-basic-usage", "active", allow_duplicate=True),
-    Output("next-basic-usage", "disabled", allow_duplicate=True),
+    Output("stepper-next", "disabled", allow_duplicate=True),
     Input("stepper-step-2", "loading"),
     State("outputdb", "value"),
     prevent_initial_call=True,
@@ -491,7 +533,7 @@ def delta_step_2_optimizer(loading_trigger, outputdpdn2):
 @callback(
     Output("stepper-step-3", "loading", allow_duplicate=True),
     Output("stepper-basic-usage", "active", allow_duplicate=True),
-    Output("next-basic-usage", "disabled", allow_duplicate=True),
+    Output("stepper-next", "disabled", allow_duplicate=True),
     Input("stepper-step-3", "loading"),
     State("outputdb", "value"),
     prevent_initial_call=True,

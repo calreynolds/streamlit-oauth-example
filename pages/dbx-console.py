@@ -1,7 +1,8 @@
 import dash
-from dash import html, dcc, callback, Input, Output, State, ctx
+import json
+import requests
+from dash import html, callback, Input, Output, ctx
 import dash_mantine_components as dmc
-from dash_iconify import DashIconify
 import pandas as pd
 import dash_ag_grid as dag
 from sqlalchemy.engine import create_engine
@@ -43,13 +44,12 @@ def layout():
                     id="downloadable-grid",
                     columnDefs=columnDefs,
                     rowData=rowData,
-                    columnSize="sizeToFit",
+                    columnSize="autoSize",
                     defaultColDef=dict(
                         resizable=True,
                         editable=True,
                         sortable=True,
                         autoHeight=True,
-                        width=90,
                     ),
                 ),
             ),
@@ -68,39 +68,38 @@ def layout():
             dmc.Group(
                 grow=True,
                 children=[
-                    html.Button(
+                    dmc.Button(
                         "Build Database Tables",
                         id="build_db_btn",
-                        className="btn btn-lg btn-primary",
-                        type="button",
-                        n_clicks=0,
+                        variant="outline",
+                        color="orange",
+                        size="lg",
                     ),
-                    html.Button(
+                    dmc.Button(
                         "Drop Database Tables",
-                        className="btn btn-lg btn-primary",
-                        type="button",
                         id="drop_tabes_btn",
-                        n_clicks=0,
+                        variant="outline",
+                        color="orange",
+                        size="lg",
                     ),
-                    html.Button(
+                    dmc.Button(
                         "Get Table List",
-                        className="btn btn-lg btn-primary",
-                        type="button",
                         id="fetch_tables_btn",
-                        n_clicks=0,
+                        variant="outline",
+                        color="orange",
+                        size="lg",
                     ),
-                    html.Button(
+                    dmc.Button(
                         "Run ELT Pipeline",
                         id="run_etl_pipe",
-                        className="btn btn-lg btn-primary",
-                        type="button",
-                        n_clicks=0,
+                        variant="outline",
+                        color="orange",
+                        size="lg",
                     ),
                 ],
             ),
-            html.Div(
-                id="container-button-timestamp",
-            ),
+            dmc.Space(h=20),
+            dmc.Text(id="container-button-timestamp", align="center"),
         ]
     )
 
@@ -157,4 +156,4 @@ def displayClick(btn1, btn2, btn3, btn4):
         msg = f"Pipeline Created and Ran with Job Id: {endp_resp['job_id']} \n run message: {run_resp}"
     else:
         msg = "No Database State Yet..."
-    return html.Div(msg)
+    return msg
