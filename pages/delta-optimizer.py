@@ -1,9 +1,8 @@
 import dash
 import json
 import requests
-from dash import html, dcc, callback, Input, Output, State, ctx
+from dash import html, dcc, callback, Input, Output, State
 import dash_mantine_components as dmc
-from dash_iconify import DashIconify
 import pandas as pd
 import dash_ag_grid as dag
 from sqlalchemy.engine import create_engine
@@ -13,7 +12,6 @@ dash.register_page(__name__, path="/optimizer", title="Delta Optimizer")
 
 SERVER_HOSTNAME = "plotly-customer-success.cloud.databricks.com"
 HTTP_PATH = "/sql/1.0/warehouses/f08f0b85ddba8d2e"
-WAREHOUSE_ID = "f08f0b85ddba8d2e"
 ACCESS_TOKEN = "dapia86bd9f9bc3504ca74a4966c0e669002"
 CATALOG = "main"
 SCHEMA = "information_schema"
@@ -303,15 +301,18 @@ def update_stepper(next_, step):
 
 
 @callback(
-    Output("table_selection_output", "children"),
-    Output("table_selection_store", "data"),
+    Output("catalog_selection_output", "children"),
+    Output("catalog_selection_store", "data"),
     Input("optimizer-grid", "selectedRows"),
 )
-def selected(selected):
+def catalog(selected):
     if selected:
-        selected_tables = [s["table_name"] for s in selected]
-        json_tables = json.dumps(selected_tables)
-        return ", ".join(selected_tables), json_tables
+        selected_catalog = [s["table_catalog"] for s in selected]
+        selected_catalog_unique = set(selected_catalog)
+        selected_catalog_unique_list = list(selected_catalog_unique)
+        final = ",".join(selected_catalog_unique_list)
+        # json_tables = json.dumps(final)
+        return ", ".join(selected_catalog_unique_list), final
     return "No selections", dash.no_update
 
 
@@ -320,28 +321,36 @@ def selected(selected):
     Output("schema_selection_store", "data"),
     Input("optimizer-grid", "selectedRows"),
 )
-def selected(selected):
+def schema(selected):
     if selected:
+        selected_catalog = [s["table_catalog"] for s in selected]
+
         selected_schema = [s["table_schema"] for s in selected]
         selected_schema_unique = set(selected_schema)
         selected_schema_unique_list = list(selected_schema_unique)
-        json_tables = json.dumps(selected_schema_unique_list)
-        return ", ".join(selected_schema_unique_list), json_tables
+        final = [str("main." + i) for i in selected_schema_unique_list]
+        final = ",".join(final)
+        # json_tables = json.dumps(final)
+        return ", ".join(selected_schema_unique_list), final
     return "No selections", dash.no_update
 
 
 @callback(
-    Output("catalog_selection_output", "children"),
-    Output("catalog_selection_store", "data"),
+    Output("table_selection_output", "children"),
+    Output("table_selection_store", "data"),
     Input("optimizer-grid", "selectedRows"),
 )
-def selected(selected):
+def tables(selected):
     if selected:
-        selected_catalog = [s["table_catalog"] for s in selected]
-        selected_catalog_unique = set(selected_catalog)
-        selected_catalog_unique_list = list(selected_catalog_unique)
-        json_tables = json.dumps(selected_catalog_unique_list)
-        return ", ".join(selected_catalog_unique_list), json_tables
+        selected_tables = [s["table_name"] for s in selected]
+        selected_schema = [s["table_schema"] for s in selected]
+        final = [
+            "main." + schema + "." + table
+            for schema, table in zip(selected_schema, selected_tables)
+        ]
+        final = ",".join(final)
+        # json_tables = json.dumps(final)
+        return ", ".join(selected_tables), final
     return "No selections", dash.no_update
 
 
@@ -395,11 +404,11 @@ def delta_step_1_optimizer(
                         "Catalog Filter Mode": "include_list",
                         "<dbx_token>": f"{token}",
                         "Catalog Filter List (Csv List)": f"{cataloglist}",
-                        "Database Filter List (catalog.database) (Csv List)": f"{schemalist}",
+                        "Database Filter List (catalog.database) (Csv List)": schemalist,
                         "SQL Warehouse Ids (csv list)": f"{optimizewarehouse}",
                         "Table Filter Mode": "include_list",
                         "Database Filter Mode": "include_list",
-                        "Table Filter List (catalog.database.table) (Csv List)": f"{tablelist}",
+                        "Table Filter List (catalog.database.table) (Csv List)": tablelist,
                         "Start Over?": "Yes" if startover else "No",
                     },
                     "source": "WORKSPACE",
@@ -438,11 +447,11 @@ def delta_step_1_optimizer(
             "Catalog Filter Mode": "include_list",
             "<dbx_token>": f"{token}",
             "Catalog Filter List (Csv List)": f"{cataloglist}",
-            "Database Filter List (catalog.database) (Csv List)": f"{schemalist}",
-            "SQL Warehouse Ids (csv list)": WAREHOUSE_ID,
+            "Database Filter List (catalog.database) (Csv List)": schemalist,
+            "SQL Warehouse Ids (csv list)": optimizewarehouse,
             "Table Filter Mode": "include_list",
             "Database Filter Mode": "include_list",
-            "Table Filter List (catalog.database.table) (Csv List)": f"{tablelist}",
+            "Table Filter List (catalog.database.table) (Csv List)": tablelist,
             "Start Over?": f"{startover}",
         },
     }
@@ -541,16 +550,5 @@ def delta_step_2_optimizer(loading_trigger, outputdpdn2):
 def delta_step_3_optimizer_analyze(loading_trigger, outputdb):
     if not loading_trigger:
         raise PreventUpdate
-
-    results_engine = create_engine(
-        f"databricks://token:{ACCESS_TOKEN}@{SERVER_HOSTNAME}/?http_path={HTTP_PATH}&catalog={CATALOG}&schema={outputdb}"
-    )
-    get_optimizer_results = f"Select * FROM {outputdb}.optimizer_results"
-    optimizer_results = pd.read_sql_query(get_optimizer_results, results_engine)
-    get_results_stats = f"Select * FROM {outputdb}.all_tables_table_stats"
-    results_stats = pd.read_sql_query(get_results_stats, results_engine)
-    get_cardinality = f"Select * FROM {outputdb}.all_tables_cardinality_stats WHERE IsUsedInReads = 1 OR IsUsedInWrites = 1"
-    cardinality_stats = pd.read_sql_query(get_cardinality, results_engine)
-    get_raw_queries = f"SELECT * from_unixtime(query_start_time_ms/1000) AS QueryStartTime, from_unixtime(query_end_time_ms/1000) AS QueryEndTime, duration/1000 AS QueryDurationSeconds FROM {outputdb}.raw_query_history_statistics"
 
     return False, 3, True
