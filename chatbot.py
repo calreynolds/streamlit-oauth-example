@@ -245,15 +245,12 @@ def streaming_chat():
     prevent_initial_call=True,
 )
 def update_table(sql_query):
-    print(sql_query)
     if sql_query:
         df = dbx_SQL_query(sql_query)
-        print(df)
         if df is False:
             return [], [], "ag-theme-balham hide", "hide"
         columnDefs = [{"field": i, "headerName": i} for i in df.columns]
         rowData = df.to_dict("records")
-        print(columnDefs, rowData)
         return columnDefs, rowData, "ag-theme-balham show", "hide"
     return [], [], "ag-theme-balham hide", "hide"
 

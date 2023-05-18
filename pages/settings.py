@@ -114,6 +114,8 @@ def generate_ag_grid(dataframe):
 
 
 db = SQLAlchemy()
+
+
 class Engines(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(15), unique=True, nullable=False)
@@ -122,112 +124,108 @@ class Engines(db.Model):
 
 engines_tbl = Table("engines", Engines.metadata)
 
-def layout():
-    return html.Div([
 
-        dmc.Accordion(
-            children=[
-                dmc.AccordionItem(
-                    [
-                        dmc.AccordionControl("Create a new User"),
-                        dmc.AccordionPanel([
-                            dmc.TextInput(
-                                id="hostname",
-                                label="Enter Server Hostname:",
-                                placeholder="dbc-a2c61234-1234.cloud.databricks.com",
-                            ),
-                            dmc.TextInput(
-                                id="path",
-                                label="Enter HTTP Path:",
-                                placeholder="sql/protocolv1/o/4337956624071234/1234-123456-pane123",
-                            ),
-                            dmc.TextInput(
-                                id="token",
-                                label="Enter Access Token:",
-                                placeholder="token",
-                            ),
-                            dmc.TextInput(
-                                id="catalog",
-                                label="Enter Catalog:",
-                                placeholder="catalog",
-                            ),
-                            dmc.TextInput(
-                                id="schema",
-                                label="Enter Database:",
-                                placeholder="database schema",
-                            ),
-                            dmc.TextInput(
-                                id="username",
-                                label="Enter Username:",
-                                placeholder="This can be whatever your want",
-                            ),
-                            dmc.Space(h=20),
-                            dmc.Group(
-                                grow=True,
-                                children=[
-                                    dmc.Button(
-                                        "Add User Engine to Session",
-                                        id="createconn",
+def layout():
+    return html.Div(
+        [
+            dmc.Accordion(
+                children=[
+                    dmc.AccordionItem(
+                        [
+                            dmc.AccordionControl("Create a new User"),
+                            dmc.AccordionPanel(
+                                [
+                                    dmc.TextInput(
+                                        id="hostname",
+                                        label="Enter Server Hostname:",
+                                        placeholder="dbc-a2c61234-1234.cloud.databricks.com",
                                     ),
-                                    dmc.Button(
-                                        "Update the List of Users",
-                                        id="userlist",
-                                        n_clicks=0
+                                    dmc.TextInput(
+                                        id="path",
+                                        label="Enter HTTP Path:",
+                                        placeholder="sql/protocolv1/o/4337956624071234/1234-123456-pane123",
+                                    ),
+                                    dmc.TextInput(
+                                        id="token",
+                                        label="Enter Access Token:",
+                                        placeholder="token",
+                                    ),
+                                    dmc.TextInput(
+                                        id="catalog",
+                                        label="Enter Catalog:",
+                                        placeholder="catalog",
+                                    ),
+                                    dmc.TextInput(
+                                        id="schema",
+                                        label="Enter Database:",
+                                        placeholder="database schema",
+                                    ),
+                                    dmc.TextInput(
+                                        id="username",
+                                        label="Enter Username:",
+                                        placeholder="This can be whatever your want",
+                                    ),
+                                    dmc.Space(h=20),
+                                    dmc.Group(
+                                        grow=True,
+                                        children=[
+                                            dmc.Button(
+                                                "Add User Engine to Session",
+                                                id="createconn",
+                                            ),
+                                            dmc.Button(
+                                                "Update the List of Users",
+                                                id="userlist",
+                                                n_clicks=0,
+                                            ),
+                                        ],
                                     ),
                                 ]
                             ),
-                        ]),
-                    ],
+                        ],
                         value="create-new-user",
-                ),
-            ],
-        ),
-        
-        dmc.Space(h=20),
-        
-        html.Div([html.Div(id="intermediate_engine")], className="col-12 col-xl-8"),
-        html.Div([html.Div(id="df_tester")], className="col-12 col-xl-8"),
-        html.Div(id="table"),
-        dmc.Select(
-            label="Listed Users:",
-            placeholder="Select user to test connection",
-            id="username-dpdn",
-            searchable=True,
-            style={"width": 200, "marginBottom": 10},
-        ),
-        # html.Div(
-        #     [
-        #         html.H6("Listed Users:"),
-        #         dcc.RadioItems(id="username-dpdn", options=[], inline=True),
-        #     ]
-        # ),
-        html.Div(
-            [
-                html.H6("Connected Engines:"),
-                dcc.RadioItems(id="engine-dpdn", options=[]),
-            ]
-        ),
-        html.Div(id="table-container"),
-        
-        dmc.Button(
-            "Test Connection",
-            id="testconn",
-        ),
-        html.Div(
-            [
-                html.H6("Connection Status:"),
-                html.Div(id="tablefound"),
-            ]
-        ),
-        dcc.RadioItems(id="tableoptions-dpdn", options=[]),
-        
-        dcc.Store(id="intermediate_engine", storage_type="memory"),
-        dcc.Store(id="df_test"),
-        dcc.Store(id="username_dpdn", storage_type="memory"),
-    ])
-
-
-
+                    ),
+                ],
+            ),
+            dmc.Space(h=20),
+            html.Div([html.Div(id="intermediate_engine")], className="col-12 col-xl-8"),
+            html.Div([html.Div(id="df_tester")], className="col-12 col-xl-8"),
+            html.Div(id="table"),
+            dmc.Select(
+                label="Listed Users:",
+                placeholder="Select user to test connection",
+                id="username-dpdn",
+                searchable=True,
+                style={"width": 200, "marginBottom": 10},
+            ),
+            # html.Div(
+            #     [
+            #         html.H6("Listed Users:"),
+            #         dcc.RadioItems(id="username-dpdn", options=[], inline=True),
+            #     ]
+            # ),
+            html.Div(
+                [
+                    html.H6("Connected Engines:"),
+                    dcc.RadioItems(id="engine-dpdn", options=[]),
+                ]
+            ),
+            html.Div(id="table-container"),
+            dmc.Button(
+                "Test Connection",
+                id="testconn",
+            ),
+            html.Div(
+                [
+                    html.H6("Connection Status:"),
+                    html.Div(id="tablefound"),
+                ]
+            ),
+            dcc.RadioItems(id="tableoptions-dpdn", options=[]),
+            dcc.Store(id="df_test"),
+            dcc.Store(id="username_dpdn", storage_type="memory"),
+        ]
+    )
 
 
 @callback(
@@ -268,18 +266,16 @@ def create_connection(token, hostname, path, catalog, schema, n_clicks, username
     Input("userlist", "n_clicks"),
 )
 def getuserlist(n_clicks):
-    print("hereeeeeeeeee")
     userstmt = f"Select * FROM main.dbxdashstudio.engines;"
     df = pd.read_sql_query(userstmt, main_engine)
-    print(df)
     if not n_clicks:
         return dash.no_update
-        
+
     return [{"label": c, "value": c} for c in sorted(df.username.unique())]
 
 
 @callback(
-    Output("table-container", "options"), 
+    Output("table-container", "children"),
     Output("engine-dpdn", "options"),
     Input("username-dpdn", "value"),
     prevent_initial_call=True,
@@ -297,7 +293,7 @@ def set_engine_value(available_options):
 
 
 @callback(
-    Output("tablefound", "children"), 
+    Output("tablefound", "children"),
     Output("tableoptions-dpdn", "options"),
     Input("engine-dpdn", "value"),
     Input("testconn", "n_clicks"),
@@ -308,7 +304,6 @@ def checkfortables(available_options, n_clicks):
         f"SELECT * FROM main.INFORMATION_SCHEMA.tables LIMIT 1;"
     )
     tablecheck_list = pd.read_sql_query(tableoption_init_statement, available_options)
-    print(tablecheck_list)
     if not n_clicks:
         return dash.no_update
     return f"USER CONNECTED AND TABLES FOUND!", [

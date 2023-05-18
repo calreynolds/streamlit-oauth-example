@@ -25,22 +25,26 @@ big_engine = create_engine(
 
 tables_stmt = f"SELECT table_catalog, table_schema,table_name, created, created_by, last_altered, last_altered_by FROM {CATALOG}.INFORMATION_SCHEMA.TABLES;"
 tables_in_db = pd.read_sql_query(tables_stmt, big_engine)
-# print(tables_in_db)
-schemas_init_statment = f"SELECT schema_name FROM {CATALOG}.{SCHEMA}.SCHEMATA ORDER BY created DESC;" # ORDER BY created DESC
+schemas_init_statment = f"SELECT schema_name FROM {CATALOG}.{SCHEMA}.SCHEMATA ORDER BY created DESC;"  # ORDER BY created DESC
 schema_list = pd.read_sql_query(schemas_init_statment, big_engine)
-schema_select_data = [{"label": c, "value": c} for c in schema_list.schema_name.unique()]
-print(schema_list.iloc[0])
+schema_select_data = [
+    {"label": c, "value": c} for c in schema_list.schema_name.unique()
+]
+
+
 def layout():
-    return html.Div([
-         dmc.Select(
-            label="Select Output DB",
-            placeholder="Select one",
-            id="output-db-select",
-            data=schema_select_data,
-        ),
-        html.Div(id="result-page-layout"),
-        component_chatbot(),
-    ])
+    return html.Div(
+        [
+            dmc.Select(
+                label="Select Output DB",
+                placeholder="Select one",
+                id="output-db-select",
+                data=schema_select_data,
+            ),
+            html.Div(id="result-page-layout"),
+            component_chatbot(),
+        ]
+    )
 
 
 @callback(
@@ -49,19 +53,16 @@ def layout():
     prevent_initial_call=True,
 )
 def create_dynamic_results_layout(selected_db):
-
-    print("aaaaaaaaaa",selected_db)
     results_engine = create_engine(
         f"databricks://token:{ACCESS_TOKEN}@{SERVER_HOSTNAME}/?http_path={HTTP_PATH}&catalog={CATALOG}&schema={selected_db}"
     )
-    get_optimizer_results= f"Select * FROM {selected_db}.optimizer_results"
-    optimizer_results = pd.read_sql_query(get_optimizer_results,results_engine)
+    get_optimizer_results = f"Select * FROM {selected_db}.optimizer_results"
+    optimizer_results = pd.read_sql_query(get_optimizer_results, results_engine)
     get_results_stats = f"Select * FROM {selected_db}.all_tables_table_stats"
     results_stats = pd.read_sql_query(get_results_stats, results_engine)
     get_cardinality = f"Select * FROM {selected_db}.all_tables_cardinality_stats WHERE IsUsedInReads = 1 OR IsUsedInWrites = 1"
-    cardinality_stats = pd.read_sql_query(get_cardinality,results_engine)
+    cardinality_stats = pd.read_sql_query(get_cardinality, results_engine)
     get_raw_queries = f"SELECT * from_unixtime(query_start_time_ms/1000) AS QueryStartTime, from_unixtime(query_end_time_ms/1000) AS QueryEndTime, duration/1000 AS QueryDurationSeconds FROM {selected_db}.raw_query_history_statistics"
-
 
     optimizer_results_columnDefs = [
         {
@@ -74,7 +75,7 @@ def create_dynamic_results_layout(selected_db):
         for x in optimizer_results.columns
     ]
     optimizer_results_rowData = optimizer_results.to_dict("records")
-    sideBar={
+    sideBar = {
         "toolPanels": [
             {
                 "id": "columns",
@@ -102,55 +103,17 @@ def create_dynamic_results_layout(selected_db):
         "defaultToolPanel": "filters",
     }
     results_stats_columnDefs = [
-    {
-        "headerName": x,
-        "field": x,
-        "filter": True,
-        "floatingFilter": True,
-        "filterParams": {"buttons": ["apply", "reset"]},
-    }
-    for x in results_stats.columns
-]
+        {
+            "headerName": x,
+            "field": x,
+            "filter": True,
+            "floatingFilter": True,
+            "filterParams": {"buttons": ["apply", "reset"]},
+        }
+        for x in results_stats.columns
+    ]
     results_stats_rowData = results_stats.to_dict("records")
-    stats_sideBar={
-    "toolPanels": [
-        {
-            "id": "columns",
-            "labelDefault": "Columns",
-            "labelKey": "columns",
-            "iconKey": "columns",
-            "toolPanel": "agColumnsToolPanel",
-        },
-        {
-            "id": "filters",
-            "labelDefault": "Filters",
-            "labelKey": "filters",
-            "iconKey": "filter",
-            "toolPanel": "agFiltersToolPanel",
-        },
-        {
-            "id": "filters 2",
-            "labelKey": "filters",
-            "labelDefault": "More Filters",
-            "iconKey": "menu",
-            "toolPanel": "agFiltersToolPanel",
-        },
-    ],
-    "position": "right",
-    "defaultToolPanel": "filters",
-}
-    cardinality_stats_columnDefs = [
-    {
-        "headerName": x,
-        "field": x,
-        "filter": True,
-        "floatingFilter": True,
-        "filterParams": {"buttons": ["apply", "reset"]},
-    }
-    for x in cardinality_stats.columns
-]
-    cardinality_stats_rowData = cardinality_stats.to_dict("records")
-    cardinality_stats_sideBar={
+    stats_sideBar = {
         "toolPanels": [
             {
                 "id": "columns",
@@ -177,80 +140,124 @@ def create_dynamic_results_layout(selected_db):
         "position": "right",
         "defaultToolPanel": "filters",
     }
-    return html.Div([
-        dmc.Card(
-            children=[
-                dag.AgGrid(
-                    id="optimizer-results-grid",
-                    enableEnterpriseModules=True,
-                    columnDefs=optimizer_results_columnDefs,
-                    rowData=optimizer_results_rowData,
-                    columnSize='sizeToFit',
-                    style={"height": "550px"},
-                    dashGridOptions={"rowSelection": "multiple","sideBar": sideBar},
-                    defaultColDef=dict(
-                        resizable=True,
-                        editable=True,
-                        sortable=True,
-                        autoHeight=True,
-                        width=150,
+    cardinality_stats_columnDefs = [
+        {
+            "headerName": x,
+            "field": x,
+            "filter": True,
+            "floatingFilter": True,
+            "filterParams": {"buttons": ["apply", "reset"]},
+        }
+        for x in cardinality_stats.columns
+    ]
+    cardinality_stats_rowData = cardinality_stats.to_dict("records")
+    cardinality_stats_sideBar = {
+        "toolPanels": [
+            {
+                "id": "columns",
+                "labelDefault": "Columns",
+                "labelKey": "columns",
+                "iconKey": "columns",
+                "toolPanel": "agColumnsToolPanel",
+            },
+            {
+                "id": "filters",
+                "labelDefault": "Filters",
+                "labelKey": "filters",
+                "iconKey": "filter",
+                "toolPanel": "agFiltersToolPanel",
+            },
+            {
+                "id": "filters 2",
+                "labelKey": "filters",
+                "labelDefault": "More Filters",
+                "iconKey": "menu",
+                "toolPanel": "agFiltersToolPanel",
+            },
+        ],
+        "position": "right",
+        "defaultToolPanel": "filters",
+    }
+    return html.Div(
+        [
+            dmc.Card(
+                children=[
+                    dag.AgGrid(
+                        id="optimizer-results-grid",
+                        enableEnterpriseModules=True,
+                        columnDefs=optimizer_results_columnDefs,
+                        rowData=optimizer_results_rowData,
+                        columnSize="sizeToFit",
+                        style={"height": "550px"},
+                        dashGridOptions={
+                            "rowSelection": "multiple",
+                            "sideBar": sideBar,
+                        },
+                        defaultColDef=dict(
+                            resizable=True,
+                            editable=True,
+                            sortable=True,
+                            autoHeight=True,
+                            width=150,
+                        ),
                     ),
-                ),
-            ],
-        ),
-        html.Br(),
-        dmc.Card(
-            children=[
-                dag.AgGrid(
-                    id="stats-results-grid",
-                    enableEnterpriseModules=True,
-                    columnDefs=results_stats_columnDefs,
-                    rowData=results_stats_rowData,
-                    columnSize='sizeToFit',
-                    style={"height": "550px"},
-                    dashGridOptions={"rowSelection": "multiple","sideBar": stats_sideBar},
-                    defaultColDef=dict(
-                        resizable=True,
-                        editable=True,
-                        sortable=True,
-                        autoHeight=True,
-                        width=150,
+                ],
+            ),
+            html.Br(),
+            dmc.Card(
+                children=[
+                    dag.AgGrid(
+                        id="stats-results-grid",
+                        enableEnterpriseModules=True,
+                        columnDefs=results_stats_columnDefs,
+                        rowData=results_stats_rowData,
+                        columnSize="sizeToFit",
+                        style={"height": "550px"},
+                        dashGridOptions={
+                            "rowSelection": "multiple",
+                            "sideBar": stats_sideBar,
+                        },
+                        defaultColDef=dict(
+                            resizable=True,
+                            editable=True,
+                            sortable=True,
+                            autoHeight=True,
+                            width=150,
+                        ),
                     ),
-                ),
-            ],
-        ),
-        html.Br(),
-        dmc.Card(
-            children=[
-                dag.AgGrid(
-                    id="cardinality-stats-grid",
-                    enableEnterpriseModules=True,
-                    columnDefs=cardinality_stats_columnDefs,
-                    rowData=cardinality_stats_rowData,
-                    columnSize='sizeToFit',
-                    style={"height": "550px"},
-                    dashGridOptions={"rowSelection": "multiple","sideBar": cardinality_stats_sideBar},
-                    defaultColDef=dict(
-                        resizable=True,
-                        editable=True,
-                        sortable=True,
-                        autoHeight=True,
-                        width=150,
+                ],
+            ),
+            html.Br(),
+            dmc.Card(
+                children=[
+                    dag.AgGrid(
+                        id="cardinality-stats-grid",
+                        enableEnterpriseModules=True,
+                        columnDefs=cardinality_stats_columnDefs,
+                        rowData=cardinality_stats_rowData,
+                        columnSize="sizeToFit",
+                        style={"height": "550px"},
+                        dashGridOptions={
+                            "rowSelection": "multiple",
+                            "sideBar": cardinality_stats_sideBar,
+                        },
+                        defaultColDef=dict(
+                            resizable=True,
+                            editable=True,
+                            sortable=True,
+                            autoHeight=True,
+                            width=150,
+                        ),
                     ),
-                ),
-            ],
-        ),
-    ])
-
-
-
-
+                ],
+            ),
+        ]
+    )
 
 
 #################################
 ############ CHATBOT ############
 #################################
-
 
 
 import dash
@@ -451,7 +458,6 @@ def open_chat_modal(n_clicks):
         return "show", "mdi:close"
 
 
-
 @callback(
     Output("rcw-output-table", "columnDefs"),
     Output("rcw-output-table", "rowData"),
@@ -461,15 +467,12 @@ def open_chat_modal(n_clicks):
     prevent_initial_call=True,
 )
 def update_table(sql_query):
-    print(sql_query)
     if sql_query:
         df = dbx_SQL_query(sql_query)
-        print(df)
         if df is False:
             return [], [], "ag-theme-balham hide", "hide"
         columnDefs = [{"field": i, "headerName": i} for i in df.columns]
         rowData = df.to_dict("records")
-        print(columnDefs, rowData)
         return columnDefs, rowData, "ag-theme-balham show", "hide"
     return [], [], "ag-theme-balham hide", "hide"
 
@@ -512,4 +515,3 @@ clientside_callback(
     State("input-question", "value"),
     prevent_initial_call=True,
 )
-

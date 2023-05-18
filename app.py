@@ -8,13 +8,13 @@ app = Dash(__name__, use_pages=True)
 server = app.server  # expose server variable for Procfile
 
 LEFT_SIDEBAR = dmc.Stack(
-    # styles={{"root":{"backgroundColor": "#374151"} }},
+    styles={"root": {"backgroundColor": dmc.theme.DEFAULT_COLORS["yellow"][1]}},
     children=[
-        
-
         dmc.Button(
             "databricks",
-            leftIcon=DashIconify(icon="simple-icons:databricks", width=40, color="orange"),
+            leftIcon=DashIconify(
+                icon="simple-icons:databricks", width=40, color="orange"
+            ),
             variant="subtle",
             size="xl",
         ),
@@ -24,7 +24,6 @@ LEFT_SIDEBAR = dmc.Stack(
             variant="subtle",
             rightSection=DashIconify(icon="ri:pie-chart-fill", width=20),
         ),
-        
         dmc.NavLink(
             label="Delta Optimizer",
             icon=DashIconify(icon="tabler:gauge", height=16),
@@ -34,13 +33,17 @@ LEFT_SIDEBAR = dmc.Stack(
                     label="Config",
                     href=dash.get_relative_path("/optimizer"),
                     variant="subtle",
-                    rightSection=DashIconify(icon="mingcute:presentation-2-fill", width=20),
+                    rightSection=DashIconify(
+                        icon="mingcute:presentation-2-fill", width=20
+                    ),
                 ),
                 dmc.NavLink(
                     label="Results",
                     href=dash.get_relative_path("/optimizer-results"),
                     variant="subtle",
-                    rightSection=DashIconify(icon="mingcute:presentation-2-fill", width=20),
+                    rightSection=DashIconify(
+                        icon="mingcute:presentation-2-fill", width=20
+                    ),
                 ),
             ],
         ),
@@ -50,40 +53,29 @@ LEFT_SIDEBAR = dmc.Stack(
             variant="subtle",
             rightSection=DashIconify(icon="material-symbols:settings", width=20),
         ),
-    ]
+    ],
 )
-FOOTER = dmc.Footer(
-    height=50,
-    fixed=True,
-    children=[
-        dmc.Text("© 2023-Plotly Inc.")
-    ]
-)
+FOOTER = dmc.Footer(height=50, fixed=True, children=[dmc.Text("© 2023-Plotly Inc.")])
 
 app.layout = dmc.MantineProvider(
-    
     withGlobalStyles=True,
     #  theme={"colorScheme": "dark"},
-     children=[
+    children=[
         dmc.Grid(
             children=[
                 dmc.Col(html.Div(LEFT_SIDEBAR), span=2),
                 dmc.Col(
-                    dmc.Stack(
-                        align="stretch",
-                        children=[
-                        dash.page_container, 
-                        FOOTER
-                    ]
-                    ), span=10),
-
+                    dmc.Stack(align="stretch", children=[dash.page_container, FOOTER]),
+                    span=10,
+                ),
             ]
         )
-     ]
+    ],
 )
 
 
 from flask import request, Response, stream_with_context
+
 
 @app.server.route("/dbx-stream", methods=["POST"])
 def streaming_chat():
@@ -116,5 +108,5 @@ def streaming_chat():
     return Response(stream_with_context(content_generator), mimetype="text/plain")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     app.run(debug=True)
