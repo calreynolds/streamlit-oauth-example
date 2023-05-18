@@ -7,6 +7,7 @@ from dash_iconify import DashIconify
 import pandas as pd
 import dash_ag_grid as dag
 from sqlalchemy.engine import create_engine
+from dash.exceptions import PreventUpdate
 
 dash.register_page(__name__, path="/optimizer", title="Delta Optimizer")
 
@@ -171,36 +172,92 @@ def layout():
             dmc.Checkbox(
                 id="startover", label="Start Over", mb=10
             ),  # todo change input
-            dmc.Group(
-                grow=True,
-                children=[
-                    dmc.Button(
-                        "Run Step 1 in Delta Optimizer",
-                        id="stepone_optimizer",
-                    ),
-                    dmc.Button(
-                        "Run Step 2 in Delta Optimizer",
-                        id="steptwo_optimizer",
-                        disabled=True,
-                    ),
-                    dmc.Button(
-                        "Analyze Results of Delta Optimizer",
-                        id="stepthree_optimizer",
-                        disabled=True,
-                    ),
-                ],
-            ),
-            html.Div(id="statuswindow"),
-            html.Div(id="jobtwowindow"),
             html.Div(id="table_selection_output"),
             html.Div(id="schema_selection_output"),
             html.Div(id="catalog_selection_output"),
-            html.Div(id="optimizer-analyze-result"),
+            dmc.Space(h=20),
+            # Stepper
+            html.Div(
+                [
+                    dmc.Stepper(
+                        id="stepper-basic-usage",
+                        active=0,
+                        breakpoint="sm",
+                        children=[
+                            dmc.StepperStep(
+                                label="First Step",
+                                description="Strategy Builder",
+                                id="stepper-step-1",
+                            ),
+                            dmc.StepperStep(
+                                label="Second step",
+                                description="Strategy Execution",
+                                children=dmc.Text("Optimize", align="center"),
+                                id="stepper-step-2",
+                            ),
+                            dmc.StepperStep(
+                                label="Final step",
+                                description="Analyze Profile",
+                                id="stepper-step-3",
+                            ),
+                            dmc.StepperCompleted(
+                                children=dmc.Text(
+                                    align="center",
+                                    children=[
+                                        "Successfully finished, you may view reuslts under ",
+                                        dmc.Anchor(
+                                            "Delta Optimizer - Results page.",
+                                            href=dash.get_relative_path(
+                                                "/optimizer-results"
+                                            ),
+                                        ),
+                                    ],
+                                )
+                            ),
+                        ],
+                    ),
+                    dmc.Group(
+                        position="center",
+                        mt="xl",
+                        children=[
+                            dmc.Button(
+                                "Restart", id="stepper-restart", variant="default"
+                            ),
+                            dmc.Button("Next step", id="next-basic-usage"),
+                        ],
+                    ),
+                ]
+            ),
             dcc.Store(id="table_selection_store"),
             dcc.Store(id="schema_selection_store"),
             dcc.Store(id="catalog_selection_store"),
         ]
     )
+
+
+@callback(
+    Output("stepper-basic-usage", "active", allow_duplicate=True),
+    Input("stepper-restart", "n_clicks"),
+    prevent_initial_call=True,
+)
+def restart_stepper(restart):
+    return 0
+
+
+@callback(
+    # Output("stepper-basic-usage", "active"),
+    Output("stepper-step-1", "loading"),
+    Output("stepper-step-2", "loading"),
+    Output("stepper-step-3", "loading"),
+    Input("next-basic-usage", "n_clicks"),
+    State("stepper-basic-usage", "active"),
+    prevent_initial_call=True,
+)
+def update_stepper(next_, step):
+    step_1_loading = step == 0
+    step_2_loading = step == 1
+    step_3_loading = step == 2
+    return step_1_loading, step_2_loading, step_3_loading
 
 
 @callback(
@@ -247,9 +304,11 @@ def selected(selected):
 
 
 @callback(
-    Output("statuswindow", "children"),
-    Output("steptwo_optimizer", "disabled"),
-    Input("stepone_optimizer", "n_clicks"),
+    Output("stepper-step-2", "children"),
+    Output("stepper-step-1", "loading", allow_duplicate=True),
+    Output("stepper-basic-usage", "active", allow_duplicate=True),
+    Output("next-basic-usage", "disabled", allow_duplicate=True),
+    Input("stepper-step-1", "loading"),
     State("optimizelookback", "value"),
     State("outputdb", "value"),
     State("optimizehostname", "value"),
@@ -262,7 +321,7 @@ def selected(selected):
     prevent_initial_call=True,
 )
 def delta_step_1_optimizer(
-    n_clicks,
+    loading_trigger,
     lookback,
     outputdb,
     hostname,
@@ -273,163 +332,174 @@ def delta_step_1_optimizer(
     cataloglist,
     startover,
 ):
-    # Build and Trigger Databricks Jobs
-    if "stepone_optimizer" == ctx.triggered_id:
-        optimize_job = {
-            "name": "Delta_Optimizer_Step_1",
-            "email_notifications": {"no_alert_for_skipped_runs": False},
-            "webhook_notifications": {},
-            "timeout_seconds": 0,
-            "max_concurrent_runs": 1,
-            "tasks": [
-                {
-                    "task_key": "Delta_Optimizer-Step1",
-                    "notebook_task": {
-                        "notebook_path": "/Repos/sach@streamtostream.com/edw-best-practices/Delta Optimizer/Step 1_ Optimization Strategy Builder",
-                        "notebook_params": {
-                            "Query History Lookback Period (days)": f"{lookback}",
-                            "Optimizer Output Database:": f"{outputdb}",
-                            "Server Hostname:": f"{hostname}",
-                            "Catalog Filter Mode": "include_list",
-                            "<dbx_token>": f"{token}",
-                            "Catalog Filter List (Csv List)": f"{cataloglist}",
-                            "Database Filter List (catalog.database) (Csv List)": f"{schemalist}",
-                            "SQL Warehouse Ids (csv list)": f"{optimizewarehouse}",
-                            "Table Filter Mode": "include_list",
-                            "Database Filter Mode": "include_list",
-                            "Table Filter List (catalog.database.table) (Csv List)": f"{tablelist}",
-                            "Start Over?": "Yes" if startover else "No",
-                        },
-                        "source": "WORKSPACE",
+    if not loading_trigger:
+        raise PreventUpdate
+
+    optimize_job = {
+        "name": "Delta_Optimizer_Step_1",
+        "email_notifications": {"no_alert_for_skipped_runs": False},
+        "webhook_notifications": {},
+        "timeout_seconds": 0,
+        "max_concurrent_runs": 1,
+        "tasks": [
+            {
+                "task_key": "Delta_Optimizer-Step1",
+                "notebook_task": {
+                    "notebook_path": "/Repos/sach@streamtostream.com/edw-best-practices/Delta Optimizer/Step 1_ Optimization Strategy Builder",
+                    "notebook_params": {
+                        "Query History Lookback Period (days)": f"{lookback}",
+                        "Optimizer Output Database:": f"{outputdb}",
+                        "Server Hostname:": f"{hostname}",
+                        "Catalog Filter Mode": "include_list",
+                        "<dbx_token>": f"{token}",
+                        "Catalog Filter List (Csv List)": f"{cataloglist}",
+                        "Database Filter List (catalog.database) (Csv List)": f"{schemalist}",
+                        "SQL Warehouse Ids (csv list)": f"{optimizewarehouse}",
+                        "Table Filter Mode": "include_list",
+                        "Database Filter Mode": "include_list",
+                        "Table Filter List (catalog.database.table) (Csv List)": f"{tablelist}",
+                        "Start Over?": "Yes" if startover else "No",
                     },
-                    "existing_cluster_id": "0510-131932-sflv6c6d",
-                    "libraries": [
-                        {
-                            "whl": "dbfs:/FileStore/jars/3dd43508_9b7a_4c5b_ba46_5917b1755868/deltaoptimizer-1.4.0-py3-none-any.whl"
-                        }
-                    ],
-                    "timeout_seconds": 0,
-                    "email_notifications": {"on_failure": ["sach@streamtostream.com"]},
-                    "notification_settings": {
-                        "no_alert_for_skipped_runs": False,
-                        "no_alert_for_canceled_runs": False,
-                        "alert_on_last_attempt": False,
-                    },
-                }
-            ],
-            "format": "MULTI_TASK",
-        }
-        job_json = json.dumps(optimize_job)
-        # Get this from a secret or param
-        headers_auth = {"Authorization": f"Bearer {ACCESS_TOKEN}"}
-        uri = f"https://{SERVER_HOSTNAME}/api/2.1/jobs/create"
-        endp_resp = requests.post(uri, data=job_json, headers=headers_auth).json()
-        # Run Job
-        optimize_job = endp_resp["job_id"]
-        run_now_uri = f"https://{SERVER_HOSTNAME}/api/2.1/jobs/run-now"
-        job_run = {
-            "job_id": 20751302339346,
-            "notebook_params": {
-                "Query History Lookback Period (days)": f"{lookback}",
-                "Optimizer Output Database:": f"{outputdb}",
-                "Server Hostname:": f"{hostname}",
-                "Catalog Filter Mode": "include_list",
-                "<dbx_token>": f"{token}",
-                "Catalog Filter List (Csv List)": f"{cataloglist}",
-                "Database Filter List (catalog.database) (Csv List)": f"{schemalist}",
-                "SQL Warehouse Ids (csv list)": WAREHOUSE_ID,
-                "Table Filter Mode": "include_list",
-                "Database Filter Mode": "include_list",
-                "Table Filter List (catalog.database.table) (Csv List)": f"{tablelist}",
-                "Start Over?": f"{startover}",
-            },
-        }
-        job_run_json = json.dumps(job_run)
-        run_resp = requests.post(
-            run_now_uri, data=job_run_json, headers=headers_auth
-        ).json()
-        msg = f"Optimizer Ran with Job Id: {endp_resp['job_id']} \n run message: {run_resp}"
-        return html.Div(msg), False
+                    "source": "WORKSPACE",
+                },
+                "existing_cluster_id": "0510-131932-sflv6c6d",
+                "libraries": [
+                    {
+                        "whl": "dbfs:/FileStore/jars/3dd43508_9b7a_4c5b_ba46_5917b1755868/deltaoptimizer-1.4.0-py3-none-any.whl"
+                    }
+                ],
+                "timeout_seconds": 0,
+                "email_notifications": {"on_failure": ["sach@streamtostream.com"]},
+                "notification_settings": {
+                    "no_alert_for_skipped_runs": False,
+                    "no_alert_for_canceled_runs": False,
+                    "alert_on_last_attempt": False,
+                },
+            }
+        ],
+        "format": "MULTI_TASK",
+    }
+    job_json = json.dumps(optimize_job)
+    # Get this from a secret or param
+    headers_auth = {"Authorization": f"Bearer {ACCESS_TOKEN}"}
+    uri = f"https://{SERVER_HOSTNAME}/api/2.1/jobs/create"
+    endp_resp = requests.post(uri, data=job_json, headers=headers_auth).json()
+    # Run Job
+    optimize_job = endp_resp["job_id"]
+    run_now_uri = f"https://{SERVER_HOSTNAME}/api/2.1/jobs/run-now"
+    job_run = {
+        "job_id": 20751302339346,
+        "notebook_params": {
+            "Query History Lookback Period (days)": f"{lookback}",
+            "Optimizer Output Database:": f"{outputdb}",
+            "Server Hostname:": f"{hostname}",
+            "Catalog Filter Mode": "include_list",
+            "<dbx_token>": f"{token}",
+            "Catalog Filter List (Csv List)": f"{cataloglist}",
+            "Database Filter List (catalog.database) (Csv List)": f"{schemalist}",
+            "SQL Warehouse Ids (csv list)": WAREHOUSE_ID,
+            "Table Filter Mode": "include_list",
+            "Database Filter Mode": "include_list",
+            "Table Filter List (catalog.database.table) (Csv List)": f"{tablelist}",
+            "Start Over?": f"{startover}",
+        },
+    }
+    job_run_json = json.dumps(job_run)
+    run_resp = requests.post(
+        run_now_uri, data=job_run_json, headers=headers_auth
+    ).json()
+    msg = f"Optimizer Ran with Job Id: {endp_resp['job_id']} \n run message: {run_resp}"
+    return dmc.Text(msg, align="center"), False, 1, False
 
 
 @callback(
-    Output("jobtwowindow", "children"),
-    Output("stepthree_optimizer", "disabled"),
-    Input("steptwo_optimizer", "n_clicks"),
+    Output("stepper-step-3", "children"),
+    Output("stepper-step-2", "loading", allow_duplicate=True),
+    Output("stepper-basic-usage", "active", allow_duplicate=True),
+    Output("next-basic-usage", "disabled", allow_duplicate=True),
+    Input("stepper-step-2", "loading"),
     State("outputdb", "value"),
     prevent_initial_call=True,
 )
-def delta_step_2_optimizer(n_clicks, outputdpdn2):
-    # Build and Trigger Databricks Jobs
-    if "steptwo_optimizer" == ctx.triggered_id:
-        optimize_job_two = {
-            "name": "Delta_Optimizer_Step_2",
-            "email_notifications": {"no_alert_for_skipped_runs": False},
-            "webhook_notifications": {},
-            "timeout_seconds": 0,
-            "max_concurrent_runs": 1,
-            "tasks": [
-                {
-                    "task_key": "Delta_Optimizer_Step_2",
-                    "notebook_task": {
-                        "notebook_path": "/Repos/sach@streamtostream.com/edw-best-practices/Delta Optimizer/Step 2_ Strategy Runner",
-                        "notebook_params": {
-                            "Optimizer Output Database:": f"{outputdpdn2}",
-                            "exclude_list(csv)": "",
-                            "include_list(csv)": "",
-                            "table_mode": "include_all_tables",
-                        },
-                        "source": "WORKSPACE",
+def delta_step_2_optimizer(loading_trigger, outputdpdn2):
+    if not loading_trigger:
+        raise PreventUpdate
+
+    optimize_job_two = {
+        "name": "Delta_Optimizer_Step_2",
+        "email_notifications": {"no_alert_for_skipped_runs": False},
+        "webhook_notifications": {},
+        "timeout_seconds": 0,
+        "max_concurrent_runs": 1,
+        "tasks": [
+            {
+                "task_key": "Delta_Optimizer_Step_2",
+                "notebook_task": {
+                    "notebook_path": "/Repos/sach@streamtostream.com/edw-best-practices/Delta Optimizer/Step 2_ Strategy Runner",
+                    "notebook_params": {
+                        "Optimizer Output Database:": f"{outputdpdn2}",
+                        "exclude_list(csv)": "",
+                        "include_list(csv)": "",
+                        "table_mode": "include_all_tables",
                     },
-                    "existing_cluster_id": "0510-131932-sflv6c6d",
-                    "libraries": [
-                        {
-                            "whl": "dbfs:/FileStore/jars/d7178675_7c86_429a_83f8_d0ed668ef4c5/deltaoptimizer-1.4.0-py3-none-any.whl"
-                        }
-                    ],
-                    "timeout_seconds": 0,
-                    "email_notifications": {},
-                    "notification_settings": {
-                        "no_alert_for_skipped_runs": False,
-                        "no_alert_for_canceled_runs": False,
-                        "alert_on_last_attempt": False,
-                    },
-                }
-            ],
-            "format": "MULTI_TASK",
-        }
-        job_json2 = json.dumps(optimize_job_two)
-        # Get this from a secret or param
-        headers_auth2 = {"Authorization": f"Bearer {ACCESS_TOKEN}"}
-        uri2 = f"https://{SERVER_HOSTNAME}/api/2.1/jobs/create"
-        endp_resp2 = requests.post(uri2, data=job_json2, headers=headers_auth2).json()
-        # Run Job
-        optimize_job_two = endp_resp2["job_id"]
-        run_now_uri2 = f"https://{SERVER_HOSTNAME}/api/2.1/jobs/run-now"
-        job_run_2 = {
-            "job_id": 60847542300700,
-            "notebook_params": {
-                "Optimizer Output Database:": f"{outputdpdn2}",
-                "exclude_list(csv)": "",
-                "include_list(csv)": "",
-                "table_mode": "include_all_tables",
-            },
-        }
-        job_run_json2 = json.dumps(job_run_2)
-        run_resp2 = requests.post(
-            run_now_uri2, data=job_run_json2, headers=headers_auth2
-        ).json()
-        msg2 = f"Optimizer Ran with Job Id: {endp_resp2['job_id']} \n run message: {run_resp2}"
-        return html.Div(msg2), False
+                    "source": "WORKSPACE",
+                },
+                "existing_cluster_id": "0510-131932-sflv6c6d",
+                "libraries": [
+                    {
+                        "whl": "dbfs:/FileStore/jars/d7178675_7c86_429a_83f8_d0ed668ef4c5/deltaoptimizer-1.4.0-py3-none-any.whl"
+                    }
+                ],
+                "timeout_seconds": 0,
+                "email_notifications": {},
+                "notification_settings": {
+                    "no_alert_for_skipped_runs": False,
+                    "no_alert_for_canceled_runs": False,
+                    "alert_on_last_attempt": False,
+                },
+            }
+        ],
+        "format": "MULTI_TASK",
+    }
+    job_json2 = json.dumps(optimize_job_two)
+    # Get this from a secret or param
+    headers_auth2 = {"Authorization": f"Bearer {ACCESS_TOKEN}"}
+    uri2 = f"https://{SERVER_HOSTNAME}/api/2.1/jobs/create"
+    endp_resp2 = requests.post(uri2, data=job_json2, headers=headers_auth2).json()
+    # Run Job
+    optimize_job_two = endp_resp2["job_id"]
+    run_now_uri2 = f"https://{SERVER_HOSTNAME}/api/2.1/jobs/run-now"
+    job_run_2 = {
+        "job_id": 60847542300700,
+        "notebook_params": {
+            "Optimizer Output Database:": f"{outputdpdn2}",
+            "exclude_list(csv)": "",
+            "include_list(csv)": "",
+            "table_mode": "include_all_tables",
+        },
+    }
+    job_run_json2 = json.dumps(job_run_2)
+    run_resp2 = requests.post(
+        run_now_uri2, data=job_run_json2, headers=headers_auth2
+    ).json()
+    msg2 = (
+        f"Optimizer Ran with Job Id: {endp_resp2['job_id']} \n run message: {run_resp2}"
+    )
+    return dmc.Text(msg2, align="center"), False, 2, False
 
 
 @callback(
-    Output("optimizer-analyze-result", "children"),
-    Input("stepthree_optimizer", "n_clicks"),
+    Output("stepper-step-3", "loading", allow_duplicate=True),
+    Output("stepper-basic-usage", "active", allow_duplicate=True),
+    Output("next-basic-usage", "disabled", allow_duplicate=True),
+    Input("stepper-step-3", "loading"),
     State("outputdb", "value"),
     prevent_initial_call=True,
 )
-def delta_step_3_optimizer_analyze(n_clicks, outputdb):
+def delta_step_3_optimizer_analyze(loading_trigger, outputdb):
+    if not loading_trigger:
+        raise PreventUpdate
+
     results_engine = create_engine(
         f"databricks://token:{ACCESS_TOKEN}@{SERVER_HOSTNAME}/?http_path={HTTP_PATH}&catalog={CATALOG}&schema={outputdb}"
     )
@@ -441,4 +511,4 @@ def delta_step_3_optimizer_analyze(n_clicks, outputdb):
     cardinality_stats = pd.read_sql_query(get_cardinality, results_engine)
     get_raw_queries = f"SELECT * from_unixtime(query_start_time_ms/1000) AS QueryStartTime, from_unixtime(query_end_time_ms/1000) AS QueryEndTime, duration/1000 AS QueryDurationSeconds FROM {outputdb}.raw_query_history_statistics"
 
-    return "Successfully finished, you may view reuslts under Delta Optimizer - Results page."
+    return False, 3, True

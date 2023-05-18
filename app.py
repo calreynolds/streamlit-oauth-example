@@ -8,7 +8,8 @@ app = Dash(__name__, use_pages=True)
 server = app.server  # expose server variable for Procfile
 
 LEFT_SIDEBAR = dmc.Stack(
-    styles={"root": {"backgroundColor": dmc.theme.DEFAULT_COLORS["yellow"][1]}},
+    style={"backgroundColor": dmc.theme.DEFAULT_COLORS["yellow"][1]},
+    p=20,
     children=[
         dmc.Button(
             "databricks",
@@ -26,7 +27,6 @@ LEFT_SIDEBAR = dmc.Stack(
         ),
         dmc.NavLink(
             label="Delta Optimizer",
-            icon=DashIconify(icon="tabler:gauge", height=16),
             childrenOffset=28,
             children=[
                 dmc.NavLink(
@@ -63,7 +63,7 @@ app.layout = dmc.MantineProvider(
     children=[
         dmc.Grid(
             children=[
-                dmc.Col(html.Div(LEFT_SIDEBAR), span=2),
+                dmc.Col(LEFT_SIDEBAR, span=2),
                 dmc.Col(
                     dmc.Stack(align="stretch", children=[dash.page_container, FOOTER]),
                     span=10,

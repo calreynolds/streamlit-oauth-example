@@ -5,9 +5,8 @@ from dash_iconify import DashIconify
 import pandas as pd
 import dash_ag_grid as dag
 from sqlalchemy.engine import create_engine
+
 dash.register_page(__name__, path="/dbx-console", title="Console")
-
-
 
 
 SERVER_HOSTNAME = "plotly-customer-success.cloud.databricks.com"
@@ -34,76 +33,76 @@ columnDefs = [
     for x in tables_in_db.columns
 ]
 rowData = tables_in_db.to_dict("records")
+
+
 def layout():
     return html.Div(
         children=[
-        html.Div("aaaaaaaaaa"),
-        dmc.Card(
-            children=dag.AgGrid(
-                id="downloadable-grid",
-                columnDefs=columnDefs,
-                rowData=rowData,
-                columnSize='sizeToFit',
-                defaultColDef=dict(
-                    resizable=True,
-                    editable=True,
-                    sortable=True,
-                    autoHeight=True,
-                    width=90,
+            dmc.Card(
+                children=dag.AgGrid(
+                    id="downloadable-grid",
+                    columnDefs=columnDefs,
+                    rowData=rowData,
+                    columnSize="sizeToFit",
+                    defaultColDef=dict(
+                        resizable=True,
+                        editable=True,
+                        sortable=True,
+                        autoHeight=True,
+                        width=90,
+                    ),
                 ),
             ),
-        ),
-        dmc.Card(
-            dag.AgGrid(
-                columnDefs=[
-                    {"headerName": i, "field": i}
-                    for i in catalog_list.columns
+            dmc.Card(
+                dag.AgGrid(
+                    columnDefs=[
+                        {"headerName": i, "field": i} for i in catalog_list.columns
+                    ],
+                    rowData=catalog_list.to_dict("records"),
+                    columnSize="sizeToFit",
+                    defaultColDef=dict(
+                        resizable=True,
+                    ),
+                ),
+            ),
+            dmc.Group(
+                grow=True,
+                children=[
+                    html.Button(
+                        "Build Database Tables",
+                        id="build_db_btn",
+                        className="btn btn-lg btn-primary",
+                        type="button",
+                        n_clicks=0,
+                    ),
+                    html.Button(
+                        "Drop Database Tables",
+                        className="btn btn-lg btn-primary",
+                        type="button",
+                        id="drop_tabes_btn",
+                        n_clicks=0,
+                    ),
+                    html.Button(
+                        "Get Table List",
+                        className="btn btn-lg btn-primary",
+                        type="button",
+                        id="fetch_tables_btn",
+                        n_clicks=0,
+                    ),
+                    html.Button(
+                        "Run ELT Pipeline",
+                        id="run_etl_pipe",
+                        className="btn btn-lg btn-primary",
+                        type="button",
+                        n_clicks=0,
+                    ),
                 ],
-                rowData=catalog_list.to_dict("records"),
-                columnSize="sizeToFit",
-                defaultColDef=dict(
-                    resizable=True,
-                ),
             ),
-        ),
-        dmc.Group(
-            grow=True,
-            children=[
-                html.Button(
-                    "Build Database Tables",
-                    id="build_db_btn",
-                    className="btn btn-lg btn-primary",
-                    type="button",
-                    n_clicks=0,
-                ),
-                html.Button(
-                    "Drop Database Tables",
-                    className="btn btn-lg btn-primary",
-                    type="button",
-                    id="drop_tabes_btn",
-                    n_clicks=0,
-                ),
-                html.Button(
-                    "Get Table List",
-                    className="btn btn-lg btn-primary",
-                    type="button",
-                    id="fetch_tables_btn",
-                    n_clicks=0,
-                ),
-                html.Button(
-                    "Run ELT Pipeline",
-                    id="run_etl_pipe",
-                    className="btn btn-lg btn-primary",
-                    type="button",
-                    n_clicks=0,
-                ),
-            ]
-        ),
-        html.Div(
-            id="container-button-timestamp",
-        ),
-    ])
-
+            html.Div(
+                id="container-button-timestamp",
+            ),
+        ]
+    )
 
 
 @callback(
@@ -157,5 +156,5 @@ def displayClick(btn1, btn2, btn3, btn4):
 
         msg = f"Pipeline Created and Ran with Job Id: {endp_resp['job_id']} \n run message: {run_resp}"
     else:
-            msg = "No Database State Yet..."
+        msg = "No Database State Yet..."
     return html.Div(msg)
