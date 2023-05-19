@@ -11,11 +11,21 @@ LEFT_SIDEBAR = dmc.Stack(
     mb=20,
     ml=20,
     children=[
-        dmc.Image(
-            src="/assets/databricks-white-lakeside.png",
-            alt="superman",
-            # caption="Funny Meme",
-            width=200,
+        html.A(
+            [
+                html.Img(
+                    src="assets/databricks-white-lakeside.png",
+                    style={
+                        "height": "100%",
+                        "width": "100%",
+                        "float": "right",
+                        "position": "relative",
+                        "padding-top": 0,
+                        "padding-right": 15,
+                    },
+                )
+            ],
+            href="https://databricks-dash.aws.plotly.host/databrickslakeside/dbx-console",
         ),
         # "databricks",
         # href="https://www.databricks.com/",

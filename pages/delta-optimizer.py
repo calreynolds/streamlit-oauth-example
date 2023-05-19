@@ -286,7 +286,6 @@ def catalog(selected):
 def schema(selected):
     if selected:
         selected_catalog = [s["table_catalog"] for s in selected]
-
         selected_schema = [s["table_schema"] for s in selected]
         selected_schema_unique = set(selected_schema)
         selected_schema_unique_list = list(selected_schema_unique)
