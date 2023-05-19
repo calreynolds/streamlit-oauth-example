@@ -165,7 +165,7 @@ def layout():
                 ],
             ),
             dmc.Space(h=20),
-            dmc.Divider(variant="dashed", color="orange"),
+            dmc.Divider(variant="dashed", color="#FF3621"),
             dmc.Space(h=5),
             dmc.SimpleGrid(
                 [
@@ -214,7 +214,7 @@ def layout():
                         id="stepper-basic-usage",
                         active=0,
                         breakpoint="sm",
-                        color="orange",
+                        color="#FF3621",
                         children=[
                             dmc.StepperStep(
                                 label="First Step",
@@ -256,13 +256,13 @@ def layout():
                                 "Restart",
                                 id="stepper-restart",
                                 variant="default",
-                                color="orange",
+                                color="#FF3621",
                             ),
                             dmc.Button(
                                 "Next step",
                                 id="stepper-next",
                                 variant="outline",
-                                color="orange",
+                                color="#FF3621",
                             ),
                         ],
                     ),

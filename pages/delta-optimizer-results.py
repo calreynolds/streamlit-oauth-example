@@ -40,7 +40,7 @@ def layout():
             ),
             dmc.LoadingOverlay(
                 overlayOpacity=0.95,
-                loaderProps=dict(color="orange", variant="bars"),
+                loaderProps=dict(color="#FF3621", variant="bars"),
                 children=html.Div(id="result-page-layout"),
             ),
             component_chatbot(),
@@ -216,7 +216,7 @@ CHAT_MODAL = dmc.Affix(
                         withArrow=True,
                         children=dmc.Loader(
                             id="table-loader",
-                            color="orange",
+                            color="#FF3621",
                             size="md",
                             variant="bars",
                             className="hide",

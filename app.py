@@ -1,103 +1,54 @@
-from dash import Dash, dcc, html
-import dash_design_kit as ddk
+from dash import Dash
 import dash_mantine_components as dmc
+from flask import request, Response, stream_with_context
 import dash
-from dash_iconify import DashIconify
+
 
 app = Dash(__name__, use_pages=True)
 server = app.server
 
-LEFT_SIDEBAR = dmc.Stack(
-    style={
-        "backgroundColor": "#1f2937",
-    },
-    p=20,
-    children=[
-        dmc.Button(
-            "databricks",
-            leftIcon=DashIconify(
-                icon="simple-icons:databricks", width=40, color="orange"
-            ),
-            variant="subtle",
-            size="xl",
-        ),
-        dmc.NavLink(
-            label="Console",
-            href=dash.get_relative_path("/dbx-console"),
-            variant="subtle",
-            icon=DashIconify(icon="ri:pie-chart-fill", width=20, color="#9ca3af"),
-            className="nav-link-component",
-        ),
-        dmc.NavLink(
-            label="Delta Optimizer",
-            childrenOffset=28,
-            children=[
-                dmc.NavLink(
-                    label="Config",
-                    href=dash.get_relative_path("/optimizer"),
-                    variant="subtle",
-                    icon=DashIconify(
-                        icon="mingcute:presentation-2-fill", width=20, color="#9ca3af"
-                    ),
-                    style={
-                        "color": "#fff",
-                    },
-                ),
-                dmc.NavLink(
-                    label="Results",
-                    href=dash.get_relative_path("/optimizer-results"),
-                    variant="subtle",
-                    icon=DashIconify(
-                        icon="mingcute:presentation-2-fill", width=20, color="#9ca3af"
-                    ),
-                    style={
-                        "color": "#fff",
-                    },
-                ),
-            ],
-            style={
-                "color": "#fff",
-            },
-        ),
-        dmc.NavLink(
-            label="Admin Settings",
-            href=dash.get_relative_path("/settings"),
-            variant="subtle",
-            icon=DashIconify(
-                icon="material-symbols:settings", width=20, color="#9ca3af"
-            ),
-            style={
-                "color": "#fff",
-            },
-        ),
-    ],
-)
-FOOTER = dmc.Footer(height=50, fixed=True, children=[dmc.Text("© 2023-Plotly Inc.")])
+
+from components import LEFT_SIDEBAR, FOOTER
 
 app.layout = dmc.MantineProvider(
     withGlobalStyles=True,
+    theme={
+        "primaryColor": "dbx-orange",
+        "colors": {
+            "dbx-orange": [
+                "#FFB4AC",
+                "#FFB4AC",
+                "#FFB4AC",
+                "#FFB4AC",
+                "#FF9B90",
+                "#FF8174",
+                "#FF6859",
+                "#FF4F3D",
+                "#FF3621",
+            ]
+        },
+    },
     children=[
         dmc.Grid(
+            m=0,
             children=[
                 dmc.Col(
                     LEFT_SIDEBAR,
                     span=2,
-                    style={"backgroundColor": "#1f2937"},
+                    style={"backgroundColor": "#303F47"},
+                    p=0,
                 ),
                 dmc.Col(
-                    dmc.Stack(
-                        align="stretch", children=[dash.page_container]
-                    ),  # , FOOTER
+                    dash.page_container,
+                    className="page",
                     span=10,
+                    p=20,
                 ),
             ],
-            style={"height": "100vh"},
-        )
+        ),
+        FOOTER,
     ],
 )
-
-
-from flask import request, Response, stream_with_context
 
 
 @app.server.route("/dbx-stream", methods=["POST"])

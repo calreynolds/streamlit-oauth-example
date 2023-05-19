@@ -64,10 +64,20 @@ def layout():
     return html.Div(
         [
             dmc.Accordion(
+                chevron=DashIconify(
+                    icon="ant-design:plus-outlined", color="#FF3621", width=30
+                ),
                 children=[
                     dmc.AccordionItem(
                         [
-                            dmc.AccordionControl("Create a new User"),
+                            dmc.AccordionControl(
+                                "Create a new User",
+                                icon=DashIconify(
+                                    icon="tabler:user",
+                                    color="#FF3621",
+                                    width=30,
+                                ),
+                            ),
                             dmc.AccordionPanel(
                                 [
                                     dmc.TextInput(
@@ -109,11 +119,16 @@ def layout():
                                             dmc.Button(
                                                 "Add User Engine to Session",
                                                 id="createconn",
+                                                variant="outline",
+                                                color="dbx-orange",
+                                                size="lg",
                                             ),
                                             dmc.Button(
                                                 "Update the List of Users",
                                                 id="userlist",
-                                                n_clicks=0,
+                                                variant="outline",
+                                                color="dbx-orange",
+                                                size="lg",
                                             ),
                                         ],
                                     ),
@@ -133,8 +148,8 @@ def layout():
                 style={"width": 200, "marginBottom": 10},
             ),
             dmc.LoadingOverlay(
-                overlayOpacity=0.95,
-                loaderProps=dict(color="orange", variant="bars"),
+                overlayOpacity=0,
+                loaderProps=dict(color="#FF3621", variant="bars"),
                 children=dmc.RadioGroup(
                     id="radio-group-engine-dpdn",
                     label="Connected Engines:",
@@ -144,8 +159,8 @@ def layout():
             ),
             dmc.Text("Tables in Selected Engine:", weight=500, mt=10),
             dmc.LoadingOverlay(
-                overlayOpacity=0.95,
-                loaderProps=dict(color="orange", variant="bars"),
+                overlayOpacity=0,
+                loaderProps=dict(color="#FF3621", variant="bars"),
                 children=dmc.List(
                     id="user-tables",
                     size="md",
@@ -211,7 +226,10 @@ def set_engine_value(available_options):
         ),
         main_engine,
     )
-    return [dmc.Radio(name, value=name) for name in sorted(dff.engine_name.unique())]
+    return [
+        dmc.Radio(name, value=name, color="#FF3621")
+        for name in sorted(dff.engine_name.unique())
+    ]
 
 
 @callback(

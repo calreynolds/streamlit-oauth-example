@@ -39,32 +39,30 @@ rowData = tables_in_db.to_dict("records")
 def layout():
     return html.Div(
         children=[
-            dmc.Card(
-                children=dag.AgGrid(
-                    id="downloadable-grid",
-                    columnDefs=columnDefs,
-                    rowData=rowData,
-                    columnSize="autoSize",
-                    defaultColDef=dict(
-                        resizable=True,
-                        editable=True,
-                        sortable=True,
-                        autoHeight=True,
-                    ),
+            dag.AgGrid(
+                id="downloadable-grid",
+                columnDefs=columnDefs,
+                rowData=rowData,
+                columnSize="autoSize",
+                defaultColDef=dict(
+                    resizable=True,
+                    editable=True,
+                    sortable=True,
+                    autoHeight=True,
                 ),
             ),
-            dmc.Card(
-                dag.AgGrid(
-                    columnDefs=[
-                        {"headerName": i, "field": i} for i in catalog_list.columns
-                    ],
-                    rowData=catalog_list.to_dict("records"),
-                    columnSize="sizeToFit",
-                    defaultColDef=dict(
-                        resizable=True,
-                    ),
+            dmc.Space(h=20),
+            dag.AgGrid(
+                columnDefs=[
+                    {"headerName": i, "field": i} for i in catalog_list.columns
+                ],
+                rowData=catalog_list.to_dict("records"),
+                columnSize="sizeToFit",
+                defaultColDef=dict(
+                    resizable=True,
                 ),
             ),
+            dmc.Space(h=20),
             dmc.Group(
                 grow=True,
                 children=[
@@ -72,28 +70,24 @@ def layout():
                         "Build Database Tables",
                         id="build_db_btn",
                         variant="outline",
-                        color="orange",
                         size="lg",
                     ),
                     dmc.Button(
                         "Drop Database Tables",
                         id="drop_tabes_btn",
                         variant="outline",
-                        color="orange",
                         size="lg",
                     ),
                     dmc.Button(
                         "Get Table List",
                         id="fetch_tables_btn",
                         variant="outline",
-                        color="orange",
                         size="lg",
                     ),
                     dmc.Button(
                         "Run ELT Pipeline",
                         id="run_etl_pipe",
                         variant="outline",
-                        color="orange",
                         size="lg",
                     ),
                 ],
