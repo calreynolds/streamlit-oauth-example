@@ -14,7 +14,7 @@ LEFT_SIDEBAR = dmc.Stack(
         html.A(
             [
                 html.Img(
-                    src="assets/databricks-white-lakeside.png",
+                    src=dash.get_asset_url("databricks-white-lakeside.png"),
                     style={
                         "height": "100%",
                         "width": "100%",
