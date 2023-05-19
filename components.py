@@ -40,23 +40,19 @@ LEFT_SIDEBAR = dmc.Stack(
             label="Console",
             href=dash.get_relative_path("/dbx-console"),
             variant="subtle",
-            icon=DashIconify(icon="ri:pie-chart-fill", width=20, color="#9ca3af"),
+            icon=DashIconify(icon="ri:pie-chart-fill", width=20, color="#FFFFFF"),
             className="nav-link-component",
         ),
         dmc.NavLink(
             label="Delta Optimizer",
-            icon=DashIconify(
-                icon="mingcute:presentation-2-fill", width=20, color="#9ca3af"
-            ),
+            icon=DashIconify(icon="mdi:delta", width=20, color="#FFFFFF"),
             childrenOffset=28,
             children=[
                 dmc.NavLink(
                     label="Config",
                     href=dash.get_relative_path("/optimizer"),
                     variant="subtle",
-                    icon=DashIconify(
-                        icon="mingcute:presentation-2-fill", width=20, color="#9ca3af"
-                    ),
+                    icon=DashIconify(icon="mdi:brain", width=20, color="#FFFFFF"),
                     className="nav-link-component",
                 ),
                 dmc.NavLink(
@@ -64,7 +60,7 @@ LEFT_SIDEBAR = dmc.Stack(
                     href=dash.get_relative_path("/optimizer-results"),
                     variant="subtle",
                     icon=DashIconify(
-                        icon="mingcute:presentation-2-fill", width=20, color="#9ca3af"
+                        icon="mingcute:presentation-2-fill", width=20, color="#FFFFFF"
                     ),
                     className="nav-link-component",
                 ),
@@ -76,8 +72,15 @@ LEFT_SIDEBAR = dmc.Stack(
             href=dash.get_relative_path("/settings"),
             variant="subtle",
             icon=DashIconify(
-                icon="material-symbols:settings", width=20, color="#9ca3af"
+                icon="material-symbols:settings", width=20, color="#FFFFFF"
             ),
+            className="nav-link-component",
+        ),
+        dmc.NavLink(
+            label="Sign out",
+            href=dash.get_relative_path("/"),
+            variant="subtle",
+            icon=DashIconify(icon="uil:signout", width=20, color="#FFFFFF"),
             className="nav-link-component",
         ),
     ],
@@ -105,7 +108,7 @@ FOOTER = dmc.Footer(
                             target="_blank",
                         ),
                         html.A(
-                            "Databricsks+Dash",
+                            "Databricks+Dash",
                             href="https://dash-demo.plotly.host/plotly-dash-500/snapshot-1684467228-670d42dd",
                             target="_blank",
                         ),
