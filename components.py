@@ -86,22 +86,22 @@ FOOTER = dmc.Footer(
                     children=[
                         html.A(
                             "About",
-                            href="https://themesberg.com/about",
+                            href="https://www.databricks.com/company/about-us",
                             target="_blank",
                         ),
                         html.A(
                             "Databricsks+Dash",
-                            href="https://themesberg.com/themes",
+                            href="https://dash-demo.plotly.host/plotly-dash-500/snapshot-1684467228-670d42dd",
                             target="_blank",
                         ),
                         html.A(
                             "Blog Posts",
-                            href="https://themesberg.com/blog",
+                            href="https://medium.com/plotly/build-real-time-production-data-apps-with-databricks-plotly-dash-269cb64b7575",
                             target="_blank",
                         ),
                         html.A(
                             "Contact",
-                            href="https://themesberg.com/contact",
+                            href="https://www.databricks.com/company/contact",
                             target="_blank",
                         ),
                     ],
