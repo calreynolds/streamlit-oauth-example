@@ -10,7 +10,7 @@ server = app.server
 
 from components import (
     LEFT_SIDEBAR,
-    FOOTER,
+    # FOOTER,
 )  # noqa: E402 isort:skip - must be imported after app is defined
 
 app.layout = dmc.MantineProvider(
@@ -49,7 +49,7 @@ app.layout = dmc.MantineProvider(
                 ),
             ],
         ),
-        FOOTER,
+        # FOOTER,
         dcc.Store(
             id="general-store", data={"outputdpdn2": "main.delta_optimizer_mercury"}
         ),

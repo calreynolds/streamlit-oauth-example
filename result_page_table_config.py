@@ -1,5 +1,7 @@
 import dash_mantine_components as dmc
 import dash_ag_grid as dag
+import plotly_express as px
+from dash import dcc
 
 
 ## example:
@@ -77,6 +79,17 @@ def create_accordion_item(title, children):
             dmc.AccordionPanel(children),
         ],
     )
+
+
+def create_top_ten_figure(df):
+    fig = px.bar(
+        df,
+        x="QueryStartTime",
+        y="TotalRuntimeOfQuery",
+        color="query_hash",
+        title="Most Greedy Queries",
+    )
+    return dcc.Graph(figure=fig)
 
 
 def create_ag_grid(df, custom_definitions=None):

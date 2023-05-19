@@ -124,6 +124,24 @@ def layout():
     return html.Div(
         [
             dmc.Title("Build Optimizer Strategy"),
+            dmc.Group(
+                position="left",
+                mt="xl",
+                children=[
+                    dmc.Button(
+                        "Build Strategy",
+                        id="build-strategy",
+                        variant="outline",
+                        color="#FF3621",
+                    ),
+                    dmc.Button(
+                        "Clear Selections",
+                        id="clear-selection",
+                        variant="default",
+                        color="#FF3621",
+                    ),
+                ],
+            ),
             dmc.Space(h=10),
             dmc.SimpleGrid(
                 [
@@ -170,25 +188,10 @@ def layout():
                 id="build-response",
             ),
             # Stepper
-            dmc.Group(
-                position="center",
-                mt="xl",
-                children=[
-                    dmc.Button(
-                        "Clear Selections",
-                        id="clear-selection",
-                        variant="default",
-                        color="#FF3621",
-                    ),
-                    dmc.Button(
-                        "Build Strategy",
-                        id="build-strategy",
-                        variant="outline",
-                        color="#FF3621",
-                    ),
-                ],
-            ),
-            dmc.Space(h=40),
+            # dmc.Space(h=20),
+            # dmc.Divider(variant="dashed", color="#FF3621"),
+            # dmc.Space(h=5),
+            dmc.Space(h=10),
             dag.AgGrid(
                 id="optimizer-grid",
                 enableEnterpriseModules=True,
@@ -229,9 +232,6 @@ def layout():
                     ),
                 ],
             ),
-            dmc.Space(h=20),
-            dmc.Divider(variant="dashed", color="#FF3621"),
-            dmc.Space(h=5),
             dcc.Store(id="table_selection_store"),
             dcc.Store(id="schema_selection_store"),
             dcc.Store(id="catalog_selection_store"),
@@ -286,7 +286,6 @@ def catalog(selected):
 def schema(selected):
     if selected:
         selected_catalog = [s["table_catalog"] for s in selected]
-
         selected_schema = [s["table_schema"] for s in selected]
         selected_schema_unique = set(selected_schema)
         selected_schema_unique_list = list(selected_schema_unique)
