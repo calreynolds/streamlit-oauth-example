@@ -1,10 +1,10 @@
 window.dash_clientside = Object.assign({}, window.dash_clientside, {
     clientside: {
-        data_streaming_OpenAI_flask_API: async function dataStreamingOpenAIFlaskAPI(n_clicks, question) {
+        data_streaming_OpenAI_flask_API: async function dataStreamingOpenAIFlaskAPI(n_clicks, question, prefix_path) {
             const chatlog = document.querySelector("#rcw-response");
             
             // Send the messages to the server to stream the response
-            const response = await fetch("/dbx-stream", {
+            const response = await fetch(prefix_path + "dbx-stream", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -28,7 +28,6 @@ window.dash_clientside = Object.assign({}, window.dash_clientside, {
                 chatlog.innerHTML = htmlText;
             }
             const htmlText = chunks;
-            console.log(htmlText);
             return [ false, htmlText, "show"];
           }
     }

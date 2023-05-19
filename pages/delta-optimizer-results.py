@@ -210,8 +210,8 @@ def dbx_SQL_query(query):
         if df.empty:
             print(f"No results returned from query")
             return False
-    except:
-        print(f"Error executing SQL query")
+    except Exception as e:
+        print(f"Error executing SQL query", e)
         return False
     return df
 
@@ -262,12 +262,12 @@ CHAT_AFFIX = dmc.Affix(
             ),
         ),
     ),
-    position={"bottom": 20, "left": 20},
+    position={"bottom": 40, "left": 20},
 )
 
 
 CHAT_MODAL = dmc.Affix(
-    position={"bottom": 100, "left": 20},
+    position={"bottom": 140, "left": 20},
     id="affix-chat-modal",
     className="hide",
     children=html.Div(
@@ -292,6 +292,7 @@ CHAT_MODAL = dmc.Affix(
                             "sortable": True,
                             "filter": True,
                         },
+                        style={"max-height": "200px"},
                         columnSize="sizeToFit",
                         className="ag-theme-balham hide",
                     ),
@@ -331,6 +332,10 @@ CHAT_MODAL = dmc.Affix(
                 ],
             ),
             html.Div(id="dummy-output", className="hide"),
+            dcc.Store(
+                id="prefix-path-store",
+                data=os.getenv("DASH_REQUESTS_PATHNAME_PREFIX", "/"),
+            ),
         ],
     ),
 )
@@ -385,6 +390,7 @@ clientside_callback(
     Output("table-loader", "className"),
     Input("rcw-send", "n_clicks"),
     State("input-question", "value"),
+    State("prefix-path-store", "data"),
     prevent_initial_call=True,
 )
 
