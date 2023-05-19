@@ -1,4 +1,4 @@
-from dash import Dash
+from dash import Dash, dcc
 import dash_mantine_components as dmc
 from flask import request, Response, stream_with_context
 import dash
@@ -7,8 +7,10 @@ import dash
 app = Dash(__name__, use_pages=True)
 server = app.server
 
-
-from components import LEFT_SIDEBAR, FOOTER
+from components import (
+    LEFT_SIDEBAR,
+    FOOTER,
+)  # noqa: E402 isort:skip - must be imported after app is defined
 
 app.layout = dmc.MantineProvider(
     withGlobalStyles=True,
@@ -47,6 +49,9 @@ app.layout = dmc.MantineProvider(
             ],
         ),
         FOOTER,
+        dcc.Store(
+            id="general-store", data={"outputdpdn2": "main.delta_optimizer_mercury"}
+        ),
     ],
 )
 

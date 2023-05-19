@@ -7,6 +7,8 @@ import dash_ag_grid as dag
 from sqlalchemy.engine import create_engine
 import result_page_table_config as comp
 from result_page_table_config import create_accordion_item, create_ag_grid
+import json
+import requests
 
 dash.register_page(__name__, path="/optimizer-results", title="Results")
 
@@ -38,6 +40,19 @@ def layout():
                 searchable=True,
                 data=schema_select_data,
             ),
+            dmc.Space(h=20),
+            dmc.Group(
+                position="center",
+                children=[
+                    dmc.Button(
+                        "Run Strategy", id="run-strategy-button", variant="outline"
+                    ),
+                    dmc.Button("Schedule", variant="outline"),
+                ],
+            ),
+            dmc.Space(h=10),
+            dmc.Text(id="run-strategy-output", align="center"),
+            dmc.Space(h=20),
             dmc.LoadingOverlay(
                 overlayOpacity=0.95,
                 loaderProps=dict(color="#FF3621", variant="bars"),
@@ -88,6 +103,76 @@ def create_dynamic_results_layout(selected_db):
             create_accordion_item("Most Expensive Merge/Delete Operations", []),
         ],
     )
+
+
+@callback(
+    Output("run-strategy-output", "children"),
+    Input("run-strategy-button", "n_clicks"),
+    State("general-store", "data"),
+    prevent_initial_call=True,
+)
+def delta_step_2_optimizer(n_clicks, outputdpdn2):
+    optimize_job_two = {
+        "name": "Delta_Optimizer_Step_2",
+        "email_notifications": {"no_alert_for_skipped_runs": False},
+        "webhook_notifications": {},
+        "timeout_seconds": 0,
+        "max_concurrent_runs": 1,
+        "tasks": [
+            {
+                "task_key": "Delta_Optimizer_Step_2",
+                "notebook_task": {
+                    "notebook_path": "/Repos/sach@streamtostream.com/edw-best-practices/Delta Optimizer/Step 2_ Strategy Runner",
+                    "notebook_params": {
+                        "Optimizer Output Database:": outputdpdn2["outputdpdn2"],
+                        "exclude_list(csv)": "",
+                        "include_list(csv)": "",
+                        "table_mode": "include_all_tables",
+                    },
+                    "source": "WORKSPACE",
+                },
+                "existing_cluster_id": "0510-131932-sflv6c6d",
+                "libraries": [
+                    {
+                        "whl": "dbfs:/FileStore/jars/d7178675_7c86_429a_83f8_d0ed668ef4c5/deltaoptimizer-1.4.0-py3-none-any.whl"
+                    }
+                ],
+                "timeout_seconds": 0,
+                "email_notifications": {},
+                "notification_settings": {
+                    "no_alert_for_skipped_runs": False,
+                    "no_alert_for_canceled_runs": False,
+                    "alert_on_last_attempt": False,
+                },
+            }
+        ],
+        "format": "MULTI_TASK",
+    }
+    job_json2 = json.dumps(optimize_job_two)
+    # Get this from a secret or param
+    headers_auth2 = {"Authorization": f"Bearer {ACCESS_TOKEN}"}
+    uri2 = f"https://{SERVER_HOSTNAME}/api/2.1/jobs/create"
+    endp_resp2 = requests.post(uri2, data=job_json2, headers=headers_auth2).json()
+    # Run Job
+    optimize_job_two = endp_resp2["job_id"]
+    run_now_uri2 = f"https://{SERVER_HOSTNAME}/api/2.1/jobs/run-now"
+    job_run_2 = {
+        "job_id": 60847542300700,
+        "notebook_params": {
+            "Optimizer Output Database:": outputdpdn2["outputdpdn2"],
+            "exclude_list(csv)": "",
+            "include_list(csv)": "",
+            "table_mode": "include_all_tables",
+        },
+    }
+    job_run_json2 = json.dumps(job_run_2)
+    run_resp2 = requests.post(
+        run_now_uri2, data=job_run_json2, headers=headers_auth2
+    ).json()
+    msg2 = (
+        f"Optimizer Ran with Job Id: {endp_resp2['job_id']} \n run message: {run_resp2}"
+    )
+    return msg2
 
 
 #################################

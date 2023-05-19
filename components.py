@@ -70,6 +70,43 @@ LEFT_SIDEBAR = dmc.Stack(
 FOOTER = dmc.Footer(
     height=50,
     fixed=True,
-    children=[dmc.Text("© 2023-Plotly Inc.")],
     className="footer",
+    children=[
+        dmc.Group(
+            position="apart",
+            mt=10,
+            children=[
+                html.A(
+                    "© 2023-Plotly Inc.", href="https://plotly.com/", target="_blank"
+                ),
+                dmc.Group(
+                    position="right",
+                    spacing="xl",
+                    align="center",
+                    children=[
+                        html.A(
+                            "About",
+                            href="https://themesberg.com/about",
+                            target="_blank",
+                        ),
+                        html.A(
+                            "Databricsks+Dash",
+                            href="https://themesberg.com/themes",
+                            target="_blank",
+                        ),
+                        html.A(
+                            "Blog Posts",
+                            href="https://themesberg.com/blog",
+                            target="_blank",
+                        ),
+                        html.A(
+                            "Contact",
+                            href="https://themesberg.com/contact",
+                            target="_blank",
+                        ),
+                    ],
+                ),
+            ],
+        )
+    ],
 )
