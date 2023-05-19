@@ -133,7 +133,7 @@ def thread_run(loop, context):
             break
 
 
-@app.server.route("lakeside/dbx-stream", methods=["POST"])
+@app.server.route("/lakeside/dbx-stream", methods=["POST"])
 def streaming_chat():
     prompt = request.json["question"]
 
