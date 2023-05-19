@@ -34,7 +34,7 @@ def layout():
     return html.Div(
         [
             dmc.Select(
-                label="Select Output DB",
+                label="Delta Optimizer Instance",
                 placeholder="Select one",
                 id="output-db-select",
                 searchable=True,
@@ -78,8 +78,103 @@ def create_dynamic_results_layout(selected_db):
     results_stats = pd.read_sql_query(get_results_stats, results_engine)
     get_cardinality = f"Select * FROM {selected_db}.all_tables_cardinality_stats WHERE IsUsedInReads = 1 OR IsUsedInWrites = 1"
     cardinality_stats = pd.read_sql_query(get_cardinality, results_engine)
-    get_raw_queries = f"SELECT * from_unixtime(query_start_time_ms/1000) AS QueryStartTime, from_unixtime(query_end_time_ms/1000) AS QueryEndTime, duration/1000 AS QueryDurationSeconds FROM {selected_db}.raw_query_history_statistics"
-
+    get_raw_queries = f"""SELECT 
+                FROM_UNIXTIME(query_start_time_ms/1000) AS QueryStartTime,
+                FROM_UNIXTIME(query_end_time_ms/1000) AS QueryEndTime,
+                duration/1000 AS QueryDurationSeconds
+              FROM 
+                delta_optimizer_mercury.raw_query_history_statistics"""
+    raw_queries = pd.read_sql_query(get_raw_queries, results_engine)
+    get_most_expensive = f"""SELECT r.query_hash, r.query_text, 
+                  SUM(r.duration/1000) AS TotalRuntimeOfQuery, 
+                  AVG(r.duration/1000) AS AvgDurationOfQuery, 
+                  COUNT(r.query_id) AS TotalRunsOfQuery, 
+                  COUNT(r.query_id) / COUNT(DISTINCT date_trunc('day', TO_TIMESTAMP(r.query_start_time_ms/1000))) AS QueriesPerDay, 
+                  SUM(r.duration/1000) / COUNT(DISTINCT date_trunc('day', TO_TIMESTAMP(r.query_start_time_ms/1000))) AS TotalRuntimePerDay 
+              FROM {selected_db}.raw_query_history_statistics r 
+              WHERE r.query_start_time_ms >= UNIX_TIMESTAMP(CURRENT_DATE() - INTERVAL 7 DAY)
+              GROUP BY r.query_hash, r.query_text 
+              ORDER BY TotalRuntimePerDay DESC"""
+    most_expensive = pd.read_sql_query(get_most_expensive, results_engine)
+    # get_query_runs = f"""SELECT
+    #               date_trunc('minute', QueryStartTime) AS Date,
+    #               COUNT(*) AS TotalQueryRuns,
+    #               AVG(QueryDurationSeconds) AS AvgQueryDurationSeconds
+    #           FROM ({raw_queries}
+    #           WHERE QueryStartTime > (current_timestamp() - INTERVAL '12 HOURS')
+    #           GROUP BY date_trunc('minute', QueryStartTime)
+    #           ORDER BY Date"""
+    # query_runs = pd.read_sql_query(get_query_runs, results_engine)
+    # get_total_runtime_query = f"""WITH r AS (
+    #     SELECT
+    #         date_trunc('minute', r.QueryStartTime) AS Date,
+    #         r.query_hash,
+    #         SUM(r.duration / 1000) AS TotalRuntimeOfQuery,
+    #         AVG(r.duration / 1000) AS AvgDurationOfQuery,
+    #         COUNT(r.query_id) AS TotalRunsOfQuery
+    #     FROM
+    #         {raw_queries} r -- Replace with the actual table name
+    #     WHERE
+    #         QueryStartTime > (current_timestamp() - INTERVAL '12 HOURS')
+    #     GROUP BY
+    #         date_trunc('minute', r.QueryStartTime),
+    #         r.query_hash
+    # ),
+    # s AS (
+    #     SELECT
+    #         *,
+    #         DENSE_RANK() OVER (PARTITION BY Date ORDER BY TotalRuntimeOfQuery DESC) AS PopularityRank
+    #     FROM
+    #         r
+    # )
+    # SELECT
+    #     uu.query_text,
+    #     s.*
+    # FROM
+    #     s
+    # LEFT JOIN
+    #     unique_queries uu ON uu.query_hash = s.query_hash
+    # WHERE
+    #     PopularityRank <= 10;
+    # """
+    # total_runtime_query = pd.read_sql_query(get_total_runtime_query, results_engine)
+    #     get_longest_query = f"""WITH r AS (
+    #     SELECT
+    #         date_trunc('minute', r.QueryStartTime) AS Date,
+    #         r.query_hash,
+    #         SUM(r.duration / 1000) AS TotalRuntimeOfQuery,
+    #         AVG(r.duration / 1000) AS AvgDurationOfQuery,
+    #         COUNT(r.query_id) AS TotalRunsOfQuery
+    #     FROM
+    #         {raw_queries} r
+    #     WHERE
+    #         QueryStartTime > (current_timestamp() - INTERVAL '12 HOURS')
+    #     GROUP BY
+    #         date_trunc('minute', r.QueryStartTime),
+    #         r.query_hash
+    # ),
+    # s AS (
+    #     SELECT
+    #         *,
+    #         DENSE_RANK() OVER (PARTITION BY Date ORDER BY AvgDurationOfQuery DESC) AS PopularityRank
+    #     FROM
+    #         r
+    # )
+    # SELECT
+    #     uu.query_text,
+    #     s.*
+    # FROM
+    #     s
+    # LEFT JOIN
+    #     unique_queries uu ON uu.query_hash = s.query_hash
+    # WHERE
+    #     PopularityRank <= 10;
+    # """
+    #     longest_queries = pd.read_sql_query(get_longest_query, results_engine)
+    #     get_most_often_query = "WITH r AS (SELECT date_trunc('minute', r.QueryStartTime) AS Date,r.query_hash, SUM(r.duration/1000) AS TotalRuntimeOfQuery,AVG(r.duration/1000) AS AvgDurationOfQuery, COUNT(r.query_id) AS TotalRunsOfQuery FROM raw_queries r WHERE QueryStartTime > (current_timestamp() - INTERVAL 12 HOURS) GROUP BY date_trunc('minute', r.QueryStartTime), r.query_hash),s as (SELECT *,DENSE_RANK() OVER (PARTITION BY Date ORDER BY TotalRunsOfQuery DESC) AS PopularityRank FROM r)SELECT uu.query_text,s.* FROM s LEFT JOIN unique_queries uu ON uu.query_hash = s.query_hash WHERE PopularityRank <= 10"
+    #     most_often_query = pd.read_sql_query(get_most_often_query, results_engine)
+    get_merge_expense = f"SELECT * FROM {selected_db}.write_statistics_merge_predicate"
+    merge_expense = pd.read_sql_query(get_merge_expense, results_engine)
     return dmc.AccordionMultiple(
         children=[
             create_accordion_item(
@@ -94,13 +189,26 @@ def create_dynamic_results_layout(selected_db):
                 "Cardinality Sampling Statistics",
                 [create_ag_grid(cardinality_stats)],
             ),
-            create_accordion_item("Raw Queries", []),
-            create_accordion_item("Most Expensive Queries", []),
-            create_accordion_item("Queries Over Time - general", []),
-            create_accordion_item("Top 10 Queries by Duration", []),
-            create_accordion_item("Top 10 Queries by Day", []),
-            create_accordion_item("Most Often Run Queries by Day", []),
-            create_accordion_item("Most Expensive Merge/Delete Operations", []),
+            create_accordion_item("Raw Queries", [create_ag_grid(raw_queries)]),
+            create_accordion_item(
+                "Most Expensive Queries", [create_ag_grid(most_expensive)]
+            ),
+            # create_accordion_item(
+            #     "Queries Over Time - general", [create_ag_grid(query_runs)]
+            # ),
+            # create_accordion_item(
+            #     "Top 10 Queries by Duration", [create_ag_grid(total_runtime_query)]
+            # ),
+            # create_accordion_item(
+            #     "Top 10 Queries by Day", [create_ag_grid(longest_queries)]
+            # ),
+            # create_accordion_item(
+            #     "Most Often Run Queries by Day", [create_ag_grid(most_often_query)]
+            # ),
+            create_accordion_item(
+                "Most Expensive Merge/Delete Operations",
+                [create_ag_grid(merge_expense)],
+            ),
         ],
     )
 

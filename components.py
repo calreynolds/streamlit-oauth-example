@@ -11,19 +11,21 @@ LEFT_SIDEBAR = dmc.Stack(
     mb=20,
     ml=20,
     children=[
-        dmc.Button(
-            html.A(
-                "databricks",
-                href="https://www.databricks.com/",
-                target="_blank",
-            ),
-            leftIcon=DashIconify(
-                icon="simple-icons:databricks", width=40, color="#FF3621"
-            ),
-            variant="subtle",
-            className="nav-link-component",
-            m=20,
+        dmc.Image(
+            src="/assets/databricks-white-lakeside.png",
+            alt="superman",
+            # caption="Funny Meme",
+            width=200,
         ),
+        # "databricks",
+        # href="https://www.databricks.com/",
+        # target="_blank",
+        # leftIcon=DashIconify(
+        #     icon="simple-icons:databricks", width=40, color="#FF3621"
+        # ),
+        # variant="subtle",
+        # className="nav-link-component",
+        # m=20,
         dmc.NavLink(
             label="Console",
             href=dash.get_relative_path("/dbx-console"),
@@ -33,6 +35,9 @@ LEFT_SIDEBAR = dmc.Stack(
         ),
         dmc.NavLink(
             label="Delta Optimizer",
+            icon=DashIconify(
+                icon="mingcute:presentation-2-fill", width=20, color="#9ca3af"
+            ),
             childrenOffset=28,
             children=[
                 dmc.NavLink(
