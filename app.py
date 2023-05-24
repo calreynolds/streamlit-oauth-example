@@ -62,7 +62,7 @@ import json
 from flask import Response
 import websockets
 
-URI = "wss://campaigns-orientation-talk-gasoline.trycloudflare.com/api/v1/stream"
+URI = "wss://drew-nvidia-namely-reduces.trycloudflare.com/api/v1/stream"
 
 
 async def run(question):
