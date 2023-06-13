@@ -73,51 +73,51 @@ import json
 
 
 # Databricks CLI command to retrieve library versions for all cluster statuses
-library_command = ["databricks", "libraries", "all-cluster-statuses"]
+# library_command = ["databricks", "libraries", "all-cluster-statuses"]
 
-# Run the Databricks CLI command to retrieve library versions
-library_result = subprocess.run(library_command, capture_output=True, text=True)
+# # Run the Databricks CLI command to retrieve library versions
+# library_result = subprocess.run(library_command, capture_output=True, text=True)
 
-# Parse the JSON output of the library command
-library_data = json.loads(library_result.stdout)
+# # Parse the JSON output of the library command
+# library_data = json.loads(library_result.stdout)
 
-# Print the library versions for all cluster statuses
-for status in library_data["statuses"]:
-    print(f"Cluster ID: {status['cluster_id']}")
-    # print("Library Versions:")
-    # for library in status["library_statuses"]:
-    #     print(f"- {library['library']['whl']}")
-    print()
+# # Print the library versions for all cluster statuses
+# for status in library_data["statuses"]:
+#     print(f"Cluster ID: {status['cluster_id']}")
+#     # print("Library Versions:")
+#     # for library in status["library_statuses"]:
+#     #     print(f"- {library['library']['whl']}")
+#     print()
 
 
-cluster_id = "0510-131932-sflv6c6d"
+# cluster_id = "0510-131932-sflv6c6d"
 
-# Path to the library file in DBFS
-dbfs_file_path = "dbfs:/tmp/deltaoptimizer-1.4.1-py3-none-any.whl"
+# # Path to the library file in DBFS
+# dbfs_file_path = "dbfs:/tmp/deltaoptimizer-1.4.1-py3-none-any.whl"
 
-# Databricks CLI command to install the library on the cluster from DBFS
-install_command = [
-    "databricks",
-    "libraries",
-    "install",
-    "--cluster-id",
-    cluster_id,
-    "--whl",
-    dbfs_file_path,
-]
+# # Databricks CLI command to install the library on the cluster from DBFS
+# install_command = [
+#     "databricks",
+#     "libraries",
+#     "install",
+#     "--cluster-id",
+#     cluster_id,
+#     "--whl",
+#     dbfs_file_path,
+# ]
 
-# Run the Databricks CLI command to install the library
-result = subprocess.run(install_command, capture_output=True, text=True)
+# # Run the Databricks CLI command to install the library
+# result = subprocess.run(install_command, capture_output=True, text=True)
 
-# Check the return code to see if the command executed successfully
-if result.returncode == 0:
-    print("Library installation successful.")
-else:
-    print("Library installation failed.")
+# # Check the return code to see if the command executed successfully
+# if result.returncode == 0:
+#     print("Library installation successful.")
+# else:
+#     print("Library installation failed.")
 
-# Print the output and error messages
-print("Command output:", result.stdout)
-print("Command error:", result.stderr)
+# # Print the output and error messages
+# print("Command output:", result.stdout)
+# print("Command error:", result.stderr)
 
 # SERVER_HOSTNAME = "plotly-customer-success.cloud.databricks.com"
 # HTTP_PATH = "/sql/1.0/warehouses/f08f0b85ddba8d2e"
