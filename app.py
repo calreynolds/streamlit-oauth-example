@@ -4,7 +4,6 @@ from flask import request, Response, stream_with_context
 import dash
 import threading
 import os
-import pyspark
 
 
 app = Dash(__name__, use_pages=True)
