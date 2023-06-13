@@ -1,8 +1,10 @@
-from dash import Dash, dcc
+from dash import Dash, dcc, State
 import dash_mantine_components as dmc
 from flask import request, Response, stream_with_context
 import dash
 import threading
+import os
+import pyspark
 
 
 app = Dash(__name__, use_pages=True)
@@ -38,7 +40,7 @@ app.layout = dmc.MantineProvider(
                 dmc.Col(
                     LEFT_SIDEBAR,
                     span=2,
-                    style={"backgroundColor": "#303F47"},
+                    style={"backgroundColor": "#0F1D22"},
                     p=0,
                 ),
                 dmc.Col(

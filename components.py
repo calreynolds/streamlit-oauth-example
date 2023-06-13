@@ -3,9 +3,18 @@ import dash
 from dash import dcc, html
 from dash_iconify import DashIconify
 
+
+from dash import html, dcc
+import dash_bootstrap_components as dbc
+import dash_mantine_components as dmc
+
+
+# the style arguments for the sidebar. We use position:fixed and a fixed width
+
+
 LEFT_SIDEBAR = dmc.Stack(
     style={
-        "backgroundColor": "#303F47",
+        "backgroundColor": "#0F1D22",
     },
     mt=20,
     mb=20,
@@ -45,14 +54,21 @@ LEFT_SIDEBAR = dmc.Stack(
         ),
         dmc.NavLink(
             label="Delta Optimizer",
-            icon=DashIconify(icon="mdi:delta", width=20, color="#FFFFFF"),
+            icon=DashIconify(icon="tabler:file-delta", width=20, color="#FFFFFF"),
             childrenOffset=28,
             children=[
                 dmc.NavLink(
                     label="Config",
-                    href=dash.get_relative_path("/optimizer"),
+                    href=dash.get_relative_path("/optimizer-config"),
                     variant="subtle",
                     icon=DashIconify(icon="mdi:brain", width=20, color="#FFFFFF"),
+                    className="nav-link-component",
+                ),
+                dmc.NavLink(
+                    label="Schedule + Run",
+                    href=dash.get_relative_path("/optimizer-runner"),
+                    variant="subtle",
+                    icon=DashIconify(icon="carbon:run", width=20, color="#FFFFFF"),
                     className="nav-link-component",
                 ),
                 dmc.NavLink(
@@ -68,19 +84,12 @@ LEFT_SIDEBAR = dmc.Stack(
             className="nav-link-component",
         ),
         dmc.NavLink(
-            label="Admin Settings",
-            href=dash.get_relative_path("/settings"),
+            label="Settings",
+            href=dash.get_relative_path("/connection_settings"),
             variant="subtle",
             icon=DashIconify(
                 icon="material-symbols:settings", width=20, color="#FFFFFF"
             ),
-            className="nav-link-component",
-        ),
-        dmc.NavLink(
-            label="Sign out",
-            href=dash.get_relative_path("/"),
-            variant="subtle",
-            icon=DashIconify(icon="uil:signout", width=20, color="#FFFFFF"),
             className="nav-link-component",
         ),
     ],

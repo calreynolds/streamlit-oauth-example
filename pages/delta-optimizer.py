@@ -7,8 +7,9 @@ import pandas as pd
 import dash_ag_grid as dag
 from sqlalchemy.engine import create_engine
 from dash.exceptions import PreventUpdate
+import subprocess
 
-dash.register_page(__name__, path="/optimizer", title="Delta Optimizer")
+dash.register_page(__name__, path="/optimizer-config", title="Delta Optimizer")
 
 SERVER_HOSTNAME = "plotly-customer-success.cloud.databricks.com"
 HTTP_PATH = "/sql/1.0/warehouses/f08f0b85ddba8d2e"
@@ -121,121 +122,129 @@ sideBar = {
 
 
 def layout():
-    return html.Div(
-        [
-            dmc.Title("Build Optimizer Strategy"),
-            dmc.Group(
-                position="left",
-                mt="xl",
-                children=[
-                    dmc.Button(
-                        "Build Strategy",
-                        id="build-strategy",
-                        variant="outline",
-                        color="#FF3621",
-                    ),
-                    dmc.Button(
-                        "Clear Selections",
-                        id="clear-selection",
-                        variant="default",
-                        color="#FF3621",
-                    ),
-                ],
-            ),
-            dmc.Space(h=10),
-            dmc.SimpleGrid(
-                [
-                    dmc.TextInput(
-                        id="outputdb",
-                        label="Enter Delta Optimizer Output DB:",
-                        placeholder="cataloge.database",
-                    ),
-                    dmc.TextInput(
-                        id="optimizehostname",
-                        label="Enter Server Hostname:",
-                        placeholder="dbc-a2c61234-1234.cloud.databricks.com",
-                    ),
-                    dmc.TextInput(
-                        id="optimizewarehouse",
-                        label="Enter SQL Warehouse ID:",
-                        placeholder="1234-123456-pane123",
-                    ),
-                    dmc.TextInput(
-                        id="optimizetoken",
-                        label="Enter Access Token:",
-                        placeholder="token",
-                    ),
-                    dmc.Stack(
-                        [
-                            dmc.NumberInput(
-                                id="optimizelookback",
-                                label="Enter Lookback Period in days:",
-                                stepHoldDelay=500,
-                                stepHoldInterval=100,
-                                min=1,
-                                value=3,
-                                style={"width": "300px"},
-                            ),
-                            dmc.Checkbox(id="startover", label="Start Over", mb=10),
-                        ]
-                    ),
-                ],
-                cols=2,
-            ),
-            dmc.Space(h=10),
-            dmc.Text(
-                align="center",
-                id="build-response",
-            ),
-            # Stepper
-            # dmc.Space(h=20),
-            # dmc.Divider(variant="dashed", color="#FF3621"),
-            # dmc.Space(h=5),
-            dmc.Space(h=10),
-            dag.AgGrid(
-                id="optimizer-grid",
-                enableEnterpriseModules=True,
-                columnDefs=columnDefs,
-                rowData=rowData,
-                style={"height": "550px"},
-                dashGridOptions={"rowSelection": "multiple", "sideBar": sideBar},
-                columnSize="sizeToFit",
-                defaultColDef=dict(
-                    resizable=True,
-                    editable=True,
-                    sortable=True,
-                    autoHeight=True,
-                    width=90,
+    return (
+        html.Div(
+            [
+                dmc.Title("Build Optimizer Strategy"),
+                dmc.Group(
+                    position="left",
+                    mt="xl",
+                    children=[
+                        dmc.Button(
+                            "Build Strategy",
+                            id="build-strategy",
+                            variant="outline",
+                            color="#FF3621",
+                        ),
+                        dmc.Button(
+                            "Clear Selections",
+                            id="clear-selection",
+                            variant="default",
+                            color="#FF3621",
+                        ),
+                    ],
                 ),
-            ),
-            dmc.Space(h=15),
-            dmc.SimpleGrid(
-                cols=3,
-                children=[
-                    html.Div(
-                        [
-                            dmc.Text("Catalogs", align="center", weight=550),
-                            dmc.Text(id="catalog_selection_output", align="center"),
-                        ]
+                dmc.Space(h=10),
+                dmc.Text(id="run-strategy-output", align="center"),
+                dmc.Space(h=20),
+                dmc.Space(h=10),
+                dmc.Text(id="run-strategy-output-schedule", align="center"),
+                dmc.Space(h=20),
+                dmc.Space(h=10),
+                dmc.SimpleGrid(
+                    [
+                        dmc.TextInput(
+                            id="outputdb",
+                            label="Enter Delta Optimizer Output DB:",
+                            placeholder="cataloge.database",
+                        ),
+                        dmc.TextInput(
+                            id="optimizehostname",
+                            label="Enter Server Hostname:",
+                            placeholder="dbc-a2c61234-1234.cloud.databricks.com",
+                        ),
+                        dmc.TextInput(
+                            id="optimizewarehouse",
+                            label="Enter SQL Warehouse ID:",
+                            placeholder="1234-123456-pane123",
+                        ),
+                        dmc.TextInput(
+                            id="optimizetoken",
+                            label="Enter Access Token:",
+                            placeholder="token",
+                        ),
+                        dmc.Stack(
+                            [
+                                dmc.NumberInput(
+                                    id="optimizelookback",
+                                    label="Enter Lookback Period in days:",
+                                    stepHoldDelay=500,
+                                    stepHoldInterval=100,
+                                    min=1,
+                                    value=3,
+                                    style={"width": "300px"},
+                                ),
+                                dmc.Checkbox(id="startover", label="Start Over", mb=10),
+                            ]
+                        ),
+                    ],
+                    cols=2,
+                ),
+                dmc.Space(h=10),
+                dmc.Text(
+                    align="center",
+                    id="build-response",
+                ),
+                # Stepper
+                # dmc.Space(h=20),
+                # dmc.Divider(variant="dashed", color="#FF3621"),
+                # dmc.Space(h=5),
+                dmc.Space(h=10),
+                dag.AgGrid(
+                    id="optimizer-grid",
+                    enableEnterpriseModules=True,
+                    columnDefs=columnDefs,
+                    rowData=rowData,
+                    style={"height": "550px"},
+                    dashGridOptions={"rowSelection": "multiple", "sideBar": sideBar},
+                    columnSize="sizeToFit",
+                    defaultColDef=dict(
+                        resizable=True,
+                        editable=True,
+                        sortable=True,
+                        autoHeight=True,
+                        width=90,
                     ),
-                    html.Div(
-                        [
-                            dmc.Text("DBs", align="center", weight=550),
-                            dmc.Text(id="schema_selection_output", align="center"),
-                        ]
-                    ),
-                    html.Div(
-                        [
-                            dmc.Text("Tables", align="center", weight=550),
-                            dmc.Text(id="table_selection_output", align="center"),
-                        ]
-                    ),
-                ],
-            ),
-            dcc.Store(id="table_selection_store"),
-            dcc.Store(id="schema_selection_store"),
-            dcc.Store(id="catalog_selection_store"),
-        ]
+                ),
+                dmc.Space(h=15),
+                dmc.SimpleGrid(
+                    cols=3,
+                    children=[
+                        html.Div(
+                            [
+                                dmc.Text("Catalogs", align="center", weight=550),
+                                dmc.Text(id="catalog_selection_output", align="center"),
+                            ]
+                        ),
+                        html.Div(
+                            [
+                                dmc.Text("DBs", align="center", weight=550),
+                                dmc.Text(id="schema_selection_output", align="center"),
+                            ]
+                        ),
+                        html.Div(
+                            [
+                                dmc.Text("Tables", align="center", weight=550),
+                                dmc.Text(id="table_selection_output", align="center"),
+                            ]
+                        ),
+                    ],
+                ),
+                dcc.Store(id="table_selection_store"),
+                dcc.Store(id="schema_selection_store"),
+                dcc.Store(id="catalog_selection_store"),
+            ]
+        ),
     )
 
 
