@@ -12,4 +12,3 @@ flask-sqlalchemy==3.0.3
 websockets==11.0.3
 plotly-express==0.4.1
 databricks-cli==0.17.7
-```
