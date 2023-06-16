@@ -288,6 +288,9 @@ def layout():
 )
 def generate_file(n_clicks, profile_name, workspace_url, token, path):
     if n_clicks is not None and n_clicks > 0:
+        if not profile_name or not workspace_url or not token or not path:
+            return None, html.Div("Please fill in all the fields.")
+
         config = ConfigParser()
         file_path = os.path.expanduser("~/.databrickscfg")
 
@@ -440,64 +443,6 @@ def check_library(n_clicks, profile_name):
         else:
             return html.H3("Please select a profile.")
     return ""
-
-
-# @callback(
-#     Output("hostname-store", "data"),
-#     Output("path-store", "data"),
-#     Output("token-store", "data"),
-#     Input("activate-button", "n_clicks"),
-#     [State("profile-dropdown", "value")],
-# )
-# def load_engine_details(n_clicks, profile_name):
-#     if profile_name:
-#         config = ConfigParser()
-#         file_path = os.path.expanduser("~/.databrickscfg")
-
-#         if os.path.exists(file_path):
-#             config.read(file_path)
-
-#             if config.has_section(profile_name):
-#                 host = config.get(profile_name, "host")
-#                 path = config.get(profile_name, "path")
-#                 token = config.get(profile_name, "token")
-#                 host = host.replace("https://", "")
-
-#                 return host, path, token
-
-#     return None, None, None
-
-
-# @callback(
-#     Output("engine-test-result", "children"),
-#     Input("test-engine-button", "n_clicks"),
-#     [
-#         State("hostname-store", "data"),
-#         State("path-store", "data"),
-#         State("token-store", "data"),
-#     ],
-# )
-# def test_sqlalchemy_engine(n_clicks, hostname, path, token):
-#     if n_clicks is not None and n_clicks > 0 and hostname and path and token:
-#         # Construct the SQL Alchemy engine
-#         engine_url = f"databricks://token:{token}@{hostname}/?http_path={path}&catalog='main'&schema='information_schema'"
-#         engine = create_engine(engine_url)
-
-#         try:
-#             # Test the engine connection by executing a sample query
-#             with engine.connect() as connection:
-#                 result = connection.execute("SELECT 1")
-#                 test_value = result.scalar()
-
-#                 if test_value == 1:
-#                     return html.Div("Connection successful!")
-#         except Exception as e:
-#             return html.Div(f"Connection failed: {str(e)}")
-
-#     return ""
-
-
-# Callback to generate the databricks config file
 
 
 @callback(

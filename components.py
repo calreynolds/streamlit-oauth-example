@@ -36,18 +36,9 @@ LEFT_SIDEBAR = dmc.Stack(
             ],
             href="https://databricks-dash.aws.plotly.host/databrickslakeside/dbx-console",
         ),
-        # "databricks",
-        # href="https://www.databricks.com/",
-        # target="_blank",
-        # leftIcon=DashIconify(
-        #     icon="simple-icons:databricks", width=40, color="#FF3621"
-        # ),
-        # variant="subtle",
-        # className="nav-link-component",
-        # m=20,
         dmc.NavLink(
-            label="Console",
-            href=dash.get_relative_path("/dbx-console"),
+            label="Data Explorer",
+            href=dash.get_relative_path("/explorer"),
             variant="subtle",
             icon=DashIconify(icon="ri:pie-chart-fill", width=20, color="#FFFFFF"),
             className="nav-link-component",
