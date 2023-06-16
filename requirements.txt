@@ -14,4 +14,4 @@ plotly-express==0.4.1
 databricks-cli==0.17.7
 configparser
 databricks-connect==13.0.0
-dbc
+
