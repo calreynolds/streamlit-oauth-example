@@ -2,8 +2,14 @@ import dash
 from dash import html, dcc, callback, Input, Output, State
 import dash_mantine_components as dmc
 from dash_iconify import DashIconify
+from dash.exceptions import PreventUpdate
+
 import pandas as pd
 import dash_ag_grid as dag
+from databricks.connect import DatabricksSession
+import sqlalchemy.exc
+import os
+from configparser import ConfigParser
 from sqlalchemy.engine import create_engine
 import result_page_table_config as comp
 from result_page_table_config import (
@@ -19,23 +25,9 @@ from sqlalchemy import Table, create_engine, MetaData
 
 dash.register_page(__name__, path="/optimizer-results", title="Results")
 
-SERVER_HOSTNAME = "plotly-customer-success.cloud.databricks.com"
-HTTP_PATH = "/sql/1.0/warehouses/f08f0b85ddba8d2e"
-WAREHOUSE_ID = "f08f0b85ddba8d2e"
-ACCESS_TOKEN = "dapia86bd9f9bc3504ca74a4966c0e669002"
+
 CATALOG = "main"
 SCHEMA = "information_schema"
-SOUND = "dbxdashstudio"
-
-conn_str = f"databricks://token:{ACCESS_TOKEN}@{SERVER_HOSTNAME}?http_path={HTTP_PATH}&catalog={CATALOG}&schema={SOUND}"
-extra_connect_args = {
-    "_tls_verify_hostname": True,
-    "_user_agent_entry": "PySQL Example Script",
-}
-sound_engine = create_engine(
-    conn_str,
-    connect_args=extra_connect_args,
-)
 
 
 db = SQLAlchemy()
@@ -54,26 +46,77 @@ rawquery_tbl = Table("raw_queries", RawQueryTempView.metadata)
 
 
 def layout():
-    big_engine = create_engine(
-        f"databricks://token:{ACCESS_TOKEN}@{SERVER_HOSTNAME}/?http_path={HTTP_PATH}&catalog={CATALOG}&schema={SCHEMA}"
-    )
-    tables_stmt = f"SELECT table_catalog, table_schema,table_name, created, created_by, last_altered, last_altered_by FROM {CATALOG}.INFORMATION_SCHEMA.TABLES;"
-    schemas_init_statment = f"SELECT schema_name FROM {CATALOG}.{SCHEMA}.SCHEMATA ORDER BY created DESC;"  # ORDER BY created DESC
-    schema_list = pd.read_sql_query(schemas_init_statment, big_engine)
-    schema_select_data = [
-        {"label": c, "value": c} for c in schema_list.schema_name.unique()
-    ]
+    # big_engine = create_engine(
+    #     f"databricks://token:{ACCESS_TOKEN}@{SERVER_HOSTNAME}/?http_path={HTTP_PATH}&catalog={CATALOG}&schema={SCHEMA}"
+    # )
+    # schemas_init_statment = f"SELECT schema_name FROM {CATALOG}.{SCHEMA}.SCHEMATA ORDER BY created DESC;"  # ORDER BY created DESC
+    # schema_list = pd.read_sql_query(schemas_init_statment, big_engine)
+    # schema_select_data = [
+    #     {"label": c, "value": c} for c in schema_list.schema_name.unique()
+    # ]
 
     return html.Div(
         [
-            dmc.Select(
-                label="Delta Optimizer Instance",
-                placeholder="Select one",
-                id="output-db-select",
-                searchable=True,
-                data=schema_select_data,
-            ),
+            dmc.Title("Results"),
+            dmc.Divider(variant="solid"),
             dmc.Space(h=20),
+            dmc.Group(
+                position="left",
+                children=[
+                    dmc.Select(
+                        id="output_db_select",
+                        # options=[],
+                        data=[],
+                        placeholder="Select one",
+                        searchable=True,
+                        style={
+                            "width": "300px",
+                            "position": "relative",
+                            "top": "0px",
+                        },
+                    ),
+                    dmc.Button(
+                        "Refresh",
+                        id="refresh-button-step3",
+                        variant="default",
+                        style={
+                            "width": "120px",
+                            "position": "relative",
+                            "top": "0px",
+                        },
+                    ),
+                    html.Div(
+                        id="engine-test-result-step3",
+                        style={
+                            "width": "300px",
+                            "position": "relative",
+                            "left": "20px",
+                            "top": "0px",
+                        },
+                    ),
+                    html.Div(
+                        style={
+                            "width": "300px",
+                            "position": "relative",
+                            "left": "350px",
+                            "top": "0px",
+                        },
+                        children=[
+                            dcc.Dropdown(
+                                id="profile-dropdown-step3",
+                                options=[],
+                                value="Select Profile",
+                                style={
+                                    "width": "200px",
+                                    "position": "relative",
+                                    "left": "40px",
+                                    "top": "0px",
+                                },
+                            )
+                        ],
+                    ),
+                ],
+            ),
             # dmc.Group(
             #     position="center",
             #     children=[
@@ -86,25 +129,248 @@ def layout():
             # dmc.Space(h=10),
             # dmc.Text(id="run-strategy-output", align="center"),
             # dmc.Space(h=20),
+            dmc.Space(h=20),
             dmc.LoadingOverlay(
                 overlayOpacity=0.95,
                 loaderProps=dict(color="#FF3621", variant="bars"),
                 children=html.Div(id="result-page-layout"),
             ),
             html.Div(id="sqlalchemycheck"),
+            dcc.Store(id="hostname-store3", storage_type="memory"),
+            dcc.Store(id="path-store3", storage_type="memory"),
+            dcc.Store(id="token-store3", storage_type="memory"),
+            dcc.Store(id="cluster-id-store3", storage_type="memory"),
+            dcc.Store(id="cluster-name-store3", storage_type="memory"),
+            dcc.Store(id="user-name-store3", storage_type="memory"),
+            # dcc.Store(id="output-db-select", storage_type="memory"),
+            dcc.Interval(id="interval", interval=1000 * 60 * 60 * 24, n_intervals=0),
             component_chatbot(),
         ]
     )
 
 
 @callback(
-    Output("result-page-layout", "children"),
-    Input("output-db-select", "value"),
+    Output("output_db_select", "data"),
+    Input("refresh-button-step3", "n_clicks"),
+    Input("hostname-store3", "data"),
+    Input("path-store3", "data"),
+    Input("token-store3", "data"),
+)
+def fetch_schema_names(n_clicks, hostname, path, token):
+    if not hostname or not path or not token:
+        return []
+
+    engine_url = f"databricks://token:{token}@{hostname}/?http_path={path}&catalog={CATALOG}&schema={SCHEMA}"
+    big_engine = create_engine(engine_url)
+
+    schemas_init_statement = (
+        f"SELECT schema_name FROM {CATALOG}.{SCHEMA}.SCHEMATA ORDER BY created DESC;"
+    )
+    schema_list = pd.read_sql_query(schemas_init_statement, big_engine)
+    schema_select_data = [
+        {"label": c, "value": c} for c in schema_list.schema_name.unique()
+    ]
+
+    return schema_select_data
+
+
+@callback(
+    Output("profile-dropdown-step3", "options"),
+    [Input("refresh-button-step3", "n_clicks"), Input("interval", "n_intervals")],
+    State("profile-dropdown-step3", "value"),
+)
+def populate_profile_dropdown(n_clicks, n_intervals, profile_name):
+    config = ConfigParser()
+    file_path = os.path.expanduser("~/.databrickscfg")
+
+    if not os.path.exists(file_path):
+        return []
+
+    config.read(file_path)
+    options = []
+
+    for section in config.sections():
+        if (
+            config.has_option(section, "host")
+            and config.has_option(section, "path")
+            and config.has_option(section, "token")
+            and config.has_option(section, "cluster_name")
+            and config.has_option(section, "cluster_id")
+            and config.has_option(section, "user_name")
+        ):
+            options.append({"label": section, "value": section})
+
+    return options
+
+
+@callback(
+    [
+        Output("hostname-store3", "data"),
+        Output("token-store3", "data"),
+        Output("path-store3", "data"),
+        Output("cluster-name-store3", "data"),
+        Output("cluster-id-store3", "data"),
+        Output("user-name-store3", "data"),
+    ],
+    [Input("profile-dropdown-step3", "value")],
     prevent_initial_call=True,
 )
-def create_dynamic_results_layout(selected_db):
+def parse_databricks_config(profile_name):
+    if profile_name:
+        config = ConfigParser()
+        file_path = os.path.expanduser("~/.databrickscfg")
+
+        if os.path.exists(file_path):
+            config.read(file_path)
+
+            if config.has_section(profile_name):
+                host = config.get(profile_name, "host")
+                token = config.get(profile_name, "token")
+                path = config.get(profile_name, "path")
+                cluster_name = config.get(profile_name, "cluster_name")
+                cluster_id = config.get(profile_name, "cluster_id")
+                user_name = config.get(profile_name, "user_name")
+                host = host.replace("https://", "")
+
+                return host, token, path, cluster_name, cluster_id, user_name
+
+    return None, None, None, None, None, None
+
+
+@callback(
+    Output("engine-test-result-step3", "children"),
+    Input("profile-dropdown-step3", "value"),
+    [
+        State("hostname-store3", "data"),
+        State("path-store3", "data"),
+        State("token-store3", "data"),
+    ],
+    prevent_initial_call=True,
+)
+def test_engine_and_spark_connection(profile_name, hostname, path, token):
+    if profile_name:
+        (
+            host,
+            token,
+            path,
+            cluster_name,
+            cluster_id,
+            user_name,
+        ) = parse_databricks_config(profile_name)
+        if host and token and path:
+            # Modify the path to remove "/sql/1.0/warehouses/"
+            sql_warehouse = path.replace("/sql/1.0/warehouses/", "")
+            engine_url = f"databricks://token:{token}@{host}/?http_path={path}&catalog=main&schema=information_schema"
+            engine = create_engine(engine_url)
+
+            try:
+                # Test the engine connection by executing a sample query
+                with engine.connect() as connection:
+                    result = connection.execute("SELECT 1")
+                    test_value = result.scalar()
+
+                    if test_value == 1:
+                        os.environ["USER"] = "anything"
+                        spark = DatabricksSession.builder.remote(
+                            f"sc://{host}:443/;token={token};x-databricks-cluster-id={cluster_id}"
+                        ).getOrCreate()
+
+                        try:
+                            # Test the Spark connection by executing a sample SQL command
+                            spark_result = spark.sql("SELECT 1")
+                            spark_test_value = spark_result.collect()[0][0]
+
+                            if spark_test_value == 1:
+                                return dmc.LoadingOverlay(
+                                    dmc.Badge(
+                                        id="spark-connection-badge",
+                                        variant="dot",
+                                        color="green",
+                                        size="lg",
+                                        children=[
+                                            html.Span(
+                                                f"Connected to SQL Warehouse: {sql_warehouse} + Cluster: {cluster_name}"
+                                            )
+                                        ],
+                                    ),
+                                    loaderProps={
+                                        "variant": "dots",
+                                        "color": "orange",
+                                        "size": "xl",
+                                    },
+                                )
+                            elif (
+                                "SPARK CONNECTION FAILED: THE CLUSTER" in str(e).upper()
+                            ):
+                                return dmc.LoadingOverlay(
+                                    dmc.Badge(
+                                        id="spark-connection-badge",
+                                        variant="dot",
+                                        color="yellow",
+                                        size="lg",
+                                        children=[
+                                            html.Span(
+                                                f"Spark Connection Pending: {cluster_name}"
+                                            )
+                                        ],
+                                    ),
+                                    loaderProps={
+                                        "variant": "dots",
+                                        "color": "orange",
+                                        "size": "xl",
+                                    },
+                                )
+                        except Exception as e:
+                            return dmc.LoadingOverlay(
+                                dmc.Badge(
+                                    id="spark-connection-badge",
+                                    variant="dot",
+                                    color="red",
+                                    size="lg",
+                                    children=[
+                                        html.Span(f"Spark Connection failed: {str(e)}")
+                                    ],
+                                ),
+                                loaderProps={
+                                    "variant": "dots",
+                                    "color": "orange",
+                                    "size": "xl",
+                                },
+                            )
+            except sqlalchemy.exc.OperationalError as e:
+                return dmc.LoadingOverlay(
+                    dmc.Badge(
+                        id="spark-connection-badge",
+                        variant="dot",
+                        color="red",
+                        size="lg",
+                        children=[
+                            html.Span(f"SQL Alchemy Connection failed: {str(e)}")
+                        ],
+                    ),
+                    loaderProps={
+                        "variant": "dots",
+                        "color": "orange",
+                        "size": "xl",
+                    },
+                )
+
+    return html.Div("Please select a profile.", style={"color": "orange"})
+
+
+@callback(
+    Output("result-page-layout", "children"),
+    [Input("refresh-button-step3", "n_clicks"), Input("output_db_select", "value")],
+    [
+        State("hostname-store3", "data"),
+        State("path-store3", "data"),
+        State("token-store3", "data"),
+    ],
+    prevent_initial_call=True,
+)
+def create_dynamic_results_layout(n_clicks, selected_db, hostname, path, token):
     results_engine = create_engine(
-        f"databricks://token:{ACCESS_TOKEN}@{SERVER_HOSTNAME}/?http_path={HTTP_PATH}&catalog={CATALOG}&schema={selected_db}"
+        f"databricks://token:{token}@{hostname}/?http_path={path}&catalog={CATALOG}&schema={selected_db}"
     )
 
     get_optimizer_results = f"Select * FROM {selected_db}.optimizer_results"
@@ -159,7 +425,7 @@ def create_dynamic_results_layout(selected_db):
     grouped_queries.sort_values(by="QueryStartTime", inplace=True)
 
     # Print the resulting DataFrame
-    print(grouped_queries)
+    # print(grouped_queries)
 
     # GET TOP 10 QUERIES WITH MOST TOTAL RUNTIME
 
@@ -202,10 +468,10 @@ def create_dynamic_results_layout(selected_db):
     result_data["QueryStartTime"] = pd.to_datetime(
         result_data["QueryStartTime"]
     )  # Convert timestamp column to datetime if needed
-    print(result_data.columns)
+    # print(result_data.columns)
     result_data["QueryStartTime"] = result_data["QueryStartTime"].dt.hour
 
-    print("aaaaaaaaaaaaaaaaaaa")
+    # print("aaaaaaaaaaaaaaaaaaa")
 
     # Top 10 Longest Running Queries By Day
     start_time_threshold = pd.Timestamp.now() - pd.Timedelta(hours=12)
@@ -263,7 +529,7 @@ def create_dynamic_results_layout(selected_db):
     ]
 
     # Print the resulting DataFrame
-    print(by_day_results)
+    # print(by_day_results)
 
     # get_query_runs = f"""SELECT
     #               date_trunc('minute', QueryStartTime) AS Date,
@@ -345,7 +611,7 @@ def create_dynamic_results_layout(selected_db):
 
     get_merge_expense = f"SELECT * FROM {selected_db}.write_statistics_merge_predicate"
     merge_expense = pd.read_sql_query(get_merge_expense, results_engine)
-    print(raw_queries)
+    # print(raw_queries)
     # query_start_time = raw_queries["QueryStartTime"].values
     # query_end_time = raw_queries["QueryEndTime"].values
     # query_duration_seconds = raw_queries["QueryDurationSeconds"].values
@@ -456,10 +722,10 @@ import pandas as pd
 from databricks import sql
 
 
-def dbx_SQL_query(query):
+def dbx_SQL_query(query, token, hostname, path):
     try:
         results_engine = create_engine(
-            f"databricks://token:{ACCESS_TOKEN}@{SERVER_HOSTNAME}/?http_path={HTTP_PATH}&catalog=hive_metastore&schema=default"
+            f"databricks://token:{token}@{hostname}/?http_path={path}&catalog=hive_metastore&schema=default"
         )
         df = pd.read_sql_query(query, results_engine)
 

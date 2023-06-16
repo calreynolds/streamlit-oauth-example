@@ -9,7 +9,7 @@
 }
 
 .nav-link-component:hover {
-    background-color: rgb(15 29 34) !important;
+    background-color: rgb(24, 42, 51) !important;
     border-radius: 20 !important;
     -webkit-border-radius: 20 !important;
     -moz-border-radius: 20 !important;
@@ -42,7 +42,7 @@ body {
 }
 
 .ag-theme-alpine {
-    --ag-alpine-active-color: #FF6859 !important;
+    --ag-alpine-active-color: rgb(15, 29, 34) !important;
     --ag-row-hover-color: #FFB4AC !important;
     --ag-selected-row-background-color: #FFB4AC !important;
 }

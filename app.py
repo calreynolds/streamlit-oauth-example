@@ -6,7 +6,12 @@ import threading
 import os
 
 
-app = Dash(__name__, use_pages=True)
+app = Dash(
+    __name__,
+    use_pages=True,
+    suppress_callback_exceptions=True,
+    url_base_pathname=os.environ.get("DASH_URL_BASE_PATHNAME", "/"),
+)
 server = app.server
 
 from components import (

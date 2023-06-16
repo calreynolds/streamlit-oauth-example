@@ -23,14 +23,15 @@ LEFT_SIDEBAR = dmc.Stack(
         html.A(
             [
                 html.Img(
-                    src=dash.get_asset_url("databricks-white-lakeside.png"),
+                    src=dash.get_asset_url("dbxdashlogo2.png"),
                     style={
                         "height": "100%",
                         "width": "100%",
-                        "float": "right",
+                        "float": "center",
                         "position": "relative",
-                        "padding-top": 0,
-                        "padding-right": 15,
+                        "padding-top": 25,
+                        "padding-right": 25,
+                        "padding-left": 0,
                     },
                 )
             ],
@@ -58,8 +59,8 @@ LEFT_SIDEBAR = dmc.Stack(
             childrenOffset=28,
             children=[
                 dmc.NavLink(
-                    label="Config",
-                    href=dash.get_relative_path("/optimizer-config"),
+                    label="Build Strategy",
+                    href=dash.get_relative_path("/build-strategy"),
                     variant="subtle",
                     icon=DashIconify(icon="mdi:brain", width=20, color="#FFFFFF"),
                     className="nav-link-component",
@@ -87,6 +88,7 @@ LEFT_SIDEBAR = dmc.Stack(
             label="Settings",
             href=dash.get_relative_path("/connection_settings"),
             variant="subtle",
+            active=True,
             icon=DashIconify(
                 icon="material-symbols:settings", width=20, color="#FFFFFF"
             ),
