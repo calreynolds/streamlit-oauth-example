@@ -5,7 +5,6 @@ import requests
 from dash import html, callback, Input, Output, ctx, dcc, State
 import dash_mantine_components as dmc
 import subprocess
-from databricks.connect import DatabricksSession
 import sqlalchemy.exc
 from configparser import ConfigParser
 
@@ -56,14 +55,19 @@ def layout():
             dmc.Group(
                 position="left",
                 children=[
+                    # dmc.Button(
+                    #     "Run Strategy",
+                    #     id="run-strategy-button-explorer",
+                    #     variant="outline",
+                    # ),
+                    # dmc.Button("Schedule", id="checksql-explorer", variant="outline"),
+                    # dmc.TextInput(
+                    #     id="schedule-explorer", type="text", value="0 0 10 * * ?"
+                    # ),
                     dmc.Button(
-                        "Run Strategy",
-                        id="run-strategy-button-explorer",
-                        variant="outline",
-                    ),
-                    dmc.Button("Schedule", id="checksql-explorer", variant="outline"),
-                    dmc.TextInput(
-                        id="schedule-explorer", type="text", value="0 0 10 * * ?"
+                        "Refresh",
+                        id="refresh-button-step4",
+                        variant="default",
                     ),
                     html.Div(
                         id="engine-test-result-step4",
@@ -92,20 +96,15 @@ def layout():
                                     "left": "40px",
                                     "top": "0px",
                                 },
-                            )
+                            ),
                         ],
                     ),
                 ],
             ),
             dmc.Space(h=10),
-            dmc.Button(
-                "Refresh",
-                id="refresh-button-step4",
-                variant="default",
-            ),
-            dmc.Text(id="run-strategy-output-explorer"),
+            # dmc.Text(id="run-strategy-output-explorer"),
             dmc.Space(h=10),
-            dmc.Text(id="run-strategy-output-schedule-explorer"),
+            # dmc.Text(id="run-strategy-output-schedule-explorer"),
             dmc.Space(h=30),
             html.Div(id="load-optimizer-grid-step4"),
             dmc.Space(h=20),
@@ -118,9 +117,6 @@ def layout():
             dcc.Store(id="hostname-store4", storage_type="memory"),
             dcc.Store(id="path-store4", storage_type="memory"),
             dcc.Store(id="token-store4", storage_type="memory"),
-            dcc.Store(id="cluster-id-store4", storage_type="memory"),
-            dcc.Store(id="cluster-name-store4", storage_type="memory"),
-            dcc.Store(id="user-name-store4", storage_type="memory"),
             dcc.Interval(id="interval4", interval=86400000, n_intervals=0),
             html.Div(id="table_selection_output_now4"),
         ]
@@ -132,9 +128,6 @@ def layout():
         Output("hostname-store4", "data"),
         Output("token-store4", "data"),
         Output("path-store4", "data"),
-        Output("cluster-name-store4", "data"),
-        Output("cluster-id-store4", "data"),
-        Output("user-name-store4", "data"),
     ],
     [Input("profile-dropdown-step4", "value")],
     prevent_initial_call=True,
@@ -151,14 +144,12 @@ def parse_databricks_config(profile_name):
                 host = config.get(profile_name, "host")
                 token = config.get(profile_name, "token")
                 path = config.get(profile_name, "path")
-                cluster_name = config.get(profile_name, "cluster_name")
-                cluster_id = config.get(profile_name, "cluster_id")
-                user_name = config.get(profile_name, "user_name")
+
                 host = host.replace("https://", "")
 
-                return host, token, path, cluster_name, cluster_id, user_name
+                return host, token, path
 
-    return None, None, None, None, None, None
+    return None, None, None
 
 
 @callback(
@@ -182,9 +173,6 @@ def populate_profile_dropdown(n_clicks, n_intervals, profile_name):
             config.has_option(section, "host")
             and config.has_option(section, "path")
             and config.has_option(section, "token")
-            and config.has_option(section, "cluster_name")
-            and config.has_option(section, "cluster_id")
-            and config.has_option(section, "user_name")
         ):
             options.append({"label": section, "value": section})
 
@@ -193,9 +181,6 @@ def populate_profile_dropdown(n_clicks, n_intervals, profile_name):
             host,
             token,
             path,
-            cluster_name,
-            cluster_id,
-            user_name,
         ) = parse_databricks_config(profile_name)
         if host and token and path:
             engine_url = f"databricks://token:{token}@{host}/?http_path={path}&catalog=main&schema=information_schema"
@@ -328,19 +313,16 @@ def populate_profile_dropdown(n_clicks, n_intervals, profile_name):
     ],
     prevent_initial_call=True,
 )
-def test_engine_and_spark_connection(profile_name, hostname, path, token):
+def test_engine_connection(profile_name, host, path, token):
     if profile_name:
         (
             host,
             token,
             path,
-            cluster_name,
-            cluster_id,
-            user_name,
         ) = parse_databricks_config(profile_name)
         if host and token and path:
             # Modify the path to remove "/sql/1.0/warehouses/"
-            sql_warehouse = path.replace("/sql/1.0/warehouses/", "")
+            # sql_warehouse = path.replace("/sql/1.0/warehouses/", "")
             engine_url = f"databricks://token:{token}@{host}/?http_path={path}&catalog=main&schema=information_schema"
             engine = create_engine(engine_url)
 
@@ -351,83 +333,30 @@ def test_engine_and_spark_connection(profile_name, hostname, path, token):
                     test_value = result.scalar()
 
                     if test_value == 1:
-                        os.environ["USER"] = "anything"
-                        spark = DatabricksSession.builder.remote(
-                            f"sc://{host}:443/;token={token};x-databricks-cluster-id={cluster_id}"
-                        ).getOrCreate()
-
-                        try:
-                            # Test the Spark connection by executing a sample SQL command
-                            spark_result = spark.sql("SELECT 1")
-                            spark_test_value = spark_result.collect()[0][0]
-
-                            if spark_test_value == 1:
-                                return dmc.LoadingOverlay(
-                                    dmc.Badge(
-                                        id="spark-connection-badge",
-                                        variant="dot",
-                                        color="green",
-                                        size="lg",
-                                        children=[
-                                            html.Span(
-                                                f"Connected to SQL Warehouse: {sql_warehouse} + Cluster: {cluster_name}"
-                                            )
-                                        ],
-                                    ),
-                                    loaderProps={
-                                        "variant": "dots",
-                                        "color": "orange",
-                                        "size": "xl",
-                                    },
-                                )
-                            elif (
-                                "SPARK CONNECTION FAILED: THE CLUSTER" in str(e).upper()
-                            ):
-                                return dmc.LoadingOverlay(
-                                    dmc.Badge(
-                                        id="spark-connection-badge",
-                                        variant="dot",
-                                        color="yellow",
-                                        size="lg",
-                                        children=[
-                                            html.Span(
-                                                f"Spark Connection Pending: {cluster_name}"
-                                            )
-                                        ],
-                                    ),
-                                    loaderProps={
-                                        "variant": "dots",
-                                        "color": "orange",
-                                        "size": "xl",
-                                    },
-                                )
-                        except Exception as e:
-                            return dmc.LoadingOverlay(
-                                dmc.Badge(
-                                    id="spark-connection-badge",
-                                    variant="dot",
-                                    color="red",
-                                    size="lg",
-                                    children=[
-                                        html.Span(f"Spark Connection failed: {str(e)}")
-                                    ],
-                                ),
-                                loaderProps={
-                                    "variant": "dots",
-                                    "color": "orange",
-                                    "size": "xl",
-                                },
-                            )
+                        return dmc.LoadingOverlay(
+                            dmc.Badge(
+                                id="engine-connection-badge",
+                                variant="dot",
+                                color="green",
+                                size="lg",
+                                children=[
+                                    html.Span(f"Connected to Workspace: {host} ")
+                                ],
+                            ),
+                            loaderProps={
+                                "variant": "dots",
+                                "color": "orange",
+                                "size": "xl",
+                            },
+                        )
             except sqlalchemy.exc.OperationalError as e:
                 return dmc.LoadingOverlay(
                     dmc.Badge(
-                        id="spark-connection-badge",
+                        id="engine-connection-badge",
                         variant="dot",
                         color="red",
                         size="lg",
-                        children=[
-                            html.Span(f"SQL Alchemy Connection failed: {str(e)}")
-                        ],
+                        children=[html.Span(f"Engine Connection failed: {str(e)}")],
                     ),
                     loaderProps={
                         "variant": "dots",
@@ -437,14 +366,6 @@ def test_engine_and_spark_connection(profile_name, hostname, path, token):
                 )
 
     return html.Div("Please select a profile.", style={"color": "orange"})
-
-
-@callback(
-    Output("selected-cluster-output-step4", "children"),
-    Input("cluster-dropdown-step4", "value"),
-)
-def display_selected_cluster(selected_cluster):
-    return f"Selected Cluster: {selected_cluster}"
 
 
 @callback(
@@ -471,9 +392,6 @@ def create_ag_grid(selected_table, profile_name):
             config.has_option(section, "host")
             and config.has_option(section, "path")
             and config.has_option(section, "token")
-            and config.has_option(section, "cluster_name")
-            and config.has_option(section, "cluster_id")
-            and config.has_option(section, "user_name")
         ):
             options.append({"label": section, "value": section})
 
@@ -482,9 +400,6 @@ def create_ag_grid(selected_table, profile_name):
             host,
             token,
             path,
-            cluster_name,
-            cluster_id,
-            user_name,
         ) = parse_databricks_config(profile_name)
         if host and token and path:
             engine_url = f"databricks://token:{token}@{host}/?http_path={path}&catalog=main&schema=information_schema"
@@ -576,165 +491,3 @@ def tables(selected):
         # json_tables = json.dumps(final)
         return ", ".join(selected_tables), final
     return "No selections", dash.no_update
-
-
-@callback(
-    Output("run-strategy-output-explorer", "children"),
-    [
-        Input("run-strategy-button-explorer", "n_clicks"),
-    ],
-    State("schema_selection_store4", "data"),
-    State("cluster-id-store4", "data"),
-    State("user-name-store4", "data"),
-    State("hostname-store4", "data"),
-    State("token-store4", "data"),
-    prevent_initial_call=True,
-)
-def delta_step_2_optimizer(
-    n_clicks, selected_schema, selected_cluster, user_name, hostname, token
-):
-    if not selected_cluster:
-        return "Please select a cluster first."
-    optimize_job_two = {
-        "name": "Delta_Optimizer_Step_2",
-        "email_notifications": {"no_alert_for_skipped_runs": False},
-        "webhook_notifications": {},
-        "timeout_seconds": 0,
-        "max_concurrent_runs": 1,
-        "schedule": {
-            "quartz_cron_expression": "0 0 10 * * ?",
-            "timezone_id": "US/Pacific",
-            "pause_status": "UNPAUSED",
-        },
-        "tasks": [
-            {
-                "task_key": "Delta_Optimizer_Step_2",
-                "notebook_task": {
-                    "notebook_path": f"/Repos/{user_name}/edw-best-practices/Delta Optimizer/Step 2_ Strategy Runner",
-                    "notebook_params": {
-                        "Optimizer Output Database:": selected_schema,
-                        "exclude_list(csv)": "",
-                        "include_list(csv)": "",
-                        "table_mode": "include_all_tables",
-                    },
-                    "source": "WORKSPACE",
-                },
-                "existing_cluster_id": selected_cluster,
-                "timeout_seconds": 0,
-                "email_notifications": {},
-                "notification_settings": {
-                    "no_alert_for_skipped_runs": False,
-                    "no_alert_for_canceled_runs": False,
-                    "alert_on_last_attempt": False,
-                },
-            }
-        ],
-        "format": "MULTI_TASK",
-    }
-    job_json2 = json.dumps(optimize_job_two)
-    # Get this from a secret or param
-    headers_auth2 = {"Authorization": f"Bearer {token}"}
-    uri2 = f"https://{hostname}/api/2.1/jobs/create"
-    endp_resp2 = requests.post(uri2, data=job_json2, headers=headers_auth2).json()
-    # Run Job
-    optimize_job_two = endp_resp2["job_id"]
-    run_now_uri2 = f"https://{hostname}/api/2.1/jobs/run-now"
-    job_run_2 = {
-        "job_id": endp_resp2["job_id"],
-        "notebook_params": {
-            "Optimizer Output Database:": selected_schema,
-            "exclude_list(csv)": "",
-            "include_list(csv)": "",
-            "table_mode": "include_all_tables",
-        },
-    }
-    job_run_json2 = json.dumps(job_run_2)
-    run_resp2 = requests.post(
-        run_now_uri2, data=job_run_json2, headers=headers_auth2
-    ).json()
-    msg2 = (
-        f"Optimizer Ran with Job Id: {endp_resp2['job_id']} \n run message: {run_resp2}"
-    )
-    return html.Pre(msg2)
-
-
-@callback(
-    Output("run-strategy-output-schedule-explorer", "children"),
-    [
-        Input("checksql-explorer", "n_clicks"),
-        Input("schedule-explorer", "value"),
-        # Input("schema_selection_output1", "value"),
-    ],
-    [
-        State("schema_selection_store4", "data"),
-        State("cluster-id-store4", "data"),
-        State("user-name-store4", "data"),
-        State("hostname-store4", "data"),
-        State("token-store4", "data"),
-    ],
-    prevent_initial_call=True,
-)
-def delta_step_2_optimizer_schedule(
-    n_clicks, schedule, selected_schema, selected_cluster, user_name, hostname, token
-):
-    optimize_job_two_schedule = {
-        "name": "Delta_Optimizer_Step_2",
-        "email_notifications": {"no_alert_for_skipped_runs": False},
-        "webhook_notifications": {},
-        "timeout_seconds": 0,
-        "max_concurrent_runs": 1,
-        "schedule": {
-            "quartz_cron_expression": schedule,
-            "timezone_id": "US/Pacific",
-            "pause_status": "UNPAUSED",
-        },
-        "tasks": [
-            {
-                "task_key": "Delta_Optimizer_Step_2",
-                "notebook_task": {
-                    "notebook_path": f"/Repos/{user_name}/edw-best-practices/Delta Optimizer/Step 2_ Strategy Runner",
-                    "notebook_params": {
-                        "Optimizer Output Database:": selected_schema,
-                        "exclude_list(csv)": "",
-                        "include_list(csv)": "",
-                        "table_mode": "include_all_tables",
-                    },
-                    "source": "WORKSPACE",
-                },
-                "existing_cluster_id": f"{selected_cluster}",
-                "timeout_seconds": 0,
-                "email_notifications": {},
-                "notification_settings": {
-                    "no_alert_for_skipped_runs": False,
-                    "no_alert_for_canceled_runs": False,
-                    "alert_on_last_attempt": False,
-                },
-            }
-        ],
-        "format": "MULTI_TASK",
-    }
-    job_json2 = json.dumps(optimize_job_two_schedule)
-    # Get this from a secret or param
-    headers_auth2 = {"Authorization": f"Bearer {token}"}
-    uri2 = f"https://{hostname}/api/2.1/jobs/create"
-    endp_resp2 = requests.post(uri2, data=job_json2, headers=headers_auth2).json()
-    # Run Job
-    optimize_job_two_schedule = endp_resp2["job_id"]
-    run_now_uri2 = f"https://{hostname}/api/2.1/jobs/run-now"
-    job_run_2 = {
-        "job_id": endp_resp2["job_id"],  # Removed the curly braces
-        "notebook_params": {
-            "Optimizer Output Database:": selected_schema,
-            "exclude_list(csv)": "",
-            "include_list(csv)": "",
-            "table_mode": "include_all_tables",
-        },
-    }
-    job_run_json2 = json.dumps(job_run_2)
-    run_resp2 = requests.post(
-        run_now_uri2, data=job_run_json2, headers=headers_auth2
-    ).json()
-    msg2 = (
-        f"Optimizer Ran with Job Id: {endp_resp2['job_id']} \n run message: {run_resp2}"
-    )
-    return msg2
