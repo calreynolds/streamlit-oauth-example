@@ -2,6 +2,9 @@ import dash_mantine_components as dmc
 import dash_ag_grid as dag
 import plotly_express as px
 from dash import dcc
+from dash_iconify import DashIconify
+import plotly.graph_objects as go
+from plotly.subplots import make_subplots
 
 
 ## example:
@@ -21,78 +24,26 @@ def raw_queries_table_config(df):
     return columnDefs, rowData, sideBar
 
 
-##################################################################
-################## Most Recent Strategy Result ##################
-##################################################################
-
-
-##################################################################
-################## Table Statistics ##################
-##################################################################
-
-
-##################################################################
-################## Cardinality Sampling Statistics ##################
-##################################################################
-
-
-##################################################################
-################## Raw Queries ##################
-##################################################################
-
-
-##################################################################
-################## Most Expensive Queries ##################
-##################################################################
-
-
-##################################################################
-################## Queries Over Time - general ##################
-##################################################################
-
-
-##################################################################
-################## Top 10 Queries by Duration ##################
-##################################################################
-
-
-##################################################################
-################## Top 10 Queries by Day ##################
-##################################################################
-
-
-##################################################################
-################## Most Often Run Queries by Day ##################
-##################################################################
-
-
-##################################################################
-################## Most Expensive Merge/Delete Operations ##################
-##################################################################
-
-
-def create_accordion_item(title, children):
+def create_accordion_item(title, children, acc_icon):
     return dmc.AccordionItem(
         value=title.lower().replace(" ", "-"),
         children=[
-            dmc.AccordionControl(title),
+            dmc.AccordionControl(
+                title,
+                icon=DashIconify(
+                    icon=acc_icon,
+                    color="rgb(255 54 33)",
+                    width=20,
+                ),
+            ),
             dmc.AccordionPanel(children),
         ],
     )
 
 
-def create_top_ten_figure(df):
-    fig = px.bar(
-        df,
-        x="QueryStartTime",
-        y="TotalRuntimeOfQuery",
-        color="query_hash",
-        title="Most Greedy Queries",
-    )
-    return dcc.Graph(figure=fig)
-
-
-def create_ag_grid(df, custom_definitions=None):
+def create_ag_grid(df, ommitted_columns=None, custom_definitions=None):
+    if ommitted_columns:
+        df = df.drop(ommitted_columns, axis=1)
     if custom_definitions is None:
         columnDefs = [
             {
@@ -153,3 +104,145 @@ def create_ag_grid(df, custom_definitions=None):
             width=150,
         ),
     )
+
+
+def create_bar_chart(df, x, y, column_desc, title="", number_limit=None):
+    if column_desc and number_limit and title:
+        df = df.sort_values(column_desc, ascending=False)
+        df = df.head(number_limit)
+        fig = px.bar(
+            df,
+            x=x,
+            y=y,
+            color=y,
+            color_continuous_scale=["rgb(255, 54, 33)", "rgb(27, 49, 57)"],
+            title=title,
+        )
+    elif column_desc and title:
+        df = df.sort_values(column_desc, ascending=False)
+        fig = px.bar(
+            df,
+            x=x,
+            y=y,
+            color=y,
+            color_continuous_scale=["rgb(255, 54, 33)", "rgb(27, 49, 57)"],
+            title=title,
+        )
+    else:
+        fig = px.bar(df, x=x, y=y)
+    fig.update_layout(yaxis={"categoryorder": "total descending"})
+
+    fig.update_layout(plot_bgcolor="white")
+    fig.update_xaxes(
+        mirror=True,
+        ticks="outside",
+        showline=True,
+        linecolor="black",
+        gridcolor="lightgrey",
+    )
+    fig.update_yaxes(
+        mirror=True,
+        ticks="outside",
+        showline=True,
+        linecolor="black",
+        gridcolor="lightgrey",
+    )
+
+    return fig
+
+
+def cardinality_bar_chart(df, x, y, column_desc, title="", number_limit=None):
+    df["TableAndColumn"] = df["TableName"] + "." + df["ColumnName"]
+    if column_desc and number_limit and title:
+        df = df.sort_values(column_desc, ascending=False)
+        df = df.head(number_limit)
+        fig = px.bar(
+            df,
+            x=x,
+            y=y,
+            color=y,
+            color_continuous_scale=["rgb(255, 54, 33)", "rgb(27, 49, 57)"],
+            title=title,
+        )
+    elif column_desc and title:
+        df = df.sort_values(column_desc, ascending=False)
+        fig = px.bar(
+            df,
+            x=x,
+            y=y,
+            color=y,
+            color_continuous_scale=["rgb(255, 54, 33)", "rgb(27, 49, 57)"],
+            title=title,
+        )
+    else:
+        fig = px.bar(df, x=x, y=y)
+    fig.update_layout(yaxis={"categoryorder": "total descending"})
+
+    fig.update_layout(plot_bgcolor="white")
+    fig.update_xaxes(
+        mirror=True,
+        ticks="outside",
+        showline=True,
+        linecolor="black",
+        gridcolor="lightgrey",
+    )
+    fig.update_yaxes(
+        mirror=True,
+        ticks="outside",
+        showline=True,
+        linecolor="black",
+        gridcolor="lightgrey",
+    )
+
+    return fig
+
+
+def create_bar_line_query_daily_chart(df):
+    fig = make_subplots(specs=[[{"secondary_y": True}]])
+
+    # Add bar chart (on secondary y-axis)
+    fig.add_trace(
+        go.Bar(
+            x=df["QueryStartTime"],
+            y=df["NumberOfQueries"],
+            name="Number of Queries",
+            marker_color=["rgb(27, 49, 57)"] * len(df["QueryStartTime"]),
+        ),
+        secondary_y=False,
+    )
+
+    # Add line plot (on primary y-axis)
+    fig.add_trace(
+        go.Scatter(
+            x=df["QueryStartTime"], y=df["AverageRuntime"], name="Average Query Time"
+        ),
+        secondary_y=True,
+    )
+
+    # Add figure title
+    fig.update_layout(title_text="Average Query Time and Number of Queries")
+    fig.update_layout(plot_bgcolor="white")
+
+    # Set x-axis title
+    fig.update_xaxes(
+        title_text="Date",
+        mirror=True,
+        ticks="outside",
+        showline=True,
+        linecolor="black",
+        gridcolor="lightgrey",
+    )
+
+    # Set y-axes titles
+    fig.update_yaxes(title_text="<b>Avg Query Time</b>", secondary_y=True)
+    fig.update_yaxes(
+        title_text="<b>Number of Queries</b>",
+        secondary_y=False,
+        mirror=True,
+        ticks="outside",
+        showline=True,
+        linecolor="black",
+        gridcolor="lightgrey",
+    )
+
+    return fig

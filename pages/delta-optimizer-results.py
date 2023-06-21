@@ -3,10 +3,14 @@ from dash import html, dcc, callback, Input, Output, State
 import dash_mantine_components as dmc
 from dash_iconify import DashIconify
 from dash.exceptions import PreventUpdate
+import plotly_express as px
+import dash_mantine_components as dmc
+import dash_chart_editor as dce
+import dash_bootstrap_components as dbc
 
 import pandas as pd
 import dash_ag_grid as dag
-from databricks.connect import DatabricksSession
+
 import sqlalchemy.exc
 import os
 from configparser import ConfigParser
@@ -15,7 +19,9 @@ import result_page_table_config as comp
 from result_page_table_config import (
     create_accordion_item,
     create_ag_grid,
-    create_top_ten_figure,
+    create_bar_chart,
+    cardinality_bar_chart,
+    create_bar_line_query_daily_chart,
 )
 import json
 import requests
@@ -194,9 +200,6 @@ def populate_profile_dropdown(n_clicks, n_intervals, profile_name):
             config.has_option(section, "host")
             and config.has_option(section, "path")
             and config.has_option(section, "token")
-            and config.has_option(section, "cluster_name")
-            and config.has_option(section, "cluster_id")
-            and config.has_option(section, "user_name")
         ):
             options.append({"label": section, "value": section})
 
@@ -208,9 +211,6 @@ def populate_profile_dropdown(n_clicks, n_intervals, profile_name):
         Output("hostname-store3", "data"),
         Output("token-store3", "data"),
         Output("path-store3", "data"),
-        Output("cluster-name-store3", "data"),
-        Output("cluster-id-store3", "data"),
-        Output("user-name-store3", "data"),
     ],
     [Input("profile-dropdown-step3", "value")],
     prevent_initial_call=True,
@@ -227,14 +227,12 @@ def parse_databricks_config(profile_name):
                 host = config.get(profile_name, "host")
                 token = config.get(profile_name, "token")
                 path = config.get(profile_name, "path")
-                cluster_name = config.get(profile_name, "cluster_name")
-                cluster_id = config.get(profile_name, "cluster_id")
-                user_name = config.get(profile_name, "user_name")
+
                 host = host.replace("https://", "")
 
-                return host, token, path, cluster_name, cluster_id, user_name
+                return host, token, path
 
-    return None, None, None, None, None, None
+    return None, None, None
 
 
 @callback(
@@ -247,19 +245,16 @@ def parse_databricks_config(profile_name):
     ],
     prevent_initial_call=True,
 )
-def test_engine_and_spark_connection(profile_name, hostname, path, token):
+def test_engine_connection(profile_name, host, path, token):
     if profile_name:
         (
             host,
             token,
             path,
-            cluster_name,
-            cluster_id,
-            user_name,
         ) = parse_databricks_config(profile_name)
         if host and token and path:
             # Modify the path to remove "/sql/1.0/warehouses/"
-            sql_warehouse = path.replace("/sql/1.0/warehouses/", "")
+            # sql_warehouse = path.replace("/sql/1.0/warehouses/", "")
             engine_url = f"databricks://token:{token}@{host}/?http_path={path}&catalog=main&schema=information_schema"
             engine = create_engine(engine_url)
 
@@ -270,83 +265,30 @@ def test_engine_and_spark_connection(profile_name, hostname, path, token):
                     test_value = result.scalar()
 
                     if test_value == 1:
-                        os.environ["USER"] = "anything"
-                        spark = DatabricksSession.builder.remote(
-                            f"sc://{host}:443/;token={token};x-databricks-cluster-id={cluster_id}"
-                        ).getOrCreate()
-
-                        try:
-                            # Test the Spark connection by executing a sample SQL command
-                            spark_result = spark.sql("SELECT 1")
-                            spark_test_value = spark_result.collect()[0][0]
-
-                            if spark_test_value == 1:
-                                return dmc.LoadingOverlay(
-                                    dmc.Badge(
-                                        id="spark-connection-badge",
-                                        variant="dot",
-                                        color="green",
-                                        size="lg",
-                                        children=[
-                                            html.Span(
-                                                f"Connected to SQL Warehouse: {sql_warehouse} + Cluster: {cluster_name}"
-                                            )
-                                        ],
-                                    ),
-                                    loaderProps={
-                                        "variant": "dots",
-                                        "color": "orange",
-                                        "size": "xl",
-                                    },
-                                )
-                            elif (
-                                "SPARK CONNECTION FAILED: THE CLUSTER" in str(e).upper()
-                            ):
-                                return dmc.LoadingOverlay(
-                                    dmc.Badge(
-                                        id="spark-connection-badge",
-                                        variant="dot",
-                                        color="yellow",
-                                        size="lg",
-                                        children=[
-                                            html.Span(
-                                                f"Spark Connection Pending: {cluster_name}"
-                                            )
-                                        ],
-                                    ),
-                                    loaderProps={
-                                        "variant": "dots",
-                                        "color": "orange",
-                                        "size": "xl",
-                                    },
-                                )
-                        except Exception as e:
-                            return dmc.LoadingOverlay(
-                                dmc.Badge(
-                                    id="spark-connection-badge",
-                                    variant="dot",
-                                    color="red",
-                                    size="lg",
-                                    children=[
-                                        html.Span(f"Spark Connection failed: {str(e)}")
-                                    ],
-                                ),
-                                loaderProps={
-                                    "variant": "dots",
-                                    "color": "orange",
-                                    "size": "xl",
-                                },
-                            )
+                        return dmc.LoadingOverlay(
+                            dmc.Badge(
+                                id="engine-connection-badge",
+                                variant="dot",
+                                color="green",
+                                size="lg",
+                                children=[
+                                    html.Span(f"Connected to Workspace: {host} ")
+                                ],
+                            ),
+                            loaderProps={
+                                "variant": "dots",
+                                "color": "orange",
+                                "size": "xl",
+                            },
+                        )
             except sqlalchemy.exc.OperationalError as e:
                 return dmc.LoadingOverlay(
                     dmc.Badge(
-                        id="spark-connection-badge",
+                        id="engine-connection-badge",
                         variant="dot",
                         color="red",
                         size="lg",
-                        children=[
-                            html.Span(f"SQL Alchemy Connection failed: {str(e)}")
-                        ],
+                        children=[html.Span(f"Engine Connection failed: {str(e)}")],
                     ),
                     loaderProps={
                         "variant": "dots",
@@ -356,6 +298,11 @@ def test_engine_and_spark_connection(profile_name, hostname, path, token):
                 )
 
     return html.Div("Please select a profile.", style={"color": "orange"})
+
+
+cardinality_stats = pd.DataFrame()
+most_expensive = pd.DataFrame()
+num_queries_per_day = pd.DataFrame()
 
 
 @callback(
@@ -378,7 +325,14 @@ def create_dynamic_results_layout(n_clicks, selected_db, hostname, path, token):
     get_results_stats = f"Select * FROM {selected_db}.all_tables_table_stats"
     results_stats = pd.read_sql_query(get_results_stats, results_engine)
     get_cardinality = f"Select * FROM {selected_db}.all_tables_cardinality_stats WHERE IsUsedInReads = 1 OR IsUsedInWrites = 1"
+    global cardinality_stats
     cardinality_stats = pd.read_sql_query(get_cardinality, results_engine)
+    cardinality_stats["CardinalityProportionScaledUp"] = (
+        cardinality_stats["CardinalityProportionScaled"] * 100
+    )
+    cardinality_stats = cardinality_stats.sort_values(
+        "CardinalityProportionScaledUp", ascending=False
+    )
     get_raw_queries = f"""SELECT 
                 FROM_UNIXTIME(query_start_time_ms/1000) AS QueryStartTime,
                 FROM_UNIXTIME(query_end_time_ms/1000) AS QueryEndTime,
@@ -400,17 +354,47 @@ def create_dynamic_results_layout(n_clicks, selected_db, hostname, path, token):
               WHERE r.query_start_time_ms >= UNIX_TIMESTAMP(CURRENT_DATE() - INTERVAL 7 DAY)
               GROUP BY r.query_hash, r.query_text 
               ORDER BY TotalRuntimePerDay DESC"""
+    global most_expensive
     most_expensive = pd.read_sql_query(get_most_expensive, results_engine)
+    max = most_expensive["TotalRuntimeOfQuery"].max()
+    most_expensive["ComparativeQueryDuration"] = (
+        most_expensive["TotalRuntimeOfQuery"] * 100
+    )
+    most_expensive["ComparativeQueryDuration"] = (
+        most_expensive["ComparativeQueryDuration"] / max
+    )
+    most_expensive["ComparativeQueryDuration"] = most_expensive[
+        "ComparativeQueryDuration"
+    ].round(2)
 
-    # Convert QueryStartTime column to datetime type
-
-    # Convert QueryStartTime column to datetime type
     raw_queries["QueryStartTime"] = pd.to_datetime(raw_queries["QueryStartTime"])
+
+    raw_queries_2 = raw_queries.copy()
+    raw_queries_2["QueryStartTime"] = raw_queries_2["QueryStartTime"].dt.strftime(
+        "%m-%d-%Y"
+    )
+
+    # Group the data by date and calculate the average runtime per day
+    avg_runtime_per_day = raw_queries_2.groupby("QueryStartTime")[
+        "QueryDurationSeconds"
+    ].mean()
+
+    # Group the data by date and calculate the number of queries per day
+    global num_queries_per_day
+    num_queries_per_day = raw_queries_2.groupby("QueryStartTime")["query_hash"].count()
+
+    # Combine the two Series into a DataFrame
+    result = pd.concat([avg_runtime_per_day, num_queries_per_day], axis=1)
+    result.columns = ["AverageRuntime", "NumberOfQueries"]
+
+    # Reset index to make 'date' a column again
+    daily_queries = result.reset_index()
+
+    # -----------------------------------------------------
 
     # Filter rows based on QueryStartTime
     start_time_threshold = datetime.now() - timedelta(hours=12)
     filtered_queries = raw_queries[raw_queries["QueryStartTime"] > start_time_threshold]
-
     # Grouping and aggregation to calculate TotalQueryRuns and AvgQueryDurationSeconds
     grouped_queries = (
         filtered_queries.groupby(pd.Grouper(key="QueryStartTime", freq="Min"))
@@ -528,173 +512,265 @@ def create_dynamic_results_layout(n_clicks, selected_db, hostname, path, token):
         ]
     ]
 
-    # Print the resulting DataFrame
-    # print(by_day_results)
-
-    # get_query_runs = f"""SELECT
-    #               date_trunc('minute', QueryStartTime) AS Date,
-    #               COUNT(*) AS TotalQueryRuns,
-    #               AVG(QueryDurationSeconds) AS AvgQueryDurationSeconds
-    #           FROM ({raw_queries}
-    #           WHERE QueryStartTime > (current_timestamp() - INTERVAL '12 HOURS')
-    #           GROUP BY date_trunc('minute', QueryStartTime)
-    #           ORDER BY Date"""
-    # query_runs = pd.read_sql_query(get_query_runs, results_engine)
-    # get_total_runtime_query = f"""WITH r AS (
-    #     SELECT
-    #         date_trunc('minute', r.QueryStartTime) AS Date,
-    #         r.query_hash,
-    #         SUM(r.duration / 1000) AS TotalRuntimeOfQuery,
-    #         AVG(r.duration / 1000) AS AvgDurationOfQuery,
-    #         COUNT(r.query_id) AS TotalRunsOfQuery
-    #     FROM
-    #         {raw_queries} r -- Replace with the actual table name
-    #     WHERE
-    #         QueryStartTime > (current_timestamp() - INTERVAL '12 HOURS')
-    #     GROUP BY
-    #         date_trunc('minute', r.QueryStartTime),
-    #         r.query_hash
-    # ),
-    # s AS (
-    #     SELECT
-    #         *,
-    #         DENSE_RANK() OVER (PARTITION BY Date ORDER BY TotalRuntimeOfQuery DESC) AS PopularityRank
-    #     FROM
-    #         r
-    # )
-    # SELECT
-    #     uu.query_text,
-    #     s.*
-    # FROM
-    #     s
-    # LEFT JOIN
-    #     unique_queries uu ON uu.query_hash = s.query_hash
-    # WHERE
-    #     PopularityRank <= 10;
-    # """
-    # total_runtime_query = pd.read_sql_query(get_total_runtime_query, results_engine)
-    #     get_longest_query = f"""WITH r AS (
-    #     SELECT
-    #         date_trunc('minute', r.QueryStartTime) AS Date,
-    #         r.query_hash,
-    #         SUM(r.duration / 1000) AS TotalRuntimeOfQuery,
-    #         AVG(r.duration / 1000) AS AvgDurationOfQuery,
-    #         COUNT(r.query_id) AS TotalRunsOfQuery
-    #     FROM
-    #         {raw_queries} r
-    #     WHERE
-    #         QueryStartTime > (current_timestamp() - INTERVAL '12 HOURS')
-    #     GROUP BY
-    #         date_trunc('minute', r.QueryStartTime),
-    #         r.query_hash
-    # ),
-    # s AS (
-    #     SELECT
-    #         *,
-    #         DENSE_RANK() OVER (PARTITION BY Date ORDER BY AvgDurationOfQuery DESC) AS PopularityRank
-    #     FROM
-    #         r
-    # )
-    # SELECT
-    #     uu.query_text,
-    #     s.*
-    # FROM
-    #     s
-    # LEFT JOIN
-    #     unique_queries uu ON uu.query_hash = s.query_hash
-    # WHERE
-    #     PopularityRank <= 10;
-    # """
-    #     longest_queries = pd.read_sql_query(get_longest_query, results_engine)
-    #     get_most_often_query = "WITH r AS (SELECT date_trunc('minute', r.QueryStartTime) AS Date,r.query_hash, SUM(r.duration/1000) AS TotalRuntimeOfQuery,AVG(r.duration/1000) AS AvgDurationOfQuery, COUNT(r.query_id) AS TotalRunsOfQuery FROM raw_queries r WHERE QueryStartTime > (current_timestamp() - INTERVAL 12 HOURS) GROUP BY date_trunc('minute', r.QueryStartTime), r.query_hash),s as (SELECT *,DENSE_RANK() OVER (PARTITION BY Date ORDER BY TotalRunsOfQuery DESC) AS PopularityRank FROM r)SELECT uu.query_text,s.* FROM s LEFT JOIN unique_queries uu ON uu.query_hash = s.query_hash WHERE PopularityRank <= 10"
-    #     most_often_query = pd.read_sql_query(get_most_often_query, results_engine)
-
     get_merge_expense = f"SELECT * FROM {selected_db}.write_statistics_merge_predicate"
     merge_expense = pd.read_sql_query(get_merge_expense, results_engine)
-    # print(raw_queries)
-    # query_start_time = raw_queries["QueryStartTime"].values
-    # query_end_time = raw_queries["QueryEndTime"].values
-    # query_duration_seconds = raw_queries["QueryDurationSeconds"].values
-    # if selected_db is not None:
-    #     ins = rawquery_tbl.insert().values(
-    #         QueryStartTime=query_start_time,
-    #         QueryEndTime=query_end_time,
-    #         QueryDurationSeconds=query_duration_seconds,
-    #     )
-    #     conn = sound_engine.connect()
-    #     conn.execute(ins)
-    #     conn.close()
+
     return dmc.AccordionMultiple(
         children=[
             create_accordion_item(
                 "Most Recent Strategy Result",
-                [create_ag_grid(optimizer_results)],
+                [
+                    create_ag_grid(
+                        optimizer_results,
+                        [
+                            "UpdateTimestamp",
+                        ],
+                    )
+                ],
+                "mdi:recent",
             ),
             create_accordion_item(
                 "Table Statistics",
-                [create_ag_grid(results_stats)],
+                [
+                    dcc.Graph(
+                        figure=create_bar_chart(
+                            results_stats,
+                            "TableName",
+                            "sizeInGB",
+                            "sizeInGB",
+                            "Top 10 Tables by Size (GB)",
+                            10,
+                        )
+                    ),
+                    create_ag_grid(
+                        results_stats,
+                        ["UpdateTimestamp", "sizeInBytes"],
+                    ),
+                ],
+                "wpf:statistics",
             ),
             create_accordion_item(
                 "Cardinality Sampling Statistics",
-                [create_ag_grid(cardinality_stats)],
+                [
+                    # dcc.Graph(
+                    #     id="cardinality_bar",
+                    # ),
+                    # dmc.Center(
+                    #     style={"height": 50, "width": "100%"},
+                    #     children=[
+                    #         dmc.Group(
+                    #             children=[
+                    #                 dmc.Checkbox(
+                    #                     id="reads",
+                    #                     label="Tables used in Reads",
+                    #                     size="xl",
+                    #                     checked=True,
+                    #                 ),
+                    #                 dmc.Checkbox(
+                    #                     id="writes",
+                    #                     label="Tables used in Writes",
+                    #                     size="xl",
+                    #                     checked=True,
+                    #                 ),
+                    #             ],
+                    #         )
+                    #     ],
+                    # ),
+                    html.Div(
+                        dag.AgGrid(
+                            id="cardinality-ag-grid",
+                            columnDefs=[
+                                {"field": "TableName"},
+                                {
+                                    "field": "CardinalityProportionScaledUp",
+                                    "cellRenderer": "DBC_Progress",
+                                    "cellRendererParams": {
+                                        "color": "rgb(27, 49, 57)",
+                                        "label": True,
+                                        "striped": True,
+                                        "style": {"height": 30},
+                                        "animated": True,
+                                    },
+                                },
+                                {"field": "ColumnName"},
+                                {"field": "SampleSize"},
+                                {"field": "TotalCountInSample"},
+                                {"field": "CardinalityProportionScaled"},
+                                {"field": "CardinalityProportion"},
+                            ],
+                            rowData=cardinality_stats.to_dict(
+                                orient="records"
+                            ),  # Convert DataFrame to list of dicts
+                            columnSize="sizeToFit",
+                            style={"height": "550px"},
+                            dashGridOptions={
+                                "rowSelection": "multiple",
+                            },
+                            defaultColDef=dict(
+                                resizable=True,
+                                editable=True,
+                                sortable=True,
+                                autoHeight=True,
+                                width=250,
+                            ),
+                        )
+                    ),
+                ],
+                "material-symbols:bar-chart-4-bars",
             ),
-            create_accordion_item("Raw Queries", [create_ag_grid(raw_queries)]),
             create_accordion_item(
-                "Most Expensive Queries", [create_ag_grid(most_expensive)]
+                "Day-by-day Query Analysis",
+                [
+                    dcc.Graph(
+                        id="daytoday",
+                        figure=create_bar_line_query_daily_chart(daily_queries),
+                    ),
+                ],
+                "ph:calendar",
             ),
             create_accordion_item(
-                "Queries Over Time - general", [create_ag_grid(grouped_queries)]
+                "Most Expensive Queries",
+                [
+                    # dcc.Graph(
+                    #     figure=create_bar_chart(
+                    #         most_expensive,
+                    #         "query_hash",
+                    #         "TotalRuntimePerDay",
+                    #         "TotalRuntimePerDay",
+                    #         "Longest Cumulative Running Queries Per Day (Drag and Drop to filter down for advanced analysis)",
+                    #     ),
+                    #     id="expensive-bar-chart",
+                    # ),
+                    html.Div(
+                        dag.AgGrid(
+                            id="expensiveAGGrid",
+                            columnDefs=[
+                                {"field": "query_hash"},
+                                {
+                                    "field": "ComparativeQueryDuration",
+                                    "cellRenderer": "DBC_Progress2",
+                                    "cellRendererParams": {
+                                        "color": "rgb(27, 49, 57)",
+                                        "label": True,
+                                        "striped": True,
+                                        "style": {"height": 30},
+                                        "animated": True,
+                                    },
+                                },
+                                {"field": "TotalRuntimeOfQuery"},
+                                {"field": "query_text"},
+                                {"field": "AvgDurationOfQuery"},
+                                {"field": "TotalRunsOfQuery"},
+                                {"field": "QueriesPerDay"},
+                                {"field": "TotalRuntimePerDay"},
+                            ],
+                            rowData=most_expensive.to_dict(
+                                orient="records"
+                            ),  # Convert DataFrame to list of dicts
+                            columnSize="sizeToFit",
+                            style={"height": "550px"},
+                            dashGridOptions={
+                                "rowSelection": "multiple",
+                            },
+                            defaultColDef=dict(
+                                resizable=True,
+                                editable=True,
+                                sortable=True,
+                                autoHeight=True,
+                                width=250,
+                            ),
+                        )
+                    ),
+                ],
+                "streamline:money-cash-search-dollar-search-pay-product-currency-query-magnifying-cash-business-money-glass",
             ),
-            create_accordion_item(
-                "Top 10 Queries by Duration", [create_ag_grid(result_data)]
-            ),
-            create_accordion_item(
-                "Top 10 Queries by Duration Viz", [create_top_ten_figure(result_data)]
-            ),
-            create_accordion_item(
-                "Top 10 Queries by Day", [create_ag_grid(by_day_results)]
-            ),
-            # create_accordion_item(
-            #     "Most Often Run Queries by Day", [create_ag_grid(most_often_query)]
-            # ),
             create_accordion_item(
                 "Most Expensive Merge/Delete Operations",
                 [create_ag_grid(merge_expense)],
+                "ph:git-merge",
+            ),
+            create_accordion_item(
+                "Raw Queries", [create_ag_grid(raw_queries)], "game-icons:raw-egg"
+            ),
+            create_accordion_item(
+                "Dash Chart Editor Query Explorer",
+                [
+                    html.Div(
+                        [
+                            html.H4(
+                                "Use Dash Chart Editor to create an interactive visualization."
+                            ),
+                            dce.DashChartEditor(
+                                dataSources=most_expensive.to_dict("list"),
+                                loadFigure=px.bar(
+                                    most_expensive.sort_values(
+                                        "AvgDurationOfQuery", ascending=False
+                                    ),
+                                    "query_hash",
+                                    "AvgDurationOfQuery",
+                                ).update_layout(
+                                    xaxis={
+                                        "tickmode": "array",
+                                        "tickvals": list(
+                                            range(len(most_expensive["query_hash"]))
+                                        ),
+                                        "ticktext": most_expensive["query_hash"]
+                                        .str.slice(-8)
+                                        .tolist(),
+                                    }
+                                ),
+                            ),
+                        ]
+                    ),
+                    create_ag_grid(most_expensive, ["TotalRuntimePerDay"]),
+                ],
+                "mdi:mountain",
             ),
         ],
     )
 
 
-# @callback(
-#     Output("sqlalchemycheck", "children"),
-#     [Input("output-db-select", "value")],
-# )
-# def write_temp_view(selected_db):
-#     stmt = f"""
-#     SELECT
-#         FROM_UNIXTIME(query_start_time_ms/1000) AS QueryStartTime,
-#         FROM_UNIXTIME(query_end_time_ms/1000) AS QueryEndTime,
-#         duration/1000 AS QueryDurationSeconds
-#     FROM
-#         main.{selected_db}.raw_query_history_statistics
-# """
+@callback(
+    Output("cardinality_bar", "figure"),
+    Output("cardinality-ag-grid", "rowData"),
+    [Input("reads", "checked"), Input("writes", "checked")],
+)
+def update_cardinality(reads, writes):
+    if reads and writes:
+        filtered_df = cardinality_stats
+    elif reads and not writes:
+        filtered_df = cardinality_stats[cardinality_stats["IsUsedInReads"] == 1]
+    elif not reads and writes:
+        filtered_df = cardinality_stats[cardinality_stats["IsUsedInWrites"] == 1]
+    else:
+        filtered_df = pd.DataFrame()  # empty DataFrame
+        return None, filtered_df
 
-#     raw_queries = pd.read_sql_query(stmt, sound_engine)
-#     QueryStartTime = raw_queries["QueryStartTime"]
-#     QueryEndTime = raw_queries["QueryEndTime"]
-#     QueryDurationSeconds = raw_queries["QueryDurationSeconds"]
+    fig = cardinality_bar_chart(
+        filtered_df,
+        "TableAndColumn",
+        "CardinalityProportionScaled",
+        "CardinalityProportionScaled",
+        "Tables sorted by highest cardinality (proportion of unique data values)",
+    )
 
-#     if selected_db is not None:
-#         ins = rawquery_tbl.insert().values(
-#             QueryStartTime=QueryStartTime,
-#             QueryEndTime=QueryEndTime,
-#             QueryDurationSeconds=QueryDurationSeconds,
-#         )
-#         conn = sound_engine.connect()
-#         conn.execute(ins)
-#         conn.close()
+    return fig, filtered_df.to_dict(orient="records")
 
-#     return "success"
+
+@callback(
+    Output("expensiveAGGrid", "rowData"), Input("expensive-bar-chart", "selectedData")
+)
+def update_expensive_ag_grid(selected_data):
+    # print("selected_data", selected_data)
+    if not selected_data:
+        return most_expensive.to_dict(orient="records")
+    else:
+        points = selected_data["points"]
+        selected_indices = [point["label"] for point in points]
+        filtered_df = most_expensive[
+            most_expensive["query_hash"].isin(selected_indices)
+        ]
+        return filtered_df.to_dict(orient="records")
 
 
 #################################

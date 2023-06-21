@@ -5,7 +5,6 @@ import requests
 from dash import html, callback, Input, Output, ctx, dcc, State
 import dash_mantine_components as dmc
 import subprocess
-from databricks.connect import DatabricksSession
 import sqlalchemy.exc
 from configparser import ConfigParser
 
@@ -61,6 +60,11 @@ def layout():
                     ),
                     dmc.Button("Schedule", id="checksql", variant="outline"),
                     dmc.TextInput(id="schedule", type="text", value="0 0 10 * * ?"),
+                    dmc.Button(
+                        "Refresh",
+                        id="refresh-button-step2",
+                        variant="default",
+                    ),
                     html.Div(
                         id="engine-test-result-step2",
                         style={
@@ -88,22 +92,100 @@ def layout():
                                     "left": "40px",
                                     "top": "0px",
                                 },
-                            )
+                            ),
                         ],
                     ),
                 ],
             ),
-            dmc.Space(h=10),
-            dmc.Button(
-                "Refresh",
-                id="refresh-button-step2",
-                variant="default",
+            dmc.Space(h=40),
+            html.Div(
+                [
+                    dmc.Slider(
+                        id="slider-callback",
+                        value=26,
+                        min=2,
+                        max=20,
+                        marks=[
+                            {"value": 4, "label": "4 Workers"},
+                            {"value": 10, "label": "10 Workers"},
+                            {"value": 18, "label": "18 Workers"},
+                        ],
+                        mb=35,
+                    ),
+                    dmc.Text(id="slider-output"),
+                ]
             ),
-            dmc.Text(id="run-strategy-output"),
             dmc.Space(h=10),
-            dmc.Text(id="run-strategy-output-schedule"),
+            dmc.Tabs(
+                [
+                    dmc.TabsList(
+                        [
+                            dmc.Tab("Strategy Picker", value="Strategy Picker"),
+                            dmc.Tab("Jobs Console", value="Jobs Console"),
+                        ]
+                    ),
+                    dmc.TabsPanel(
+                        html.Div(
+                            [
+                                dmc.Text(id="run-strategy-output"),
+                                dmc.Space(h=10),
+                                dmc.Text(id="run-strategy-output-schedule"),
+                                dmc.Space(h=10),
+                                html.Div(id="load-optimizer-grid-step2"),
+                                dmc.Space(h=10),
+                                html.Div(id="table_selection_output_now"),
+                            ]
+                        ),
+                        value="Strategy Picker",
+                    ),
+                    dmc.TabsPanel(
+                        html.Div(
+                            [
+                                dmc.Space(h=10),
+                                html.Div(id="jobs-grid"),
+                                dmc.Space(h=20),
+                                dmc.Group(
+                                    position="left",
+                                    children=[
+                                        dmc.Button(
+                                            "Delete Selected Jobs", id="delete-button"
+                                        ),
+                                        dmc.TextInput(
+                                            id="new-cron-expression",
+                                            type="text",
+                                            value="0 0 10 * * ?",
+                                        ),
+                                        dmc.Button(
+                                            "Update Schedule",
+                                            id="update-schedule-button",
+                                            variant="default",
+                                        ),
+                                        dmc.Button(
+                                            "Pause/Unpase Selected Jobs",
+                                            id="pause-button",
+                                            variant="outline",
+                                        ),
+                                        # dmc.Button(
+                                        #     "Unpause Selected Jobs",
+                                        #     id="unpause-button",
+                                        #     variant="outline",
+                                        # ),
+                                    ],
+                                ),
+                                html.Div(id="pause-message"),
+                                html.Div(id="job_selection_output1"),
+                                html.Div(id="schedule-change-message"),
+                                html.Div(id="delete-message"),
+                                html.Div(id="run-list"),
+                            ]
+                        ),
+                        value="Jobs Console",
+                    ),
+                ],
+                value="Job Runner",
+            ),
+            dmc.Space(h=10),
             dmc.Space(h=30),
-            html.Div(id="load-optimizer-grid-step2"),
             dmc.Space(h=20),
             dmc.Space(h=20),
             dmc.Text(id="container-button-timestamp", align="center"),
@@ -117,10 +199,62 @@ def layout():
             dcc.Store(id="cluster-id-store2", storage_type="memory"),
             dcc.Store(id="cluster-name-store2", storage_type="memory"),
             dcc.Store(id="user-name-store2", storage_type="memory"),
+            dcc.Store(id="job_selection_store1", storage_type="memory"),
+            dcc.Store(id="job_grid_step2", storage_type="memory"),
+            dcc.Store(id="slider_store", storage_type="memory"),
             dcc.Interval(id="interval2", interval=86400000, n_intervals=0),
-            html.Div(id="table_selection_output_now"),
         ]
     )
+
+
+@callback(
+    Output("slider-output", "children"),
+    Output("slider_store", "data"),
+    Input("slider-callback", "value"),
+    State("slider_store", "data"),
+)
+def update_value(value, slider_data):
+    slider_data = int(slider_data) if slider_data else None
+    return f"You have selected: {value}", slider_data
+
+
+@callback(
+    Output("run-list", "children"),
+    Input("job_selection_store1", "data"),
+    State("hostname-store2", "data"),
+    State("token-store2", "data"),
+    prevent_initial_call=True,
+)
+def get_job_runs(job_id, hostname, token):
+    if job_id:
+        # Make a GET request to the Runs API
+        url = f"https://{hostname}/api/2.1/jobs/runs/list"
+        headers = {"Authorization": f"Bearer {token}"}
+        params = {"job_id": job_id}
+        response = requests.get(url, headers=headers, params=params)
+
+        # Check if the request was successful
+        if response.status_code == 200:
+            # Extract the run information from the response
+            run_list = response.json().get("runs", [])
+
+            # Create a list of HTML elements to display the runs
+            run_divs = [
+                html.Div(
+                    [
+                        html.Div(f"Run ID: {run['run_id']}"),
+                        html.Div(f"Status: {run['state']['life_cycle_state']}"),
+                        html.Div(f"Start Time: {run['start_time']}"),
+                        html.Div(f"End Time: {run['end_time']}"),
+                        # Add more fields as needed
+                    ]
+                )
+                for run in run_list
+            ]
+
+            return run_divs
+
+    return html.Div("No job selected.")
 
 
 @callback(
@@ -128,9 +262,9 @@ def layout():
         Output("hostname-store2", "data"),
         Output("token-store2", "data"),
         Output("path-store2", "data"),
-        Output("cluster-name-store2", "data"),
-        Output("cluster-id-store2", "data"),
-        Output("user-name-store2", "data"),
+        # Output("cluster-name-store2", "data"),
+        # Output("cluster-id-store2", "data"),
+        # Output("user-name-store2", "data"),
     ],
     [Input("profile-dropdown-step2", "value")],
     prevent_initial_call=True,
@@ -147,14 +281,14 @@ def parse_databricks_config(profile_name):
                 host = config.get(profile_name, "host")
                 token = config.get(profile_name, "token")
                 path = config.get(profile_name, "path")
-                cluster_name = config.get(profile_name, "cluster_name")
-                cluster_id = config.get(profile_name, "cluster_id")
-                user_name = config.get(profile_name, "user_name")
+                # cluster_name = config.get(profile_name, "cluster_name")
+                # cluster_id = config.get(profile_name, "cluster_id")
+                # user_name = config.get(profile_name, "user_name")
                 host = host.replace("https://", "")
 
-                return host, token, path, cluster_name, cluster_id, user_name
+                return host, token, path
 
-    return None, None, None, None, None, None
+    return None, None, None
 
 
 @callback(
@@ -178,9 +312,9 @@ def populate_profile_dropdown(n_clicks, n_intervals, profile_name):
             config.has_option(section, "host")
             and config.has_option(section, "path")
             and config.has_option(section, "token")
-            and config.has_option(section, "cluster_name")
-            and config.has_option(section, "cluster_id")
-            and config.has_option(section, "user_name")
+            # and config.has_option(section, "cluster_name")
+            # and config.has_option(section, "cluster_id")
+            # and config.has_option(section, "user_name")
         ):
             options.append({"label": section, "value": section})
 
@@ -189,9 +323,9 @@ def populate_profile_dropdown(n_clicks, n_intervals, profile_name):
             host,
             token,
             path,
-            cluster_name,
-            cluster_id,
-            user_name,
+            # cluster_name,
+            # cluster_id,
+            # user_name,
         ) = parse_databricks_config(profile_name)
         if host and token and path:
             engine_url = f"databricks://token:{token}@{host}/?http_path={path}&catalog=main&schema=information_schema"
@@ -201,33 +335,35 @@ def populate_profile_dropdown(n_clicks, n_intervals, profile_name):
             tables_in_db = pd.read_sql_query(tables_stmt, big_engine)
 
             columnDefs = [
+                # {
+                #     "headerName": "Table Name",
+                #     "field": "table_name",
+                #     "checkboxSelection": True,
+                #     "headerCheckboxSelection": True,
+                #     "filter": True,
+                #     "floatingFilter": True,
+                #     "filterParams": {
+                #         "buttons": ["apply", "reset"],
+                #     },
+                #     "minWidth": 180,
+                # },
                 {
-                    "headerName": "Table Name",
-                    "field": "table_name",
+                    "headerName": "Strategy Name",
+                    "field": "table_schema",
                     "checkboxSelection": True,
                     "headerCheckboxSelection": True,
                     "filter": True,
                     "floatingFilter": True,
-                    "filterParams": {
-                        "buttons": ["apply", "reset"],
-                    },
-                    "minWidth": 180,
-                },
-                {
-                    "headerName": "Database Name",
-                    "field": "table_schema",
-                    "filter": True,
-                    "floatingFilter": True,
                     "filterParams": {"buttons": ["apply", "reset"]},
                     "minWidth": 180,
                 },
-                {
-                    "headerName": "Catalog Name",
-                    "field": "table_catalog",
-                    "filter": True,
-                    "floatingFilter": True,
-                    "filterParams": {"buttons": ["apply", "reset"]},
-                },
+                # {
+                #     "headerName": "Catalog Name",
+                #     "field": "table_catalog",
+                #     "filter": True,
+                #     "floatingFilter": True,
+                #     "filterParams": {"buttons": ["apply", "reset"]},
+                # },
                 {
                     "headerName": "Creator",
                     "field": "created_by",
@@ -324,19 +460,16 @@ def populate_profile_dropdown(n_clicks, n_intervals, profile_name):
     ],
     prevent_initial_call=True,
 )
-def test_engine_and_spark_connection(profile_name, hostname, path, token):
+def test_engine_connection(profile_name, host, path, token):
     if profile_name:
         (
             host,
             token,
             path,
-            cluster_name,
-            cluster_id,
-            user_name,
         ) = parse_databricks_config(profile_name)
         if host and token and path:
             # Modify the path to remove "/sql/1.0/warehouses/"
-            sql_warehouse = path.replace("/sql/1.0/warehouses/", "")
+            # sql_warehouse = path.replace("/sql/1.0/warehouses/", "")
             engine_url = f"databricks://token:{token}@{host}/?http_path={path}&catalog=main&schema=information_schema"
             engine = create_engine(engine_url)
 
@@ -347,83 +480,30 @@ def test_engine_and_spark_connection(profile_name, hostname, path, token):
                     test_value = result.scalar()
 
                     if test_value == 1:
-                        os.environ["USER"] = "anything"
-                        spark = DatabricksSession.builder.remote(
-                            f"sc://{host}:443/;token={token};x-databricks-cluster-id={cluster_id}"
-                        ).getOrCreate()
-
-                        try:
-                            # Test the Spark connection by executing a sample SQL command
-                            spark_result = spark.sql("SELECT 1")
-                            spark_test_value = spark_result.collect()[0][0]
-
-                            if spark_test_value == 1:
-                                return dmc.LoadingOverlay(
-                                    dmc.Badge(
-                                        id="spark-connection-badge",
-                                        variant="dot",
-                                        color="green",
-                                        size="lg",
-                                        children=[
-                                            html.Span(
-                                                f"Connected to SQL Warehouse: {sql_warehouse} + Cluster: {cluster_name}"
-                                            )
-                                        ],
-                                    ),
-                                    loaderProps={
-                                        "variant": "dots",
-                                        "color": "orange",
-                                        "size": "xl",
-                                    },
-                                )
-                            elif (
-                                "SPARK CONNECTION FAILED: THE CLUSTER" in str(e).upper()
-                            ):
-                                return dmc.LoadingOverlay(
-                                    dmc.Badge(
-                                        id="spark-connection-badge",
-                                        variant="dot",
-                                        color="yellow",
-                                        size="lg",
-                                        children=[
-                                            html.Span(
-                                                f"Spark Connection Pending: {cluster_name}"
-                                            )
-                                        ],
-                                    ),
-                                    loaderProps={
-                                        "variant": "dots",
-                                        "color": "orange",
-                                        "size": "xl",
-                                    },
-                                )
-                        except Exception as e:
-                            return dmc.LoadingOverlay(
-                                dmc.Badge(
-                                    id="spark-connection-badge",
-                                    variant="dot",
-                                    color="red",
-                                    size="lg",
-                                    children=[
-                                        html.Span(f"Spark Connection failed: {str(e)}")
-                                    ],
-                                ),
-                                loaderProps={
-                                    "variant": "dots",
-                                    "color": "orange",
-                                    "size": "xl",
-                                },
-                            )
+                        return dmc.LoadingOverlay(
+                            dmc.Badge(
+                                id="engine-connection-badge",
+                                variant="dot",
+                                color="green",
+                                size="lg",
+                                children=[
+                                    html.Span(f"Connected to Workspace: {host} ")
+                                ],
+                            ),
+                            loaderProps={
+                                "variant": "dots",
+                                "color": "orange",
+                                "size": "xl",
+                            },
+                        )
             except sqlalchemy.exc.OperationalError as e:
                 return dmc.LoadingOverlay(
                     dmc.Badge(
-                        id="spark-connection-badge",
+                        id="engine-connection-badge",
                         variant="dot",
                         color="red",
                         size="lg",
-                        children=[
-                            html.Span(f"SQL Alchemy Connection failed: {str(e)}")
-                        ],
+                        children=[html.Span(f"Engine Connection failed: {str(e)}")],
                     ),
                     loaderProps={
                         "variant": "dots",
@@ -433,6 +513,288 @@ def test_engine_and_spark_connection(profile_name, hostname, path, token):
                 )
 
     return html.Div("Please select a profile.", style={"color": "orange"})
+
+
+@callback(
+    Output("job_selection_output1", "children"),
+    Output("job_selection_store1", "data"),
+    Input("job-grid-step2", "selectedRows"),
+)
+def display_selected_jobs(selected_rows):
+    if selected_rows:
+        selected_jobs = [selected_rows[i]["job_id"] for i in range(len(selected_rows))]
+        selected_jobs_list = [html.Li(str(job_id)) for job_id in selected_jobs]
+        return selected_jobs_list, selected_jobs
+
+    return html.Div("No selections"), []
+
+
+import subprocess
+
+
+@callback(
+    Output("delete-message", "children"),
+    Input("delete-button", "n_clicks"),
+    State("job-grid-step2", "selectedRows"),
+    State("hostname-store2", "data"),
+    State("token-store2", "data"),
+    prevent_initial_call=True,
+)
+def delete_selected_jobs(n_clicks, selected_rows, hostname, token):
+    if n_clicks is not None and n_clicks > 0:
+        if not selected_rows:
+            return html.Div("Please select jobs to delete.")
+
+        # Get the selected job IDs
+        selected_job_ids = [row["job_id"] for row in selected_rows]
+
+        # Delete each selected job using CLI command
+        delete_count = 0
+
+        for job_id in selected_job_ids:
+            cli_command = f"databricks jobs delete --job-id {job_id}"
+            process = subprocess.Popen(cli_command, shell=True)
+            process.wait()
+
+            if process.returncode == 0:
+                delete_count += 1
+
+        if delete_count > 0:
+            return html.Div(f"{delete_count} jobs deleted successfully.")
+        else:
+            return html.Div("Error deleting jobs.")
+
+    return html.Div()
+
+
+@callback(
+    Output("pause-message", "children"),
+    Input("pause-button", "n_clicks"),
+    State("job-grid-step2", "selectedRows"),
+    State("hostname-store2", "data"),
+    State("token-store2", "data"),
+    prevent_initial_call=True,
+)
+def toggle_pause_selected_jobs(n_clicks, selected_rows, hostname, token):
+    if n_clicks is not None and n_clicks > 0:
+        if not selected_rows:
+            return html.Div("Please select jobs to toggle pause status.")
+
+        # Get the selected job IDs
+        selected_job_ids = [row["job_id"] for row in selected_rows]
+
+        # Toggle pause/unpause status for each selected job
+        toggle_count = 0
+
+        for job_id in selected_job_ids:
+            # Make a GET request to the Jobs API to retrieve the current job details
+            url = f"https://{hostname}/api/2.1/jobs/get"
+            headers = {"Authorization": f"Bearer {token}"}
+            params = {"job_id": job_id}
+            response = requests.get(url, headers=headers, params=params)
+
+            if response.status_code == 200:
+                job_details = response.json()
+                job_details["new_settings"] = job_details.pop("settings")
+
+                current_pause_status = job_details["new_settings"]["schedule"].get(
+                    "pause_status"
+                )
+                new_pause_status = (
+                    "PAUSED" if current_pause_status == "UNPAUSED" else "UNPAUSED"
+                )
+
+                # Update the payload with the new pause status
+                payload = {
+                    **job_details,
+                    "new_settings": {
+                        **job_details["new_settings"],
+                        "schedule": {
+                            **job_details["new_settings"]["schedule"],
+                            "pause_status": new_pause_status,
+                        },
+                    },
+                }
+
+                # Send the payload to the Jobs API to update the job
+                update_url = f"https://{hostname}/api/2.1/jobs/reset"
+                headers = {"Authorization": f"Bearer {token}"}
+                response_new = requests.post(update_url, headers=headers, json=payload)
+                print(payload)
+                print(response_new.status_code)
+
+                if response_new.status_code == 200:
+                    toggle_count += 1
+
+        if toggle_count > 0:
+            return html.Div(f"{toggle_count} jobs have been toggled successfully.")
+        else:
+            return html.Div("Error toggling pause status for jobs.")
+
+    return html.Div()
+
+
+import subprocess
+import json
+
+
+@callback(
+    Output("schedule-change-message", "children"),
+    Input("update-schedule-button", "n_clicks"),
+    State("job-grid-step2", "selectedRows"),
+    State("new-cron-expression", "value"),
+    State("hostname-store2", "data"),
+    State("token-store2", "data"),
+    prevent_initial_call=True,
+)
+def change_schedule(n_clicks, selected_rows, new_schedule, hostname, token):
+    if n_clicks is not None and n_clicks > 0:
+        if not selected_rows:
+            return html.Div("Please select a job to update its schedule.")
+
+        job_id = selected_rows[0]["job_id"]  # Assuming only one job is selected
+
+        # Prepare the payload with the updated schedule
+        payload = {
+            "job_id": job_id,
+            "new_settings": {
+                "schedule": {
+                    "quartz_cron_expression": new_schedule,
+                    "timezone_id": "US/Pacific",  # Set the desired timezone ID
+                }
+            },
+        }
+
+        # Make a POST request to update the job schedule
+        url = f"https://{hostname}/api/2.1/jobs/update"
+        headers = {"Authorization": f"Bearer {token}"}
+        response = requests.post(url, headers=headers, json=payload)
+
+        if response.status_code == 200:
+            return html.Div("Schedule updated successfully.")
+        else:
+            return html.Div(f"Error updating schedule: {response.text}")
+
+    return html.Div()
+
+
+@callback(
+    Output("jobs-grid", "children"),
+    Input("refresh-button-step2", "n_clicks"),
+    State("hostname-store2", "data"),
+    State("token-store2", "data"),
+)
+def get_job_list(n_clicks, workspace_url, access_token):
+    if n_clicks is not None and n_clicks > 0:
+        # Make a GET request to the Jobs API
+        response = requests.get(
+            f"https://{workspace_url}/api/2.1/jobs/list",
+            headers={"Authorization": f"Bearer {access_token}"},
+        )
+
+        # Check if the request was successful
+        if response.status_code == 200:
+            # Extract the job information from the response
+            job_list = response.json().get("jobs", [])
+
+            # Convert the job list to a Pandas DataFrame
+            df = pd.DataFrame(job_list)
+
+            # Select columns to display in the table
+
+            columnDefs = [
+                {
+                    "headerName": "Job ID",
+                    "field": "job_id",
+                    "checkboxSelection": True,
+                    "headerCheckboxSelection": True,
+                    "filter": True,
+                    "floatingFilter": True,
+                    "filterParams": {
+                        "buttons": ["apply", "reset"],
+                    },
+                    "minWidth": 180,
+                },
+                {
+                    "headerName": "Job Name",
+                    "field": "settings.name",
+                    "filter": True,
+                    "floatingFilter": True,
+                    "filterParams": {"buttons": ["apply", "reset"]},
+                    "minWidth": 180,
+                },
+                {
+                    "headerName": "Schedule",
+                    "field": "settings.schedule.quartz_cron_expression",
+                    "filter": True,
+                    "floatingFilter": True,
+                    "filterParams": {"buttons": ["apply", "reset"]},
+                },
+                {
+                    "headerName": "Timezone",
+                    "field": "settings.schedule.timezone_id",
+                    "filter": True,
+                    "floatingFilter": True,
+                    "filterParams": {"buttons": ["apply", "reset"]},
+                    "minWidth": 180,
+                },
+                {
+                    "headerName": "Pause Status",
+                    "field": "settings.schedule.pause_status",
+                    "filter": True,
+                    "floatingFilter": True,
+                    "filterParams": {"buttons": ["apply", "reset"]},
+                    "minWidth": 180,
+                },
+                {
+                    "headerName": "Creator",
+                    "field": "creator_user_name",
+                    "filter": True,
+                    "floatingFilter": True,
+                    "filterParams": {"buttons": ["apply", "reset"]},
+                    "minWidth": 180,
+                },
+                {
+                    "headerName": "Created On",
+                    "field": "created_time",
+                    "filter": True,
+                    "floatingFilter": True,
+                    "filterParams": {"buttons": ["apply", "reset"]},
+                    "minWidth": 180,
+                },
+            ]
+
+            rowData = df.to_dict("records")
+
+            jobs_grid = [
+                dag.AgGrid(
+                    id="job-grid-step2",
+                    enableEnterpriseModules=True,
+                    columnDefs=columnDefs,
+                    rowData=rowData,
+                    style={"height": "550px"},
+                    dashGridOptions={"rowSelection": "multiple", "sideBar": sideBar},
+                    columnSize="sizeToFit",
+                    defaultColDef=dict(
+                        resizable=True,
+                        editable=True,
+                        sortable=True,
+                        autoHeight=True,
+                        width=90,
+                    ),
+                ),
+            ]
+
+            # Return the jobs_grid
+            return jobs_grid
+
+    # Return an empty list if the button hasn't been clicked yet or the request was not successful
+    return []
+
+    # Return an empty DataFram
+
+    # Return an empty div if the button hasn't been clicked yet
+    return html.Div()
 
 
 @callback(
@@ -467,9 +829,9 @@ def create_ag_grid(selected_table, profile_name):
             config.has_option(section, "host")
             and config.has_option(section, "path")
             and config.has_option(section, "token")
-            and config.has_option(section, "cluster_name")
-            and config.has_option(section, "cluster_id")
-            and config.has_option(section, "user_name")
+            # and config.has_option(section, "cluster_name")
+            # and config.has_option(section, "cluster_id")
+            # and config.has_option(section, "user_name")
         ):
             options.append({"label": section, "value": section})
 
@@ -478,9 +840,9 @@ def create_ag_grid(selected_table, profile_name):
             host,
             token,
             path,
-            cluster_name,
-            cluster_id,
-            user_name,
+            # cluster_name,
+            # cluster_id,
+            # user_name,
         ) = parse_databricks_config(profile_name)
         if host and token and path:
             engine_url = f"databricks://token:{token}@{host}/?http_path={path}&catalog=main&schema=information_schema"
@@ -579,20 +941,17 @@ def tables(selected):
     [
         Input("run-strategy-button", "n_clicks"),
     ],
+    State("slider-callback", "value"),
     State("schema_selection_store1", "data"),
-    State("cluster-id-store2", "data"),
-    State("user-name-store2", "data"),
+    # State("cluster-id-store2", "data"),
+    # State("user-name-store2", "data"),
     State("hostname-store2", "data"),
     State("token-store2", "data"),
     prevent_initial_call=True,
 )
-def delta_step_2_optimizer(
-    n_clicks, selected_schema, selected_cluster, user_name, hostname, token
-):
-    if not selected_cluster:
-        return "Please select a cluster first."
+def delta_step_2_optimizer(n_clicks, slider, selected_schema, hostname, token):
     optimize_job_two = {
-        "name": "Delta_Optimizer_Step_2",
+        "name": f"{selected_schema} Optimizer Run",
         "email_notifications": {"no_alert_for_skipped_runs": False},
         "webhook_notifications": {},
         "timeout_seconds": 0,
@@ -606,16 +965,35 @@ def delta_step_2_optimizer(
             {
                 "task_key": "Delta_Optimizer_Step_2",
                 "notebook_task": {
-                    "notebook_path": f"/Repos/{user_name}/edw-best-practices/Delta Optimizer/Step 2_ Strategy Runner",
+                    "notebook_path": "Delta Optimizer/Step 2_ Strategy Runner",
+                    "source": "GIT",
                     "notebook_params": {
                         "Optimizer Output Database:": selected_schema,
                         "exclude_list(csv)": "",
                         "include_list(csv)": "",
                         "table_mode": "include_all_tables",
                     },
-                    "source": "WORKSPACE",
                 },
-                "existing_cluster_id": selected_cluster,
+                "new_cluster": {
+                    "node_type_id": "i3.xlarge",
+                    "spark_version": "7.3.x-scala2.12",
+                    "num_workers": slider,
+                    "spark_conf": {"spark.databricks.delta.preview.enabled": "true"},
+                    "spark_env_vars": {
+                        "PYSPARK_PYTHON": "/databricks/python3/bin/python3"
+                    },
+                    "enable_elastic_disk": True,
+                },
+                "aws_attributes": {
+                    "availability": "ON_DEMAND",
+                    # "zone_id": "us-west-2a",
+                },
+                "libraries": [
+                    {
+                        "whl": "dbfs:/FileStore/tmp/deltaoptimizer-1.4.1-py3-none-any.whl"
+                    },
+                ],
+                # "existing_cluster_id": selected_cluster,
                 "timeout_seconds": 0,
                 "email_notifications": {},
                 "notification_settings": {
@@ -625,6 +1003,11 @@ def delta_step_2_optimizer(
                 },
             }
         ],
+        "git_source": {
+            "git_url": "https://github.com/CodyAustinDavis/edw-best-practices.git",
+            "git_provider": "gitHub",
+            "git_branch": "main",
+        },
         "format": "MULTI_TASK",
     }
     job_json2 = json.dumps(optimize_job_two)
@@ -662,19 +1045,20 @@ def delta_step_2_optimizer(
         # Input("schema_selection_output1", "value"),
     ],
     [
+        State("slider-callback", "value"),
         State("schema_selection_store1", "data"),
-        State("cluster-id-store2", "data"),
-        State("user-name-store2", "data"),
+        # State("cluster-id-store2", "data"),
+        # State("user-name-store2", "data"),
         State("hostname-store2", "data"),
         State("token-store2", "data"),
     ],
     prevent_initial_call=True,
 )
 def delta_step_2_optimizer_schedule(
-    n_clicks, schedule, selected_schema, selected_cluster, user_name, hostname, token
+    n_clicks, schedule, slider, selected_schema, hostname, token
 ):
     optimize_job_two_schedule = {
-        "name": "Delta_Optimizer_Step_2",
+        "name": f"{selected_schema} Optimizer Run",
         "email_notifications": {"no_alert_for_skipped_runs": False},
         "webhook_notifications": {},
         "timeout_seconds": 0,
@@ -688,16 +1072,35 @@ def delta_step_2_optimizer_schedule(
             {
                 "task_key": "Delta_Optimizer_Step_2",
                 "notebook_task": {
-                    "notebook_path": f"/Repos/{user_name}/edw-best-practices/Delta Optimizer/Step 2_ Strategy Runner",
+                    "notebook_path": "Delta Optimizer/Step 2_ Strategy Runner",
+                    "source": "GIT",
                     "notebook_params": {
                         "Optimizer Output Database:": selected_schema,
                         "exclude_list(csv)": "",
                         "include_list(csv)": "",
                         "table_mode": "include_all_tables",
                     },
-                    "source": "WORKSPACE",
                 },
-                "existing_cluster_id": f"{selected_cluster}",
+                "new_cluster": {
+                    "node_type_id": "i3.xlarge",
+                    "spark_version": "7.3.x-scala2.12",
+                    "num_workers": slider,
+                    "spark_conf": {"spark.databricks.delta.preview.enabled": "true"},
+                    "spark_env_vars": {
+                        "PYSPARK_PYTHON": "/databricks/python3/bin/python3"
+                    },
+                    "enable_elastic_disk": True,
+                },
+                "aws_attributes": {
+                    "availability": "ON_DEMAND",
+                    # "zone_id": "us-west-2a",
+                },
+                "libraries": [
+                    {
+                        "whl": "dbfs:/FileStore/tmp/deltaoptimizer-1.4.1-py3-none-any.whl"
+                    },
+                ],
+                # "existing_cluster_id": selected_cluster,
                 "timeout_seconds": 0,
                 "email_notifications": {},
                 "notification_settings": {
@@ -707,6 +1110,11 @@ def delta_step_2_optimizer_schedule(
                 },
             }
         ],
+        "git_source": {
+            "git_url": "https://github.com/CodyAustinDavis/edw-best-practices.git",
+            "git_provider": "gitHub",
+            "git_branch": "main",
+        },
         "format": "MULTI_TASK",
     }
     job_json2 = json.dumps(optimize_job_two_schedule)

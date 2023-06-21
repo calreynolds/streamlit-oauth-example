@@ -1,5 +1,6 @@
 from dash import Dash, dcc, State
 import dash_mantine_components as dmc
+import dash_bootstrap_components as dbc
 from flask import request, Response, stream_with_context
 import dash
 import threading
@@ -10,6 +11,7 @@ app = Dash(
     __name__,
     use_pages=True,
     suppress_callback_exceptions=True,
+    external_stylesheets=[dbc.themes.BOOTSTRAP],
     # url_base_pathname=os.environ.get("DASH_URL_BASE_PATHNAME", "/"),
 )
 server = app.server

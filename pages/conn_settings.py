@@ -34,10 +34,10 @@ def layout():
                 position="left",
                 mt="xl",
                 children=[
-                    dmc.Button(
-                        "Get Profile Names",
-                        id="get-profile-names-button",
-                    ),
+                    # dmc.Button(
+                    #     "Get Profile Names",
+                    #     id="get-profile-names-button",
+                    # ),
                     dmc.Button(
                         "Activate Profile",
                         rightIcon=DashIconify(
@@ -45,10 +45,10 @@ def layout():
                         ),
                         id="activate-button",
                     ),
-                    dmc.Button(
-                        "Check DBFS for Library",
-                        id="check-library-button",
-                    ),
+                    # dmc.Button(
+                    #     "Check DBFS for Library",
+                    #     id="check-library-button",
+                    # ),
                     # dmc.Button(
                     #     id="test-engine-button",
                     #     children="Test Engine",
@@ -94,11 +94,11 @@ def layout():
                             ),
                             dmc.AccordionPanel(
                                 [
-                                    html.Label("HTTP Path"),
+                                    html.Label("SQL Warehouse HTTP Path"),
                                     dmc.TextInput(
                                         id="path",
                                         type="text",
-                                        placeholder="Enter Http Path",
+                                        placeholder="Enter SQL Warehouse HTTP Path",
                                     ),
                                 ]
                             ),
@@ -124,147 +124,90 @@ def layout():
                     ),
                 ],
             ),
-            # html.H3("Select Engine"),
-            # dcc.Dropdown(
-            #     id="engine-dropdown",
-            #     options=[],
-            #     placeholder="Select an engine",
-            # ),
-            # dmc.Space(h=10),
-            # dmc.Group(
-            #     position="left",
-            #     mt="xl",
-            #     children=[
-            #         dmc.Button(
-            #             id="get-engine-names-button",
-            #             children="Get Engine Names",
-            #         ),
-            #         dmc.Button(
-            #             id="load-engine-button",
-            #             children="Load Engine",
-            #         ),
-            #     ],
-            # ),
-            # html.Div(id="engine-info"),
-            # dmc.Space(h=10),
-            # dmc.Space(h=10),
             # dmc.Accordion(
             #     disableChevronRotation=True,
             #     children=[
             #         dmc.AccordionItem(
-            #             [
+            #             value="install-library-accordion",
+            #             children=[
             #                 dmc.AccordionControl(
-            #                     "Create New SQLAlchemy Engine",
+            #                     "Install Library on Cluster (optional)",
             #                     icon=DashIconify(
-            #                         icon="mingcute:engine-line",
+            #                         icon="tabler:user",
             #                         color=dmc.theme.DEFAULT_COLORS["blue"][6],
             #                         width=20,
             #                     ),
             #                 ),
             #                 dmc.AccordionPanel(
-            #                     [
-            #                         html.Label("Engine Name"),
-            #                         dmc.TextInput(
-            #                             id="engine-name",
-            #                             type="text",
-            #                             placeholder="Enter engine name",
-            #                         ),
-            #                     ]
-            #                 ),
-            #                 dmc.AccordionPanel(
-            #                     [
-            #                         html.Label("Workspace URL"),
-            #                         dmc.TextInput(
-            #                             id="workspace-url-engine",
-            #                             type="text",
-            #                             placeholder="Enter workspace URL (without https://)",
-            #                         ),
-            #                     ]
-            #                 ),
-            #                 dmc.AccordionPanel(
-            #                     [
-            #                         html.Label("HTTP Path"),
-            #                         dmc.TextInput(
-            #                             id="path",
-            #                             type="text",
-            #                             placeholder="Enter Http Path",
-            #                         ),
-            #                     ]
-            #                 ),
-            #                 dmc.AccordionPanel(
-            #                     [
-            #                         html.Label("Token"),
-            #                         dmc.TextInput(
-            #                             id="token-engine",
-            #                             type="text",
-            #                             placeholder="Enter token",
+            #                     children=[
+            #                         html.Div(id="result-div"),
+            #                         dcc.Dropdown(
+            #                             id="cluster-dropdown", options=[], value=None
             #                         ),
             #                         dmc.Space(h=10),
-            #                         dmc.Button(
-            #                             "Create Engine",
-            #                             id="generate-engine-button",
-            #                             n_clicks=0,
+            #                         dmc.Group(
+            #                             position="left",
+            #                             mt="xl",
+            #                             children=[
+            #                                 dmc.Button(
+            #                                     "Get Clusters",
+            #                                     id="get-clusters-button",
+            #                                     n_clicks=0,
+            #                                 ),
+            #                                 dmc.Button(
+            #                                     "Install Library",
+            #                                     id="install-library-button",
+            #                                     n_clicks=0,
+            #                                 ),
+            #                                 dmc.Button(
+            #                                     "Append Cluster to Profile",
+            #                                     id="append-cluster-button",
+            #                                     n_clicks=0,
+            #                                 ),
+            #                             ],
             #                         ),
-            #                         html.Div(id="engine-message-output"),
-            #                     ]
+            #                         html.Div(id="append-cluster-output"),
+            #                         html.Div(id="selected-cluster-output"),
+            #                     ],
             #                 ),
             #             ],
-            #             value="engine",
+            #         ),
+            #         dmc.AccordionItem(
+            #             value="install-repository-accordion",
+            #             children=[
+            #                 html.Div(
+            #                     children=[
+            #                         html.H3("Install Repository"),
+            #                         dcc.Dropdown(id="group-members-dropdown"),
+            #                         dmc.Group(
+            #                             position="left",
+            #                             mt="xl",
+            #                             children=[
+            #                                 dmc.Button(
+            #                                     "Get Users", id="refresh-button"
+            #                                 ),
+            #                                 dmc.Button(
+            #                                     "Install Repository",
+            #                                     id="create-repo-button",
+            #                                     leftIcon=DashIconify(
+            #                                         icon="ion:logo-github"
+            #                                     ),
+            #                                     n_clicks=0,
+            #                                 ),
+            #                             ],
+            #                         ),
+            #                         html.Div(id="repo-creation-status"),
+            #                         dmc.Space(h=10),
+            #                     ],
+            #                 ),
+            #             ],
             #         ),
             #     ],
             # ),
-            html.Div(
-                children=[
-                    html.H3("Install Library"),
-                    html.Div(id="result-div"),
-                    # html.Label("Select Cluster:"),
-                    dcc.Dropdown(id="cluster-dropdown", options=[], value=None),
-                    dmc.Space(h=10),
-                    dmc.Group(
-                        position="left",
-                        mt="xl",
-                        children=[
-                            dmc.Button(
-                                "Get Clusters",
-                                id="get-clusters-button",
-                                n_clicks=0,
-                            ),
-                            dmc.Button(
-                                "Install Library",
-                                id="install-library-button",
-                                n_clicks=0,
-                            ),
-                            dmc.Button(
-                                "Append Cluster to Profile",
-                                id="append-cluster-button",
-                                n_clicks=0,
-                            ),
-                        ],
-                    ),
-                    html.Div(id="append-cluster-output"),
-                    html.Div(id="selected-cluster-output"),
-                    html.H3("Install Repository"),
-                    dcc.Dropdown(id="group-members-dropdown"),
-                    dmc.Group(
-                        position="left",
-                        mt="xl",
-                        children=[
-                            dmc.Button("Get Users", id="refresh-button"),
-                            dmc.Button(
-                                "Install Repository",
-                                id="create-repo-button",
-                                leftIcon=DashIconify(icon="ion:logo-github"),
-                                n_clicks=0,
-                            ),
-                        ],
-                    ),
-                    html.Div(id="repo-creation-status"),
-                    dmc.Space(h=10),
-                ]
-            ),
             dcc.Store(id="selected-cluster-store", storage_type="session"),
             dcc.Store(id="selected-profile-store", storage_type="memory"),
             dcc.Store(id="engine-store", storage_type="memory"),
+            html.Div(id="dummy", style={"display": "none"}),
             # dcc.Store(id="hostname-store", storage_type="memory"),
             # dcc.Store(id="path-store", storage_type="memory"),
             # dcc.Store(id="token-store", storage_type="memory"),
@@ -326,14 +269,12 @@ def get_profile_names():
 
 @callback(
     Output("profile-dropdown", "options"),
-    [Input("get-profile-names-button", "n_clicks")],
+    Input("dummy", "children"),
 )
-def update_profile_dropdown(n_clicks):
-    if n_clicks is not None and n_clicks > 0:
-        profile_names = get_profile_names()
-        options = [{"label": name, "value": name} for name in profile_names]
-        return options
-    return []
+def update_profile_dropdown(dummy):
+    profile_names = get_profile_names()
+    options = [{"label": name, "value": name} for name in profile_names]
+    return options
 
 
 # Callback to activate the selected profile
@@ -349,6 +290,36 @@ def activate_profile(n_clicks, profile_name):
         try:
             result = subprocess.run(command, capture_output=True, text=True, shell=True)
             output = result.stdout.strip()
+
+            url = "https://github.com/CodyAustinDavis/edw-best-practices/blob/8680b2d2ad003b3317cfaa762162ba8f7ee795f2/Delta%20Optimizer/deltaoptimizer-1.5.0-py3-none-any.whl"
+            local_path = "/tmp/deltaoptimizer-1.5.0-py3-none-any.whl"
+            dbfs_path = "dbfs:/tmp/deltaoptimizer-1.5.0-py3-none-any.whl"
+
+            urllib.request.urlretrieve(url, local_path)
+
+            check_command = [
+                "databricks",
+                "fs",
+                "ls",
+                dbfs_path,
+                "--profile",
+                profile_name,
+            ]
+            check_result = subprocess.run(check_command, capture_output=True, text=True)
+
+            if "No such file or directory" in check_result.stderr:
+                upload_command = [
+                    "databricks",
+                    "fs",
+                    "cp",
+                    local_path,
+                    dbfs_path,
+                    "--profile",
+                    profile_name,
+                ]
+                upload_result = subprocess.run(
+                    upload_command, capture_output=True, text=True
+                )
 
             return [
                 html.Div(
@@ -500,45 +471,45 @@ def populate_cluster_dropdown(n_clicks, profile_name, selected_cluster_id):
         return [], f"Error retrieving cluster options: {str(e)}", []
 
 
-@callback(
-    Output("result-div", "children"),
-    Input("install-library-button", "n_clicks"),
-    Input("cluster-dropdown", "value"),
-    State("profile-dropdown", "value"),
-    prevent_initial_call=True,
-)
-def install_library(n_clicks, cluster_id, profile_name):
-    if n_clicks is None or cluster_id is None or not profile_name:
-        return ""
+# @callback(
+#     Output("result-div", "children"),
+#     Input("install-library-button", "n_clicks"),
+#     Input("cluster-dropdown", "value"),
+#     State("profile-dropdown", "value"),
+#     prevent_initial_call=True,
+# )
+# def install_library(n_clicks, cluster_id, profile_name):
+#     if n_clicks is None or cluster_id is None or not profile_name:
+#         return ""
 
-    # Path to the library file in DBFS
-    dbfs_file_path = "dbfs:/tmp/deltaoptimizer-1.4.1-py3-none-any.whl"
+#     # Path to the library file in DBFS
+#     dbfs_file_path = "dbfs:/tmp/deltaoptimizer-1.4.1-py3-none-any.whl"
 
-    # Databricks CLI command to install the library on the cluster from DBFS
-    install_command = [
-        "databricks",
-        "libraries",
-        "install",
-        "--cluster-id",
-        cluster_id,
-        "--whl",
-        dbfs_file_path,
-        "--profile",
-        profile_name,
-    ]
+#     # Databricks CLI command to install the library on the cluster from DBFS
+#     install_command = [
+#         "databricks",
+#         "libraries",
+#         "install",
+#         "--cluster-id",
+#         cluster_id,
+#         "--whl",
+#         dbfs_file_path,
+#         "--profile",
+#         profile_name,
+#     ]
 
-    # Run the Databricks CLI command to install the library
-    result = subprocess.run(install_command, capture_output=True, text=True)
+#     # Run the Databricks CLI command to install the library
+#     result = subprocess.run(install_command, capture_output=True, text=True)
 
-    # Check the return code to see if the command executed successfully
-    if result.returncode == 0:
-        output_message = result.stdout.strip()
-        return html.P(
-            f"The library was successfully installed on cluster {cluster_id}. Make sure you select this cluster when you run the Delta Optimizer."
-        )
-    else:
-        error_message = result.stderr.strip()
-        return html.P(f"Error: {error_message}")
+#     # Check the return code to see if the command executed successfully
+#     if result.returncode == 0:
+#         output_message = result.stdout.strip()
+#         return html.P(
+#             f"The library was successfully installed on cluster {cluster_id}. Make sure you select this cluster when you run the Delta Optimizer."
+#         )
+#     else:
+#         error_message = result.stderr.strip()
+#         return html.P(f"Error: {error_message}")
 
 
 @callback(
