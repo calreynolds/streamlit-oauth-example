@@ -10,7 +10,7 @@ import dash_bootstrap_components as dbc
 
 import pandas as pd
 import dash_ag_grid as dag
-
+from databricks.connect import DatabricksSession
 import sqlalchemy.exc
 import os
 from configparser import ConfigParser
@@ -108,9 +108,9 @@ def layout():
                             "top": "0px",
                         },
                         children=[
-                            dcc.Dropdown(
+                            dmc.Select(
                                 id="profile-dropdown-step3",
-                                options=[],
+                                data=[],
                                 value="Select Profile",
                                 style={
                                     "width": "200px",
@@ -181,16 +181,16 @@ def fetch_schema_names(n_clicks, hostname, path, token):
 
 
 @callback(
-    Output("profile-dropdown-step3", "options"),
-    [Input("refresh-button-step3", "n_clicks"), Input("interval", "n_intervals")],
-    State("profile-dropdown-step3", "value"),
+    Output("profile-dropdown-step3", "data"),
+    # [Input("refresh-button-step3", "n_clicks"), Input("interval", "n_intervals")],
+    Input("profile-dropdown-step3", "value"),
 )
-def populate_profile_dropdown(n_clicks, n_intervals, profile_name):
+def populate_profile_dropdown(profile_name):
     config = ConfigParser()
     file_path = os.path.expanduser("~/.databrickscfg")
 
     if not os.path.exists(file_path):
-        return []
+        return [], []
 
     config.read(file_path)
     options = []
@@ -200,6 +200,9 @@ def populate_profile_dropdown(n_clicks, n_intervals, profile_name):
             config.has_option(section, "host")
             and config.has_option(section, "path")
             and config.has_option(section, "token")
+            # and config.has_option(section, "cluster_name")
+            # and config.has_option(section, "cluster_id")
+            # and config.has_option(section, "user_name")
         ):
             options.append({"label": section, "value": section})
 
@@ -245,7 +248,7 @@ def parse_databricks_config(profile_name):
     ],
     prevent_initial_call=True,
 )
-def test_engine_connection(profile_name, host, path, token):
+def test_engine_and_spark_connection(profile_name, hostname, path, token):
     if profile_name:
         (
             host,
@@ -254,7 +257,7 @@ def test_engine_connection(profile_name, host, path, token):
         ) = parse_databricks_config(profile_name)
         if host and token and path:
             # Modify the path to remove "/sql/1.0/warehouses/"
-            # sql_warehouse = path.replace("/sql/1.0/warehouses/", "")
+            sql_warehouse = path.replace("/sql/1.0/warehouses/", "")
             engine_url = f"databricks://token:{token}@{host}/?http_path={path}&catalog=main&schema=information_schema"
             engine = create_engine(engine_url)
 
@@ -265,30 +268,83 @@ def test_engine_connection(profile_name, host, path, token):
                     test_value = result.scalar()
 
                     if test_value == 1:
-                        return dmc.LoadingOverlay(
-                            dmc.Badge(
-                                id="engine-connection-badge",
-                                variant="dot",
-                                color="green",
-                                size="lg",
-                                children=[
-                                    html.Span(f"Connected to Workspace: {host} ")
-                                ],
-                            ),
-                            loaderProps={
-                                "variant": "dots",
-                                "color": "orange",
-                                "size": "xl",
-                            },
-                        )
+                        os.environ["USER"] = "anything"
+                        spark = DatabricksSession.builder.remote(
+                            f"sc://{host}:443/;token={token};x-databricks-cluster-id={cluster_id}"
+                        ).getOrCreate()
+
+                        try:
+                            # Test the Spark connection by executing a sample SQL command
+                            spark_result = spark.sql("SELECT 1")
+                            spark_test_value = spark_result.collect()[0][0]
+
+                            if spark_test_value == 1:
+                                return dmc.LoadingOverlay(
+                                    dmc.Badge(
+                                        id="spark-connection-badge",
+                                        variant="dot",
+                                        color="green",
+                                        size="lg",
+                                        children=[
+                                            html.Span(
+                                                f"Connected to SQL Warehouse: {sql_warehouse} + Cluster: {cluster_name}"
+                                            )
+                                        ],
+                                    ),
+                                    loaderProps={
+                                        "variant": "dots",
+                                        "color": "orange",
+                                        "size": "xl",
+                                    },
+                                )
+                            elif (
+                                "SPARK CONNECTION FAILED: THE CLUSTER" in str(e).upper()
+                            ):
+                                return dmc.LoadingOverlay(
+                                    dmc.Badge(
+                                        id="spark-connection-badge",
+                                        variant="dot",
+                                        color="yellow",
+                                        size="lg",
+                                        children=[
+                                            html.Span(
+                                                f"Spark Connection Pending: {cluster_name}"
+                                            )
+                                        ],
+                                    ),
+                                    loaderProps={
+                                        "variant": "dots",
+                                        "color": "orange",
+                                        "size": "xl",
+                                    },
+                                )
+                        except Exception as e:
+                            return dmc.LoadingOverlay(
+                                dmc.Badge(
+                                    id="spark-connection-badge",
+                                    variant="dot",
+                                    color="red",
+                                    size="lg",
+                                    children=[
+                                        html.Span(f"Spark Connection failed: {str(e)}")
+                                    ],
+                                ),
+                                loaderProps={
+                                    "variant": "dots",
+                                    "color": "orange",
+                                    "size": "xl",
+                                },
+                            )
             except sqlalchemy.exc.OperationalError as e:
                 return dmc.LoadingOverlay(
                     dmc.Badge(
-                        id="engine-connection-badge",
+                        id="spark-connection-badge",
                         variant="dot",
                         color="red",
                         size="lg",
-                        children=[html.Span(f"Engine Connection failed: {str(e)}")],
+                        children=[
+                            html.Span(f"SQL Alchemy Connection failed: {str(e)}")
+                        ],
                     ),
                     loaderProps={
                         "variant": "dots",
@@ -329,7 +385,7 @@ def create_dynamic_results_layout(n_clicks, selected_db, hostname, path, token):
     cardinality_stats = pd.read_sql_query(get_cardinality, results_engine)
     cardinality_stats["CardinalityProportionScaledUp"] = (
         cardinality_stats["CardinalityProportionScaled"] * 100
-    )
+    ).round(2)
     cardinality_stats = cardinality_stats.sort_values(
         "CardinalityProportionScaledUp", ascending=False
     )
@@ -408,11 +464,6 @@ def create_dynamic_results_layout(n_clicks, selected_db, hostname, path, token):
     # Sort by Date
     grouped_queries.sort_values(by="QueryStartTime", inplace=True)
 
-    # Print the resulting DataFrame
-    # print(grouped_queries)
-
-    # GET TOP 10 QUERIES WITH MOST TOTAL RUNTIME
-
     # Grouping and aggregation to calculate TotalRuntimeOfQuery and TotalRunsOfQuery
     grouped_data = (
         raw_queries.groupby(["QueryStartTime", "query_hash"])
@@ -452,10 +503,7 @@ def create_dynamic_results_layout(n_clicks, selected_db, hostname, path, token):
     result_data["QueryStartTime"] = pd.to_datetime(
         result_data["QueryStartTime"]
     )  # Convert timestamp column to datetime if needed
-    # print(result_data.columns)
     result_data["QueryStartTime"] = result_data["QueryStartTime"].dt.hour
-
-    # print("aaaaaaaaaaaaaaaaaaa")
 
     # Top 10 Longest Running Queries By Day
     start_time_threshold = pd.Timestamp.now() - pd.Timedelta(hours=12)
@@ -514,6 +562,79 @@ def create_dynamic_results_layout(n_clicks, selected_db, hostname, path, token):
 
     get_merge_expense = f"SELECT * FROM {selected_db}.write_statistics_merge_predicate"
     merge_expense = pd.read_sql_query(get_merge_expense, results_engine)
+
+    max = merge_expense["AvgMergeRuntimeMs"].max()
+    merge_expense["ComparativeMergeRuntime"] = merge_expense["AvgMergeRuntimeMs"] * 100
+    merge_expense["ComparativeMergeRuntime"] = (
+        merge_expense["ComparativeMergeRuntime"] / max
+    )
+    merge_expense["ComparativeMergeRuntime"] = merge_expense[
+        "ComparativeMergeRuntime"
+    ].round(2)
+
+    grouped = merge_expense.groupby(
+        ["TableName", "AvgMergeRuntimeMs", "ComparativeMergeRuntime"]
+    )
+
+    # Initialize an empty list to hold the final data
+    data = []
+
+    # Loop through each group
+    for name, group in grouped:
+        table_name, avg_merge_runtime_ms, comparative_merge_runtime = name
+
+        # Convert each group into a list of dictionaries
+        # (where each dictionary corresponds to a row in the original DataFrame)
+        drilldown = group[
+            [
+                "ColumnName",
+                "HasColumnInMergePredicate",
+                "NumberOfVersionsPredicateIsUsed",
+            ]
+        ].to_dict("records")
+
+        # Append the result to the final data list
+        data.append(
+            {
+                "TableName": table_name,
+                "AvgMergeRuntimeMs": avg_merge_runtime_ms,
+                "ComparativeMergeRuntime": comparative_merge_runtime,
+                "drilldown": drilldown,
+            }
+        )
+
+    expensive_master_column_defs = [
+        {
+            "headerName": "Table Name",
+            "field": "TableName",
+            "cellRenderer": "agGroupCellRenderer",
+        },
+        {"headerName": "Average Merge Runtime ms", "field": "AvgMergeRuntimeMs"},
+        {
+            "headerName": "Comparative Merge Runtime (ms)",
+            "field": "ComparativeMergeRuntime",
+            "cellRenderer": "DBC_Progress2",
+            "cellRendererParams": {
+                "color": "rgb(27, 49, 57)",
+                "label": True,
+                "striped": True,
+                "style": {"height": 30},
+                "animated": True,
+            },
+        },
+    ]
+
+    expensive_detail_column_defs = [
+        {"headerName": "Column Name", "field": "ColumnName"},
+        {
+            "headerName": "HasColumnInMergePredicate",
+            "field": "HasColumnInMergePredicate",
+        },
+        {
+            "headerName": "Number of Versions Predicate is Used In",
+            "field": "NumberOfVersionsPredicateIsUsed",
+        },
+    ]
 
     return dmc.AccordionMultiple(
         children=[
@@ -686,7 +807,35 @@ def create_dynamic_results_layout(n_clicks, selected_db, hostname, path, token):
             ),
             create_accordion_item(
                 "Most Expensive Merge/Delete Operations",
-                [create_ag_grid(merge_expense)],
+                [
+                    html.Div(
+                        dag.AgGrid(
+                            id="expensive_ag_grid",
+                            columnDefs=expensive_master_column_defs,
+                            rowData=data,  # Convert DataFrame to list of dicts
+                            columnSize="sizeToFit",
+                            masterDetail=True,
+                            detailCellRendererParams={
+                                "detailGridOptions": {
+                                    "columnDefs": expensive_detail_column_defs,
+                                },
+                                "detailColName": "drilldown",
+                                "suppressCallback": True,
+                            },
+                            style={"height": "550px"},
+                            dashGridOptions={
+                                "rowSelection": "multiple",
+                            },
+                            defaultColDef=dict(
+                                resizable=True,
+                                editable=True,
+                                sortable=True,
+                                autoHeight=True,
+                                width=250,
+                            ),
+                        )
+                    )
+                ],
                 "ph:git-merge",
             ),
             create_accordion_item(
@@ -761,7 +910,6 @@ def update_cardinality(reads, writes):
     Output("expensiveAGGrid", "rowData"), Input("expensive-bar-chart", "selectedData")
 )
 def update_expensive_ag_grid(selected_data):
-    # print("selected_data", selected_data)
     if not selected_data:
         return most_expensive.to_dict(orient="records")
     else:

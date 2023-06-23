@@ -1,7 +1,7 @@
 from dash import Dash, dcc, State
 import dash_mantine_components as dmc
 import dash_bootstrap_components as dbc
-from flask import request, Response, stream_with_context
+from flask import request, Response, stream_with_context, render_template
 import dash
 import threading
 import os
@@ -57,7 +57,6 @@ app.layout = dmc.MantineProvider(
                 ),
             ],
         ),
-        FOOTER,
         dcc.Store(
             id="general-store", data={"outputdpdn2": "main.delta_optimizer_mercury"}
         ),

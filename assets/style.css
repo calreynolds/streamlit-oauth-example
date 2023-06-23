@@ -1,20 +1,62 @@
+.sidebar {
+    background-color: #f8f9fa;
+    width: 250px;
+    /* padding: 20px; */
+    position: fixed;
+    height: 100%;
+    overflow-y: auto;
+    transition: all 0.3s;
+    display: flex;
+    align-items: flex-start;
+    justify-content: flex-start;
+}
+
+
 .nav-link-component {
+    display: flexbox;
     color: #fff !important;
     font-family: DM Sans, sans-serif !important;
     font-weight: 400 !important;
+    background-color: rgb(15, 29, 34);
+    padding: 8px 16px;
+    border-radius: 20px;
+    /* Adjust the border radius as needed */
+    text-decoration: none;
+    transition: background-color 0.3s ease;
+    width: 220px;
+    /* Add the desired width */
+    margin-left: 5%;
+    /* Adjust the margin-left value as needed */
+}
+
+
+.nav-link-component.selected {
+    background-color: #28a745 !important;
+    /* Change to the desired color */
+    color: #fff !important;
+    /* Change to the desired color */
+}
+
+.nav-link-component.active {
+    background-color: #28a745 !important;
+    /* Change to the desired color */
+    color: #fff !important;
+    /* Change to the desired color */
 }
 
 .nav-link-component span {
-    font-size: 21px !important;
+    font-size: 18px !important;
 }
 
 .nav-link-component:hover {
     background-color: rgb(24, 42, 51) !important;
-    border-radius: 20 !important;
-    -webkit-border-radius: 20 !important;
-    -moz-border-radius: 20 !important;
-    -ms-border-radius: 20 !important;
-    -o-border-radius: 20 !important;
+    border-radius: 20px !important;
+    -webkit-border-radius: 35px !important;
+    -moz-border-radius: 35px !important;
+    -ms-border-radius: 35px !important;
+    -o-border-radius: 35px !important;
+    padding: 8px 25px;
+    /* Adjust the padding values to change the width */
 }
 
 .nav-link-component a,
@@ -31,10 +73,18 @@
 }
 
 .footer {
-    background-color: #1B3139;
-    border-top: none !important;
-    padding-left: 20px !important;
-    padding-right: 20px !important;
+    display: flex;
+    justify-content: flex-end;
+    align-items: flex-start;
+    background-color: #f8f9fa;
+    padding: 20px;
+    position: fixed;
+    bottom: 0;
+    left: 320px;
+    /* Adjust the left position to accommodate the width of the sidebar */
+    right: 200px;
+    z-index: 2;
+    /* Ensure the footer appears above the content but below the sidebar */
 }
 
 body {
@@ -42,7 +92,217 @@ body {
 }
 
 .ag-theme-alpine {
-    --ag-alpine-active-color: rgb(15, 29, 34) !important;
-    --ag-row-hover-color: #FFB4AC !important;
+    --ag-alpine-active-color: #FF5F46 !important;
+    --ag-odd-row-background-color: #F9F7F4;
+    --ag-header-background-color: #F9F7F4;
+    --ag-row-hover-color: #FF9E94 !important;
+    /* --ag-border-color: #0a0201; */
     --ag-selected-row-background-color: #FFB4AC !important;
+
+}
+
+.bg-white {
+    background-color: white;
+}
+
+.rounded {
+    border-radius: 0.25rem;
+}
+
+.shadow {
+    /* Add shadow styles here */
+}
+
+.p-5 {
+    padding: 1.25rem;
+}
+
+.mb-4 {
+    margin-bottom: 1rem;
+}
+
+.mt-4 {
+    margin-top: 1rem;
+}
+
+.d-flex {
+    display: flex;
+}
+
+.flex-column {
+    flex-direction: column;
+}
+
+.flex-md-row {
+    flex-direction: row;
+}
+
+.justify-content-between {
+    justify-content: space-between;
+}
+
+.align-items-center {
+    align-items: center;
+}
+
+.col-12 {
+    width: 100%;
+}
+
+.col-md-4 {
+    width: 33.333333%;
+}
+
+.col-xl-6 {
+    width: 50%;
+}
+
+.text-center {
+    text-align: center;
+}
+
+.text-lg-start {
+    text-align: left;
+}
+
+.text-primary {
+    color: blue;
+}
+
+.fw-normal {
+    font-weight: normal;
+}
+
+.mb-0 {
+    margin-bottom: 0;
+}
+
+.text-md-end {
+    text-align: right;
+}
+
+.list-inline {
+    display: inline-block;
+    list-style: none;
+    padding-left: 0;
+    margin-top: 0;
+    margin-bottom: 0;
+}
+
+.list-group-flush {
+    border-radius: 0;
+}
+
+.list-group-borderless {
+    border: none;
+}
+
+.px-0 {
+    padding-left: 0;
+    padding-right: 0;
+}
+
+.px-sm-2 {
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+}
+
+body {
+    min-height: 100vh;
+    min-height: -webkit-fill-available;
+}
+
+html {
+    height: -webkit-fill-available;
+}
+
+main {
+    display: flex;
+    flex-wrap: nowrap;
+    height: 100vh;
+    height: -webkit-fill-available;
+    max-height: 100vh;
+    overflow-x: auto;
+    overflow-y: hidden;
+}
+
+.b-example-divider {
+    flex-shrink: 0;
+    width: 1.5rem;
+    height: 100vh;
+    background-color: rgba(0, 0, 0, .1);
+    border: solid rgba(0, 0, 0, .15);
+    border-width: 1px 0;
+    box-shadow: inset 0 .5em 1.5em rgba(0, 0, 0, .1), inset 0 .125em .5em rgba(0, 0, 0, .15);
+}
+
+.bi {
+    vertical-align: -.125em;
+    pointer-events: none;
+    fill: currentColor;
+}
+
+.dropdown-toggle {
+    outline: 0;
+}
+
+.nav-flush .nav-link {
+    border-radius: 0;
+}
+
+.btn-toggle {
+    display: inline-flex;
+    align-items: center;
+    padding: .25rem .5rem;
+    font-weight: 600;
+    color: rgba(0, 0, 0, .65);
+    background-color: transparent;
+    border: 0;
+}
+
+.btn-toggle:hover,
+.btn-toggle:focus {
+    color: rgba(0, 0, 0, .85);
+    background-color: #d2f4ea;
+}
+
+.btn-toggle::before {
+    width: 1.25em;
+    line-height: 0;
+    content: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='rgba%280,0,0,.5%29' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M5 14l6-6-6-6'/%3e%3c/svg%3e");
+    transition: transform .35s ease;
+    transform-origin: .5em 50%;
+}
+
+.btn-toggle[aria-expanded="true"] {
+    color: rgba(0, 0, 0, .85);
+}
+
+.btn-toggle[aria-expanded="true"]::before {
+    transform: rotate(90deg);
+}
+
+.btn-toggle-nav a {
+    display: inline-flex;
+    padding: .1875rem .5rem;
+    margin-top: .125rem;
+    margin-left: 1.25rem;
+    text-decoration: none;
+}
+
+.btn-toggle-nav a:hover,
+.btn-toggle-nav a:focus {
+    background-color: #d2f4ea;
+}
+
+.scrollarea {
+    overflow-y: auto;
+}
+
+.fw-semibold {
+    font-weight: 600;
+}
+
+.lh-tight {
+    line-height: 1.25;
 }

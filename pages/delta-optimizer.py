@@ -1,6 +1,6 @@
 import os
 import dash
-import json
+import time
 import requests
 import sqlalchemy.exc
 from dash import html, dcc, callback, Input, Output, State
@@ -11,7 +11,7 @@ from sqlalchemy.engine import create_engine
 from dash.exceptions import PreventUpdate
 import subprocess
 from configparser import ConfigParser
-import urllib.request
+import components as comp
 
 dash.register_page(__name__, path="/build-strategy", title="Strategy Builder")
 
@@ -46,145 +46,153 @@ sideBar = {
 
 
 def layout():
-    return (
-        html.Div(
+    return dmc.MantineProvider(
+        children=dmc.NotificationsProvider(
             [
-                dmc.Title("Build Optimizer Strategy"),
-                dmc.Divider(variant="solid"),
-                dmc.Group(
-                    position="left",
-                    mt="xl",
-                    children=[
-                        dmc.Button(
-                            "Build Strategy",
-                            id="build-strategy",
-                            variant="outline",
-                            # color="#0f1d22",
+                html.Div(
+                    [
+                        html.Div(id="notifications-container-step1"),
+                        html.Div(id="cluster-loading-notification"),
+                        html.Div(id="cluster-loaded-notification"),
+                        dmc.Title("Build Optimizer Strategy"),
+                        dmc.Divider(variant="solid"),
+                        dmc.Group(
+                            position="left",
+                            mt="xl",
+                            children=[
+                                dmc.Button(
+                                    "Build Strategy",
+                                    id="build-strategy",
+                                    variant="outline",
+                                    # color="#0f1d22",
+                                ),
+                                dmc.Button(
+                                    "Clear Selections",
+                                    id="clear-selection",
+                                    variant="default",
+                                    # color="#0f1d22",
+                                ),
+                                dmc.Button(
+                                    "Refresh",
+                                    id="refresh-button",
+                                    variant="default",
+                                ),
+                                html.Div(
+                                    id="engine-test-result",
+                                    style={
+                                        "width": "300px",
+                                        "position": "relative",
+                                        "left": "20px",
+                                        "top": "0px",
+                                    },
+                                ),
+                                html.Div(
+                                    style={
+                                        "width": "300px",
+                                        "position": "relative",
+                                        "left": "350px",
+                                        "top": "0px",
+                                    },
+                                    children=[
+                                        dmc.Select(
+                                            id="profile-dropdown-step1",
+                                            data=[],
+                                            value="Select Profile",
+                                            style={
+                                                "width": "200px",
+                                                "position": "relative",
+                                                "left": "110px",
+                                                "top": "0px",
+                                            },
+                                        )
+                                    ],
+                                ),
+                            ],
                         ),
-                        dmc.Button(
-                            "Clear Selections",
-                            id="clear-selection",
-                            variant="default",
-                            # color="#0f1d22",
+                        dmc.Space(h=10),
+                        html.Div(id="job-id"),
+                        dmc.Space(h=10),
+                        dmc.Text(id="run-strategy-output", align="right"),
+                        dmc.Space(h=10),
+                        dmc.Text(id="run-strategy-output-schedule", align="center"),
+                        dmc.SimpleGrid(
+                            [
+                                dmc.TextInput(
+                                    id="outputdb",
+                                    label="Enter Delta Optimizer Output DB:",
+                                    placeholder="catalog.database",
+                                ),
+                                dmc.TextInput(
+                                    id="optimizewarehouse",
+                                    label="Enter SQL Warehouse ID:",
+                                    placeholder="1234-123456-pane123",
+                                ),
+                                dmc.Stack(
+                                    [
+                                        dmc.Group(
+                                            position="left",
+                                            children=[
+                                                dmc.NumberInput(
+                                                    id="optimizelookback",
+                                                    label="Enter Lookback Period in days:",
+                                                    stepHoldDelay=500,
+                                                    stepHoldInterval=100,
+                                                    min=1,
+                                                    value=3,
+                                                    style={"width": "300px"},
+                                                ),
+                                            ],
+                                        ),
+                                        dmc.Switch(
+                                            id="startover", label="Start Over", mb=10
+                                        ),
+                                    ]
+                                ),
+                            ],
+                            cols=2,
                         ),
-                        dmc.Button(
-                            "Refresh",
-                            id="refresh-button",
-                            variant="default",
-                        ),
-                        html.Div(
-                            id="engine-test-result",
+                        dmc.Text(
+                            align="center",
+                            id="build-response",
                             style={
-                                "width": "300px",
-                                "position": "relative",
-                                "left": "20px",
-                                "top": "0px",
-                            },
-                        ),
-                        html.Div(
-                            style={
-                                "width": "300px",
+                                "width": "500px",
                                 "position": "relative",
                                 "left": "350px",
                                 "top": "0px",
                             },
-                            children=[
-                                dcc.Dropdown(
-                                    id="profile-dropdown-step1",
-                                    options=[],
-                                    value="Select Profile",
-                                    style={
-                                        "width": "200px",
-                                        "position": "relative",
-                                        "left": "45px",
-                                        "top": "0px",
-                                    },
-                                )
-                            ],
                         ),
-                    ],
+                        html.Div(id="load-optimizer-grid"),
+                        dmc.Space(h=10),
+                        dmc.Space(h=10),
+                        dmc.Space(h=15),
+                        dcc.Store(id="table_selection_store"),
+                        dcc.Store(id="schema_selection_store"),
+                        dcc.Store(id="catalog_selection_store"),
+                        dcc.Store(id="selected-profile-store"),
+                        dcc.Store(id="selected-cluster-store-step1"),
+                        dcc.Store(id="selected-cluster-store", storage_type="session"),
+                        dcc.Store(id="cluster-state-store", storage_type="memory"),
+                        dcc.Store(id="hostname-store", storage_type="memory"),
+                        dcc.Store(id="path-store", storage_type="memory"),
+                        dcc.Store(id="token-store", storage_type="memory"),
+                        dcc.Interval(
+                            id="interval", interval=86400000, n_intervals=0
+                        ),  # Update every day
+                        dcc.Interval(id="interval_test", interval=1000, n_intervals=0),
+                    ]
                 ),
-                dmc.Space(h=10),
-                html.Div(id="job-id"),
-                dmc.Space(h=10),
-                dmc.Text(id="run-strategy-output", align="center"),
-                dmc.Space(h=10),
-                dmc.Text(id="run-strategy-output-schedule", align="center"),
-                dmc.SimpleGrid(
-                    [
-                        dmc.TextInput(
-                            id="outputdb",
-                            label="Enter Delta Optimizer Output DB:",
-                            placeholder="cataloge.database",
-                        ),
-                        dmc.TextInput(
-                            id="optimizewarehouse",
-                            label="Enter SQL Warehouse ID:",
-                            placeholder="1234-123456-pane123",
-                        ),
-                        dmc.Stack(
-                            [
-                                dmc.Group(
-                                    position="left",
-                                    children=[
-                                        dmc.NumberInput(
-                                            id="optimizelookback",
-                                            label="Enter Lookback Period in days:",
-                                            stepHoldDelay=500,
-                                            stepHoldInterval=100,
-                                            min=1,
-                                            value=3,
-                                            style={"width": "300px"},
-                                        ),
-                                    ],
-                                ),
-                                dmc.Checkbox(id="startover", label="Start Over", mb=10),
-                            ]
-                        ),
-                    ],
-                    cols=2,
-                ),
-                dmc.Text(
-                    align="center",
-                    id="build-response",
-                    style={
-                        "width": "500px",
-                        "position": "relative",
-                        "left": "350px",
-                        "top": "0px",
-                    },
-                ),
-                html.Div(id="load-optimizer-grid"),
-                dmc.Space(h=10),
-                dmc.Space(h=10),
-                dmc.Space(h=15),
-                dcc.Store(id="table_selection_store"),
-                dcc.Store(id="schema_selection_store"),
-                dcc.Store(id="catalog_selection_store"),
-                dcc.Store(id="selected-profile-store"),
-                dcc.Store(id="selected-cluster-store-step1"),
-                dcc.Store(id="selected-cluster-store", storage_type="session"),
-                dcc.Store(id="hostname-store", storage_type="memory"),
-                dcc.Store(id="path-store", storage_type="memory"),
-                dcc.Store(id="token-store", storage_type="memory"),
-                # dcc.Store(id="cluster-id-store", storage_type="memory"),
-                # dcc.Store(id="cluster-name-store", storage_type="memory"),
-                # dcc.Store(id="user-name-store", storage_type="memory"),
-                dcc.Interval(
-                    id="interval", interval=86400000, n_intervals=0
-                ),  # Update every day
             ]
-        ),
+        )
     )
 
 
 @callback(
-    Output("profile-dropdown-step1", "options"),
+    Output("profile-dropdown-step1", "data"),
     Output("load-optimizer-grid", "children"),
-    [Input("refresh-button", "n_clicks"), Input("interval", "n_intervals")],
-    State("profile-dropdown-step1", "value"),
+    # [Input("refresh-button", "n_clicks"), Input("interval", "n_intervals")],
+    Input("profile-dropdown-step1", "value"),
 )
-def populate_profile_dropdown(n_clicks, n_intervals, profile_name):
+def populate_profile_dropdown(profile_name):
     config = ConfigParser()
     file_path = os.path.expanduser("~/.databrickscfg")
 
@@ -199,9 +207,6 @@ def populate_profile_dropdown(n_clicks, n_intervals, profile_name):
             config.has_option(section, "host")
             and config.has_option(section, "path")
             and config.has_option(section, "token")
-            # and config.has_option(section, "cluster_name")
-            # and config.has_option(section, "cluster_id")
-            # and config.has_option(section, "user_name")
         ):
             options.append({"label": section, "value": section})
 
@@ -210,9 +215,6 @@ def populate_profile_dropdown(n_clicks, n_intervals, profile_name):
             host,
             token,
             path,
-            # cluster_name,
-            # cluster_id,
-            # user_name,
         ) = parse_databricks_config(profile_name)
         if host and token and path:
             engine_url = f"databricks://token:{token}@{host}/?http_path={path}&catalog=main&schema=information_schema"
@@ -242,13 +244,13 @@ def populate_profile_dropdown(n_clicks, n_intervals, profile_name):
                     "filterParams": {"buttons": ["apply", "reset"]},
                     "minWidth": 180,
                 },
-                {
-                    "headerName": "Catalog Name",
-                    "field": "table_catalog",
-                    "filter": True,
-                    "floatingFilter": True,
-                    "filterParams": {"buttons": ["apply", "reset"]},
-                },
+                # {
+                #     "headerName": "Catalog Name",
+                #     "field": "table_catalog",
+                #     "filter": True,
+                #     "floatingFilter": True,
+                #     "filterParams": {"buttons": ["apply", "reset"]},
+                # },
                 {
                     "headerName": "Creator",
                     "field": "created_by",
@@ -365,16 +367,15 @@ def parse_databricks_config(profile_name):
 
 
 @callback(
-    Output("engine-test-result", "children"),
-    Input("profile-dropdown-step1", "value"),
+    Output("hidden", "children"),
+    [Input("profile-dropdown-step1", "value")],
     [
         State("hostname-store", "data"),
         State("path-store", "data"),
         State("token-store", "data"),
     ],
-    prevent_initial_call=True,
 )
-def test_engine_connection(profile_name, host, path, token):
+def your_callback_function(profile_name, host, path, token):
     if profile_name:
         (
             host,
@@ -382,51 +383,90 @@ def test_engine_connection(profile_name, host, path, token):
             path,
         ) = parse_databricks_config(profile_name)
         if host and token and path:
-            # Modify the path to remove "/sql/1.0/warehouses/"
-            # sql_warehouse = path.replace("/sql/1.0/warehouses/", "")
             engine_url = f"databricks://token:{token}@{host}/?http_path={path}&catalog=main&schema=information_schema"
-            engine = create_engine(engine_url)
+        engine = create_engine(engine_url)
+        result = engine.execute("SELECT 1").fetchone()
 
-            try:
-                # Test the engine connection by executing a sample query
-                with engine.connect() as connection:
-                    result = connection.execute("SELECT 1")
-                    test_value = result.scalar()
+        return str(result)
 
-                    if test_value == 1:
-                        return dmc.LoadingOverlay(
-                            dmc.Badge(
-                                id="engine-connection-badge",
-                                variant="dot",
-                                color="green",
-                                size="lg",
-                                children=[
-                                    html.Span(f"Connected to Workspace: {host} ")
-                                ],
-                            ),
-                            loaderProps={
-                                "variant": "dots",
-                                "color": "orange",
-                                "size": "xl",
-                            },
+    return "Invalid configuration"
+
+
+@callback(
+    [
+        Output("cluster-loading-notification", "children"),
+        Output("cluster-loaded-notification", "children"),
+        Output("engine-test-result", "children"),
+    ],
+    [
+        Input("profile-dropdown-step1", "value"),
+        Input("refresh-button", "n_clicks"),
+    ],
+    [
+        State("hostname-store", "data"),
+        State("path-store", "data"),
+        State("token-store", "data"),
+    ],
+)
+def get_cluster_state(profile_name, n_clicks, host, path, token):
+    if n_clicks or profile_name:
+        if profile_name:
+            host, token, path = parse_databricks_config(profile_name)
+            if host and token and path:
+                sqlwarehouse = path.replace("/sql/1.0/warehouses", "")
+
+                try:
+                    test_job_uri = (
+                        f"https://{host}/api/2.0/sql/warehouses/{sqlwarehouse}"
+                    )
+                    headers_auth = {"Authorization": f"Bearer {token}"}
+                    test_job = requests.get(test_job_uri, headers=headers_auth).json()
+                    print(test_job)
+
+                    if test_job["state"] == "TERMINATED":
+                        return (
+                            comp.cluster_loading("Cluster is loading..."),
+                            dash.no_update,
+                            dash.no_update,
                         )
-            except sqlalchemy.exc.OperationalError as e:
-                return dmc.LoadingOverlay(
-                    dmc.Badge(
-                        id="engine-connection-badge",
-                        variant="dot",
-                        color="red",
-                        size="lg",
-                        children=[html.Span(f"Engine Connection failed: {str(e)}")],
-                    ),
-                    loaderProps={
-                        "variant": "dots",
-                        "color": "orange",
-                        "size": "xl",
-                    },
-                )
 
-    return html.Div("Please select a profile.", style={"color": "orange"})
+                    if test_job["state"] == "STARTING":
+                        return (
+                            comp.cluster_loading("Cluster is loading..."),
+                            dash.no_update,
+                            dmc.LoadingOverlay(
+                                dmc.Badge(
+                                    id="engine-connection-badge",
+                                    variant="dot",
+                                    color="yellow",
+                                    size="lg",
+                                    children=[
+                                        html.Span(f"Connecting to Workspace: {host} ")
+                                    ],
+                                ),
+                            ),
+                        )
+                    elif test_job["state"] == "RUNNING":
+                        return (
+                            dash.no_update,
+                            comp.cluster_loaded("Cluster is loaded"),
+                            dmc.LoadingOverlay(
+                                dmc.Badge(
+                                    id="engine-connection-badge",
+                                    variant="dot",
+                                    color="green",
+                                    size="lg",
+                                    children=[
+                                        html.Span(f"Connected to Workspace: {host} ")
+                                    ],
+                                ),
+                            ),
+                        )
+
+                except Exception as e:
+                    print(f"Error occurred while testing engine connection: {str(e)}")
+
+    return dash.no_update, dash.no_update, dash.no_update
 
 
 @callback(
@@ -512,6 +552,7 @@ def tables(selected):
     [
         Output("build-response", "children"),
         Output("general-store", "data"),
+        Output("notifications-container-step1", "children"),
     ],
     [Input("build-strategy", "n_clicks")],
     [
@@ -524,8 +565,6 @@ def tables(selected):
         State("schema_selection_store", "data"),
         State("catalog_selection_store", "data"),
         State("startover", "checked"),
-        # State("cluster-id-store", "data"),
-        # State("user-name-store", "data"),
     ],
     prevent_initial_call=True,
 )
@@ -540,11 +579,26 @@ def delta_step_1_optimizer(
     schemalist,
     cataloglist,
     startover,
-    # selected_cluster,
-    # user_name,
 ):
     if not n_clicks:
         raise PreventUpdate
+
+    if any(
+        field is None or field == ""
+        for field in [
+            hostname,
+            token,
+            tablelist,
+            schemalist,
+            cataloglist,
+            optimizewarehouse,
+        ]
+    ):
+        return (
+            dash.no_update,
+            dash.no_update,
+            comp.notification_job1_error("Please fill out all fields."),
+        )
 
     # Prepare the job payload
     optimize_job = {
@@ -581,7 +635,7 @@ def delta_step_1_optimizer(
                 },
                 "new_cluster": {
                     "node_type_id": "i3.xlarge",
-                    "spark_version": "7.3.x-scala2.12",
+                    "spark_version": "12.1.x-scala2.12",
                     "num_workers": 8,
                     "spark_conf": {"spark.databricks.delta.preview.enabled": "true"},
                     "spark_env_vars": {
@@ -591,9 +645,7 @@ def delta_step_1_optimizer(
                 },
                 "aws_attributes": {"availability": "ON_DEMAND"},
                 "libraries": [
-                    {
-                        "whl": "dbfs:/FileStore/tmp/deltaoptimizer-1.4.1-py3-none-any.whl"
-                    },
+                    {"whl": "dbfs:/tmp/deltaoptimizer-1.5.0-py3-none-any.whl"},
                 ],
                 "timeout_seconds": 0,
                 "notification_settings": {
@@ -648,34 +700,45 @@ def delta_step_1_optimizer(
             ).json()
 
             if "run_id" in run_resp:
-                return [
-                    f"Optimizer ran with Job ID: {job_id}",
-                    dmc.Space(h=10),
-                    "You can now use the optimizer strategy to optimize your tables.",
-                    dmc.Anchor(
-                        "Delta Optimizer - Runner page.",
-                        href=dash.get_relative_path("/optimizer-runner"),
-                        target="_blank",
-                        style={"font-size": "14px"},
+                return (
+                    [
+                        f"Optimizer ran with Job ID: {job_id}",
+                        dmc.Space(h=10),
+                        "You can now use the optimizer strategy to optimize your tables.",
+                        dmc.Anchor(
+                            "Delta Optimizer - Runner page.",
+                            href=dash.get_relative_path("/optimizer-runner"),
+                            target="_blank",
+                            style={"font-size": "14px"},
+                        ),
+                    ],
+                    job_id,
+                    comp.notification_user_step_1(
+                        f"Optimizer ran with Job ID: {job_id}"
                     ),
-                ], job_id
+                )
 
             # Handle specific error conditions
             if "error" in run_resp:
                 error_message = run_resp["error"]["message"]
+                error_message_string = str(error_message)
                 if "run_id" in run_resp["error"]:
                     job_id = run_resp["error"]["run_id"]
                     return (
                         f"Error occurred while running the optimizer: {error_message} (Job ID: {job_id})",
                         None,
+                        comp.notification_user_step_1(
+                            f"Error while running optimizer{error_message_string}"
+                        ),
                     )
                 else:
                     return (
                         f"Error occurred while running the optimizer: {error_message}",
                         None,
+                        comp.notification_user_step_1(error_message_string),
                     )
 
-        return "Error occurred while creating the job.", None
+        return "Error occurred while creating the job.", None, None
 
     except requests.exceptions.RequestException as e:
-        return f"Error occurred while running the optimizer: {str(e)}", None
+        return f"Error occurred while running the optimizer: {str(e)}", None, None
