@@ -24,7 +24,7 @@ LEFT_SIDEBAR = dmc.Stack(
         html.A(
             [
                 html.Img(
-                    src=dash.get_asset_url("dbxdashlogo2.png"),
+                    src=dash.get_asset_url("plotly_DO.png"),
                     style={
                         "height": "100%",
                         "width": "100%",

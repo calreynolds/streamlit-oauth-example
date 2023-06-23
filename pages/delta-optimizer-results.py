@@ -7,10 +7,10 @@ import plotly_express as px
 import dash_mantine_components as dmc
 import dash_chart_editor as dce
 import dash_bootstrap_components as dbc
+import components as compo
 
 import pandas as pd
 import dash_ag_grid as dag
-from databricks.connect import DatabricksSession
 import sqlalchemy.exc
 import os
 from configparser import ConfigParser
@@ -61,97 +61,103 @@ def layout():
     #     {"label": c, "value": c} for c in schema_list.schema_name.unique()
     # ]
 
-    return html.Div(
-        [
-            dmc.Title("Results"),
-            dmc.Divider(variant="solid"),
-            dmc.Space(h=20),
-            dmc.Group(
-                position="left",
-                children=[
-                    dmc.Select(
-                        id="output_db_select",
-                        # options=[],
-                        data=[],
-                        placeholder="Select one",
-                        searchable=True,
-                        style={
-                            "width": "300px",
-                            "position": "relative",
-                            "top": "0px",
-                        },
-                    ),
-                    dmc.Button(
-                        "Refresh",
-                        id="refresh-button-step3",
-                        variant="default",
-                        style={
-                            "width": "120px",
-                            "position": "relative",
-                            "top": "0px",
-                        },
-                    ),
-                    html.Div(
-                        id="engine-test-result-step3",
-                        style={
-                            "width": "300px",
-                            "position": "relative",
-                            "left": "20px",
-                            "top": "0px",
-                        },
-                    ),
-                    html.Div(
-                        style={
-                            "width": "300px",
-                            "position": "relative",
-                            "left": "350px",
-                            "top": "0px",
-                        },
-                        children=[
-                            dmc.Select(
-                                id="profile-dropdown-step3",
-                                data=[],
-                                value="Select Profile",
-                                style={
-                                    "width": "200px",
-                                    "position": "relative",
-                                    "left": "40px",
-                                    "top": "0px",
-                                },
-                            )
-                        ],
-                    ),
-                ],
-            ),
-            # dmc.Group(
-            #     position="center",
-            #     children=[
-            #         dmc.Button(
-            #             "Run Strategy", id="run-strategy-button", variant="outline"
-            #         ),
-            #         dmc.Button("Schedule", id="checksql", variant="outline"),
-            #     ],
-            # ),
-            # dmc.Space(h=10),
-            # dmc.Text(id="run-strategy-output", align="center"),
-            # dmc.Space(h=20),
-            dmc.Space(h=20),
-            dmc.LoadingOverlay(
-                overlayOpacity=0.95,
-                loaderProps=dict(color="#FF3621", variant="bars"),
-                children=html.Div(id="result-page-layout"),
-            ),
-            html.Div(id="sqlalchemycheck"),
-            dcc.Store(id="hostname-store3", storage_type="memory"),
-            dcc.Store(id="path-store3", storage_type="memory"),
-            dcc.Store(id="token-store3", storage_type="memory"),
-            dcc.Store(id="cluster-id-store3", storage_type="memory"),
-            dcc.Store(id="cluster-name-store3", storage_type="memory"),
-            dcc.Store(id="user-name-store3", storage_type="memory"),
-            # dcc.Store(id="output-db-select", storage_type="memory"),
-            dcc.Interval(id="interval", interval=1000 * 60 * 60 * 24, n_intervals=0),
-            component_chatbot(),
-        ]
+    return dmc.MantineProvider(
+        children=dmc.NotificationsProvider(
+            [
+                html.Div(id="cluster-loading-notification-step3"),
+                html.Div(id="cluster-loaded-notification-step3"),
+                dmc.Title("Results"),
+                dmc.Divider(variant="solid"),
+                dmc.Space(h=20),
+                dmc.Group(
+                    position="left",
+                    children=[
+                        dmc.Select(
+                            id="output_db_select",
+                            # options=[],
+                            data=[],
+                            placeholder="Select one",
+                            searchable=True,
+                            style={
+                                "width": "300px",
+                                "position": "relative",
+                                "top": "0px",
+                            },
+                        ),
+                        dmc.Button(
+                            "Refresh",
+                            id="refresh-button-step3",
+                            variant="default",
+                            style={
+                                "width": "120px",
+                                "position": "relative",
+                                "top": "0px",
+                            },
+                        ),
+                        html.Div(
+                            id="engine-test-result-step3",
+                            style={
+                                "width": "300px",
+                                "position": "relative",
+                                "left": "20px",
+                                "top": "0px",
+                            },
+                        ),
+                        html.Div(
+                            style={
+                                "width": "300px",
+                                "position": "relative",
+                                "left": "350px",
+                                "top": "0px",
+                            },
+                            children=[
+                                dmc.Select(
+                                    id="profile-dropdown-step3",
+                                    data=[],
+                                    value="Select Profile",
+                                    style={
+                                        "width": "200px",
+                                        "position": "relative",
+                                        "left": "70px",
+                                        "top": "0px",
+                                    },
+                                )
+                            ],
+                        ),
+                    ],
+                ),
+                # dmc.Group(
+                #     position="center",
+                #     children=[
+                #         dmc.Button(
+                #             "Run Strategy", id="run-strategy-button", variant="outline"
+                #         ),
+                #         dmc.Button("Schedule", id="checksql", variant="outline"),
+                #     ],
+                # ),
+                # dmc.Space(h=10),
+                # dmc.Text(id="run-strategy-output", align="center"),
+                # dmc.Space(h=20),
+                dmc.Space(h=20),
+                dmc.LoadingOverlay(
+                    overlayOpacity=0.95,
+                    loaderProps=dict(color="#FF3621", variant="bars"),
+                    children=html.Div(id="result-page-layout"),
+                ),
+                html.Div(id="sqlalchemycheck"),
+                dcc.Store(id="hostname-store3", storage_type="memory"),
+                dcc.Store(id="path-store3", storage_type="memory"),
+                dcc.Store(id="token-store3", storage_type="memory"),
+                dcc.Store(id="cluster-id-store3", storage_type="memory"),
+                dcc.Store(id="cluster-name-store3", storage_type="memory"),
+                dcc.Store(id="user-name-store3", storage_type="memory"),
+                # dcc.Store(id="output-db-select", storage_type="memory"),
+                dcc.Interval(
+                    id="interval", interval=1000 * 60 * 60 * 24, n_intervals=0
+                ),
+                component_chatbot(),
+            ]
+        )
     )
 
 
@@ -239,121 +245,81 @@ def parse_databricks_config(profile_name):
 
 
 @callback(
-    Output("engine-test-result-step3", "children"),
-    Input("profile-dropdown-step3", "value"),
+    [
+        Output("cluster-loading-notification-step3", "children"),
+        Output("cluster-loaded-notification-step3", "children"),
+        Output("engine-test-result-step3", "children"),
+    ],
+    [
+        Input("profile-dropdown-step3", "value"),
+        Input("refresh-button-step3", "n_clicks"),
+    ],
     [
         State("hostname-store3", "data"),
         State("path-store3", "data"),
         State("token-store3", "data"),
     ],
-    prevent_initial_call=True,
 )
-def test_engine_and_spark_connection(profile_name, hostname, path, token):
-    if profile_name:
-        (
-            host,
-            token,
-            path,
-        ) = parse_databricks_config(profile_name)
-        if host and token and path:
-            # Modify the path to remove "/sql/1.0/warehouses/"
-            sql_warehouse = path.replace("/sql/1.0/warehouses/", "")
-            engine_url = f"databricks://token:{token}@{host}/?http_path={path}&catalog=main&schema=information_schema"
-            engine = create_engine(engine_url)
+def get_cluster_state(profile_name, n_clicks, host, path, token):
+    if n_clicks or profile_name:
+        if profile_name:
+            host, token, path = parse_databricks_config(profile_name)
+            if host and token and path:
+                sqlwarehouse = path.replace("/sql/1.0/warehouses", "")
 
-            try:
-                # Test the engine connection by executing a sample query
-                with engine.connect() as connection:
-                    result = connection.execute("SELECT 1")
-                    test_value = result.scalar()
+                try:
+                    test_job_uri = (
+                        f"https://{host}/api/2.0/sql/warehouses/{sqlwarehouse}"
+                    )
+                    headers_auth = {"Authorization": f"Bearer {token}"}
+                    test_job = requests.get(test_job_uri, headers=headers_auth).json()
+                    print(test_job)
 
-                    if test_value == 1:
-                        os.environ["USER"] = "anything"
-                        spark = DatabricksSession.builder.remote(
-                            f"sc://{host}:443/;token={token};x-databricks-cluster-id={cluster_id}"
-                        ).getOrCreate()
+                    if test_job["state"] == "TERMINATED":
+                        return (
+                            compo.cluster_loading("Cluster is loading..."),
+                            dash.no_update,
+                            dash.no_update,
+                        )
 
-                        try:
-                            # Test the Spark connection by executing a sample SQL command
-                            spark_result = spark.sql("SELECT 1")
-                            spark_test_value = spark_result.collect()[0][0]
-
-                            if spark_test_value == 1:
-                                return dmc.LoadingOverlay(
-                                    dmc.Badge(
-                                        id="spark-connection-badge",
-                                        variant="dot",
-                                        color="green",
-                                        size="lg",
-                                        children=[
-                                            html.Span(
-                                                f"Connected to SQL Warehouse: {sql_warehouse} + Cluster: {cluster_name}"
-                                            )
-                                        ],
-                                    ),
-                                    loaderProps={
-                                        "variant": "dots",
-                                        "color": "orange",
-                                        "size": "xl",
-                                    },
-                                )
-                            elif (
-                                "SPARK CONNECTION FAILED: THE CLUSTER" in str(e).upper()
-                            ):
-                                return dmc.LoadingOverlay(
-                                    dmc.Badge(
-                                        id="spark-connection-badge",
-                                        variant="dot",
-                                        color="yellow",
-                                        size="lg",
-                                        children=[
-                                            html.Span(
-                                                f"Spark Connection Pending: {cluster_name}"
-                                            )
-                                        ],
-                                    ),
-                                    loaderProps={
-                                        "variant": "dots",
-                                        "color": "orange",
-                                        "size": "xl",
-                                    },
-                                )
-                        except Exception as e:
-                            return dmc.LoadingOverlay(
+                    if test_job["state"] == "STARTING":
+                        return (
+                            compo.cluster_loading("Cluster is loading..."),
+                            dash.no_update,
+                            dmc.LoadingOverlay(
                                 dmc.Badge(
-                                    id="spark-connection-badge",
+                                    id="engine-connection-badge",
                                     variant="dot",
-                                    color="red",
+                                    color="yellow",
                                     size="lg",
                                     children=[
-                                        html.Span(f"Spark Connection failed: {str(e)}")
+                                        html.Span(f"Connecting to Workspace: {host} ")
                                     ],
                                 ),
-                                loaderProps={
-                                    "variant": "dots",
-                                    "color": "orange",
-                                    "size": "xl",
-                                },
-                            )
-            except sqlalchemy.exc.OperationalError as e:
-                return dmc.LoadingOverlay(
-                    dmc.Badge(
-                        id="spark-connection-badge",
-                        variant="dot",
-                        color="red",
-                        size="lg",
-                        children=[
-                            html.Span(f"SQL Alchemy Connection failed: {str(e)}")
-                        ],
-                    ),
-                    loaderProps={
-                        "variant": "dots",
-                        "color": "orange",
-                        "size": "xl",
-                    },
-                )
+                            ),
+                        )
+                    elif test_job["state"] == "RUNNING":
+                        return (
+                            dash.no_update,
+                            compo.cluster_loaded("Cluster is loaded"),
+                            dmc.LoadingOverlay(
+                                dmc.Badge(
+                                    id="engine-connection-badge",
+                                    variant="gradient",
+                                    gradient={"from": "teal", "to": "lime", "deg": 105},
+                                    color="green",
+                                    size="lg",
+                                    children=[
+                                        html.Span(f"Connected to Workspace: {host} ")
+                                    ],
+                                ),
+                            ),
+                        )
 
-    return html.Div("Please select a profile.", style={"color": "orange"})
+                except Exception as e:
+                    print(f"Error occurred while testing engine connection: {str(e)}")
+
+    return dash.no_update, dash.no_update, dash.no_update
 
 
 cardinality_stats = pd.DataFrame()
