@@ -196,8 +196,9 @@ def cluster_loaded(text):
     )
 
 
-FOOTER = html.Footer(
+FOOTER = dmc.Footer(
     className="footer",
+    height=20,
     children=[
         html.Div(
             className="footer-content",
@@ -205,6 +206,55 @@ FOOTER = html.Footer(
                 html.A(
                     "© 2023-Plotly Inc.", href="https://plotly.com/", target="_blank"
                 ),
+                html.Div(
+                    className="footer-links",
+                    children=[
+                        html.A(
+                            "About",
+                            href="https://www.databricks.com/company/about-us",
+                            target="_blank",
+                        ),
+                        html.A(
+                            "Databricks+Dash",
+                            href="https://dash-demo.plotly.host/plotly-dash-500/snapshot-1684467228-670d42dd",
+                            target="_blank",
+                        ),
+                        html.A(
+                            "Blog Posts",
+                            href="https://medium.com/plotly/build-real-time-production-data-apps-with-databricks-plotly-dash-269cb64b7575",
+                            target="_blank",
+                        ),
+                        html.A(
+                            "Contact",
+                            href="https://www.databricks.com/company/contact",
+                            target="_blank",
+                        ),
+                    ],
+                ),
+            ],
+        ),
+    ],
+)
+
+FOOTER_FIXED = dmc.Footer(
+    height=50,
+    fixed=True,
+    className="footer",
+    children=[
+        html.Div(
+            className="footer-content",
+            children=[
+                html.Div(
+                    className="footer-content-item",
+                    children=[
+                        html.A(
+                            "© 2023 Plotly Inc.",
+                            href="https://plotly.com/",
+                            target="_blank",
+                        )
+                    ],
+                ),
+                html.Div(className="footer-content-spacing"),
                 html.Div(
                     className="footer-links",
                     children=[

@@ -60,10 +60,10 @@
 }
 
 .nav-link-component a,
-.footer a {
+/* .footer a {
     text-decoration: none !important;
     color: #fff;
-}
+} */
 
 .page {
     background-color: #F2F4F6 !important;
@@ -74,18 +74,64 @@
 
 .footer {
     display: flex;
-    justify-content: flex-end;
+    justify-content: flex-start;
     align-items: flex-start;
     background-color: #f8f9fa;
     padding: 20px;
-    position: fixed;
-    bottom: 0;
+    color: black;
+    position: absolute;
+    bottom: 20px;
     left: 320px;
     /* Adjust the left position to accommodate the width of the sidebar */
-    right: 200px;
+    right: 50px;
     z-index: 2;
     /* Ensure the footer appears above the content but below the sidebar */
+    padding-bottom: 20px;
+    padding-top: 10px;
+    /* Add the desired padding value */
+    text-align: left;
+    /* Align the text to the left */
+    border-radius: 10px;
+    /* Add the desired border radius */
+    box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.2);
+    /* Add the desired shadow effect */
+
+
 }
+
+.footer .footer-content {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+}
+
+.footer .footer-content>*:not(:last-child) {
+    margin-right: 20px;
+}
+
+.footer .footer-links {
+    display: flex;
+    align-items: center;
+}
+
+.footer .footer-links>*:not(:last-child) {
+    margin-right: 20px;
+}
+
+.footer .footer-links a,
+.footer .footer-content a {
+    color: black;
+    text-decoration: none;
+}
+
+.footer .footer-links a:hover,
+.footer .footer-content a:hover {
+    text-decoration: underline;
+}
+
+
+
+
 
 body {
     margin: 0 !important;

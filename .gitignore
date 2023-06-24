@@ -258,3 +258,4 @@ config.toml
 tempTEMP_MPY_*
 .vscode/
 reddit_hearsay.json
+.databricks

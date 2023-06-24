@@ -18,7 +18,7 @@ server = app.server
 
 from components import (
     LEFT_SIDEBAR,
-    FOOTER,
+    FOOTER_FIXED,
 )  # noqa: E402 isort:skip - must be imported after app is defined
 
 app.layout = dmc.MantineProvider(
@@ -57,6 +57,7 @@ app.layout = dmc.MantineProvider(
                 ),
             ],
         ),
+        FOOTER_FIXED,
         dcc.Store(
             id="general-store", data={"outputdpdn2": "main.delta_optimizer_mercury"}
         ),
@@ -156,5 +157,7 @@ def streaming_chat():
     )
 
 
+# ip_address = "10.179.194.70"
+
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(debug=True, port=8050)
