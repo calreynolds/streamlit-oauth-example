@@ -99,9 +99,9 @@ def layout():
                                             data=[],
                                             value="Select Profile",
                                             style={
-                                                "width": "200px",
+                                                "width": "230px",
                                                 "position": "relative",
-                                                "left": "110px",
+                                                "left": "85px",
                                                 "top": "0px",
                                             },
                                         )
@@ -157,10 +157,11 @@ def layout():
                             style={
                                 "width": "500px",
                                 "position": "relative",
-                                "left": "350px",
+                                "left": "400px",
                                 "top": "0px",
                             },
                         ),
+                        dmc.Space(h=10),
                         html.Div(id="load-optimizer-grid"),
                         dmc.Space(h=10),
                         dmc.Space(h=10),
@@ -244,13 +245,6 @@ def populate_profile_dropdown(profile_name):
                     "filterParams": {"buttons": ["apply", "reset"]},
                     "minWidth": 180,
                 },
-                # {
-                #     "headerName": "Catalog Name",
-                #     "field": "table_catalog",
-                #     "filter": True,
-                #     "floatingFilter": True,
-                #     "filterParams": {"buttons": ["apply", "reset"]},
-                # },
                 {
                     "headerName": "Creator",
                     "field": "created_by",
@@ -421,13 +415,24 @@ def get_cluster_state(profile_name, n_clicks, host, path, token):
                     )
                     headers_auth = {"Authorization": f"Bearer {token}"}
                     test_job = requests.get(test_job_uri, headers=headers_auth).json()
-                    print(test_job)
+                    # print(test_job)
 
                     if test_job["state"] == "TERMINATED":
                         return (
                             comp.cluster_loading("Cluster is loading..."),
                             dash.no_update,
-                            dash.no_update,
+                            dmc.LoadingOverlay(
+                                dmc.Badge(
+                                    id="engine-connection-badge",
+                                    variant="gradient",
+                                    color="yellow",
+                                    gradient={"from": "yeloow", "to": "orange"},
+                                    size="lg",
+                                    children=[
+                                        html.Span(f"Connecting to Workspace: {host} ")
+                                    ],
+                                ),
+                            ),
                         )
 
                     if test_job["state"] == "STARTING":
@@ -437,7 +442,8 @@ def get_cluster_state(profile_name, n_clicks, host, path, token):
                             dmc.LoadingOverlay(
                                 dmc.Badge(
                                     id="engine-connection-badge",
-                                    variant="dot",
+                                    variant="gradient",
+                                    gradient={"from": "yellow", "to": "orange"},
                                     color="yellow",
                                     size="lg",
                                     children=[
@@ -453,7 +459,8 @@ def get_cluster_state(profile_name, n_clicks, host, path, token):
                             dmc.LoadingOverlay(
                                 dmc.Badge(
                                     id="engine-connection-badge",
-                                    variant="dot",
+                                    variant="gradient",
+                                    gradient={"from": "teal", "to": "lime", "deg": 105},
                                     color="green",
                                     size="lg",
                                     children=[

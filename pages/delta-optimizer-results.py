@@ -116,9 +116,9 @@ def layout():
                                     data=[],
                                     value="Select Profile",
                                     style={
-                                        "width": "200px",
+                                        "width": "230px",
                                         "position": "relative",
-                                        "left": "70px",
+                                        "left": "55px",
                                         "top": "0px",
                                     },
                                 )
@@ -126,18 +126,6 @@ def layout():
                         ),
                     ],
                 ),
-                # dmc.Group(
-                #     position="center",
-                #     children=[
-                #         dmc.Button(
-                #             "Run Strategy", id="run-strategy-button", variant="outline"
-                #         ),
-                #         dmc.Button("Schedule", id="checksql", variant="outline"),
-                #     ],
-                # ),
-                # dmc.Space(h=10),
-                # dmc.Text(id="run-strategy-output", align="center"),
-                # dmc.Space(h=20),
                 dmc.Space(h=20),
                 dmc.LoadingOverlay(
                     overlayOpacity=0.95,
@@ -188,7 +176,6 @@ def fetch_schema_names(n_clicks, hostname, path, token):
 
 @callback(
     Output("profile-dropdown-step3", "data"),
-    # [Input("refresh-button-step3", "n_clicks"), Input("interval", "n_intervals")],
     Input("profile-dropdown-step3", "value"),
 )
 def populate_profile_dropdown(profile_name):
@@ -273,7 +260,7 @@ def get_cluster_state(profile_name, n_clicks, host, path, token):
                     )
                     headers_auth = {"Authorization": f"Bearer {token}"}
                     test_job = requests.get(test_job_uri, headers=headers_auth).json()
-                    print(test_job)
+                    # print(test_job)
 
                     if test_job["state"] == "TERMINATED":
                         return (
@@ -289,8 +276,8 @@ def get_cluster_state(profile_name, n_clicks, host, path, token):
                             dmc.LoadingOverlay(
                                 dmc.Badge(
                                     id="engine-connection-badge",
-                                    variant="dot",
-                                    color="yellow",
+                                    variant="gradient",
+                                    gradient={"from": "yellow", "to": "orange"},
                                     size="lg",
                                     children=[
                                         html.Span(f"Connecting to Workspace: {host} ")

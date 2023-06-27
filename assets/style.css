@@ -76,6 +76,10 @@
     display: flex;
     justify-content: flex-start;
     align-items: flex-start;
+    font-family: DM Sans, sans-serif !important;
+    font-weight: 400 !important;
+
+    font-size: small;
     background-color: #f8f9fa;
     padding: 20px;
     color: black;
@@ -87,7 +91,7 @@
     z-index: 2;
     /* Ensure the footer appears above the content but below the sidebar */
     padding-bottom: 20px;
-    padding-top: 10px;
+    padding-top: 13px;
     /* Add the desired padding value */
     text-align: left;
     /* Align the text to the left */

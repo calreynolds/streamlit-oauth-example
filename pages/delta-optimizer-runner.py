@@ -511,6 +511,7 @@ def populate_profile_dropdown(profile_name):
         State("path-store2", "data"),
         State("token-store2", "data"),
     ],
+    prevent_initial_call=True,
 )
 def get_cluster_state(profile_name, n_clicks, host, path, token):
     if n_clicks or profile_name:
@@ -525,7 +526,7 @@ def get_cluster_state(profile_name, n_clicks, host, path, token):
                     )
                     headers_auth = {"Authorization": f"Bearer {token}"}
                     test_job = requests.get(test_job_uri, headers=headers_auth).json()
-                    print(test_job)
+                    # print(test_job)
 
                     if test_job["state"] == "TERMINATED":
                         return (
@@ -541,8 +542,8 @@ def get_cluster_state(profile_name, n_clicks, host, path, token):
                             dmc.LoadingOverlay(
                                 dmc.Badge(
                                     id="engine-connection-badge",
-                                    variant="dot",
-                                    color="yellow",
+                                    variant="gradient",
+                                    gradient={"from": "yellow", "to": "orange"},
                                     size="lg",
                                     children=[
                                         html.Span(f"Connecting to Workspace: {host} ")
@@ -686,8 +687,8 @@ def toggle_pause_selected_jobs(n_clicks, selected_rows, hostname, token):
                 update_url = f"https://{hostname}/api/2.1/jobs/reset"
                 headers = {"Authorization": f"Bearer {token}"}
                 response_new = requests.post(update_url, headers=headers, json=payload)
-                print(payload)
-                print(response_new.status_code)
+                # print(payload)
+                # print(response_new.status_code)
 
                 if response_new.status_code == 200:
                     toggle_count += 1
@@ -761,12 +762,17 @@ def change_schedule(n_clicks, selected_rows, new_schedule, hostname, token):
         Input("profile-dropdown-step2", "value"),
         Input("refresh-button-step2", "n_clicks"),
     ],
-    State("hostname-store2", "data"),
-    State("token-store2", "data"),
+    [
+        State("hostname-store2", "data"),
+        State("token-store2", "data"),
+    ],
     prevent_initial_call=True,
 )
 def get_job_list(profile_name, n_clicks, host, access_token):
-    if profile_name or n_clicks is not None and n_clicks > 0:
+    if profile_name or (n_clicks is not None and n_clicks > 0):
+        if host is None or access_token is None:
+            raise PreventUpdate
+
         # Make a GET request to the Jobs API
         response = requests.get(
             f"https://{host}/api/2.1/jobs/list",
@@ -778,8 +784,22 @@ def get_job_list(profile_name, n_clicks, host, access_token):
             # Extract the job information from the response
             job_list = response.json().get("jobs", [])
 
-            # Convert the job list to a Pandas DataFrame
-            df = pd.DataFrame(job_list)
+            # Create an empty list to store the filtered jobs
+            filtered_jobs = []
+
+            # Iterate over the job list and filter jobs with "Optimizer" in the name or settings.name
+            for job in job_list:
+                name = job.get("name")
+                settings_name = job.get("settings", {}).get("name")
+                if name and ("Optimizer" in name or "Strategy" in name):
+                    filtered_jobs.append(job)
+                elif settings_name and (
+                    "Optimizer" in settings_name or "Strategy" in settings_name
+                ):
+                    filtered_jobs.append(job)
+
+            # Convert the filtered jobs list to a Pandas DataFrame
+            df = pd.DataFrame(filtered_jobs)
 
             # Select columns to display in the table
 
@@ -869,13 +889,13 @@ def get_job_list(profile_name, n_clicks, host, access_token):
             # Return the jobs_grid
             return jobs_grid
 
-    # Return an empty list if the button hasn't been clicked yet or the request was not successful
-    return []
+        # Return an empty list if the button hasn't been clicked yet or the request was not successful
+        return []
 
-    # Return an empty DataFram
+        # Return an empty DataFram
 
-    # Return an empty div if the button hasn't been clicked yet
-    return html.Div()
+        # Return an empty div if the button hasn't been clicked yet
+        return html.Div()
 
 
 @callback(
@@ -1025,8 +1045,6 @@ def tables(selected):
     ],
     State("slider-callback", "value"),
     State("schema_selection_store1", "data"),
-    # State("cluster-id-store2", "data"),
-    # State("user-name-store2", "data"),
     State("hostname-store2", "data"),
     State("token-store2", "data"),
     prevent_initial_call=True,
