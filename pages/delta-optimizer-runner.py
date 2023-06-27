@@ -358,9 +358,6 @@ def populate_profile_dropdown(profile_name):
             config.has_option(section, "host")
             and config.has_option(section, "path")
             and config.has_option(section, "token")
-            # and config.has_option(section, "cluster_name")
-            # and config.has_option(section, "cluster_id")
-            # and config.has_option(section, "user_name")
         ):
             options.append({"label": section, "value": section})
 
@@ -369,9 +366,6 @@ def populate_profile_dropdown(profile_name):
             host,
             token,
             path,
-            # cluster_name,
-            # cluster_id,
-            # user_name,
         ) = parse_databricks_config(profile_name)
         if host and token and path:
             engine_url = f"databricks://token:{token}@{host}/?http_path={path}&catalog=main&schema=information_schema"
@@ -381,18 +375,6 @@ def populate_profile_dropdown(profile_name):
             tables_in_db = pd.read_sql_query(tables_stmt, big_engine)
 
             columnDefs = [
-                # {
-                #     "headerName": "Table Name",
-                #     "field": "table_name",
-                #     "checkboxSelection": True,
-                #     "headerCheckboxSelection": True,
-                #     "filter": True,
-                #     "floatingFilter": True,
-                #     "filterParams": {
-                #         "buttons": ["apply", "reset"],
-                #     },
-                #     "minWidth": 180,
-                # },
                 {
                     "headerName": "Strategy Name",
                     "field": "table_schema",
@@ -403,13 +385,6 @@ def populate_profile_dropdown(profile_name):
                     "filterParams": {"buttons": ["apply", "reset"]},
                     "minWidth": 220,
                 },
-                # {
-                #     "headerName": "Catalog Name",
-                #     "field": "table_catalog",
-                #     "filter": True,
-                #     "floatingFilter": True,
-                #     "filterParams": {"buttons": ["apply", "reset"]},
-                # },
                 {
                     "headerName": "Creator",
                     "field": "created_by",
@@ -892,8 +867,6 @@ def get_job_list(profile_name, n_clicks, host, access_token):
         # Return an empty list if the button hasn't been clicked yet or the request was not successful
         return []
 
-        # Return an empty DataFram
-
         # Return an empty div if the button hasn't been clicked yet
         return html.Div()
 
@@ -930,9 +903,6 @@ def create_ag_grid(selected_table, profile_name):
             config.has_option(section, "host")
             and config.has_option(section, "path")
             and config.has_option(section, "token")
-            # and config.has_option(section, "cluster_name")
-            # and config.has_option(section, "cluster_id")
-            # and config.has_option(section, "user_name")
         ):
             options.append({"label": section, "value": section})
 
@@ -941,9 +911,6 @@ def create_ag_grid(selected_table, profile_name):
             host,
             token,
             path,
-            # cluster_name,
-            # cluster_id,
-            # user_name,
         ) = parse_databricks_config(profile_name)
         if host and token and path:
             engine_url = f"databricks://token:{token}@{host}/?http_path={path}&catalog=main&schema=information_schema"
@@ -1222,7 +1189,6 @@ def delta_step_2_optimizer_schedule(
                 },
                 "aws_attributes": {
                     "availability": "ON_DEMAND",
-                    # "zone_id": "us-west-2a",
                 },
                 "libraries": [
                     {"whl": "dbfs:/tmp/deltaoptimizer-1.5.0-py3-none-any.whl"},

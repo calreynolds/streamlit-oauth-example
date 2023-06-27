@@ -7,23 +7,10 @@ from dash import html, dcc, callback, Input, Output, State, ctx
 import dash_mantine_components as dmc
 from dash_iconify import DashIconify
 from sqlalchemy.engine import create_engine
-from components import footer
 import components as comp
 
 
 dash.register_page(__name__, path="/connection_settings", title="Connection Settings")
-
-sidebar_code = """
-<script>
-    (function () {
-        'use strict';
-        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-        tooltipTriggerList.forEach(function (tooltipTriggerEl) {
-            new bootstrap.Tooltip(tooltipTriggerEl);
-        });
-    })();
-</script>
-"""
 
 
 def layout():
@@ -133,7 +120,6 @@ def layout():
                         dcc.Store(id="engine-store", storage_type="memory"),
                         html.Div(id="dummy", style={"display": "none"}),
                         dcc.Store(id="cluster-options-store", storage_type="memory"),
-                        footer(),
                     ],
                 ),
             ]
@@ -254,6 +240,3 @@ def activate_profile(n_clicks, profile_name):
                 comp.notification_user(error_message),
             ]
     return ["", None, None]
-
-
-# Callback to check if the library is in DBFS

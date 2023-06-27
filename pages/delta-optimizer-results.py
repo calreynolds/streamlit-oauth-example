@@ -52,15 +52,6 @@ rawquery_tbl = Table("raw_queries", RawQueryTempView.metadata)
 
 
 def layout():
-    # big_engine = create_engine(
-    #     f"databricks://token:{ACCESS_TOKEN}@{SERVER_HOSTNAME}/?http_path={HTTP_PATH}&catalog={CATALOG}&schema={SCHEMA}"
-    # )
-    # schemas_init_statment = f"SELECT schema_name FROM {CATALOG}.{SCHEMA}.SCHEMATA ORDER BY created DESC;"  # ORDER BY created DESC
-    # schema_list = pd.read_sql_query(schemas_init_statment, big_engine)
-    # schema_select_data = [
-    #     {"label": c, "value": c} for c in schema_list.schema_name.unique()
-    # ]
-
     return dmc.MantineProvider(
         children=dmc.NotificationsProvider(
             [

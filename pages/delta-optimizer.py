@@ -64,13 +64,11 @@ def layout():
                                     "Build Strategy",
                                     id="build-strategy",
                                     variant="outline",
-                                    # color="#0f1d22",
                                 ),
                                 dmc.Button(
                                     "Clear Selections",
                                     id="clear-selection",
                                     variant="default",
-                                    # color="#0f1d22",
                                 ),
                                 dmc.Button(
                                     "Refresh",
@@ -190,7 +188,6 @@ def layout():
 @callback(
     Output("profile-dropdown-step1", "data"),
     Output("load-optimizer-grid", "children"),
-    # [Input("refresh-button", "n_clicks"), Input("interval", "n_intervals")],
     Input("profile-dropdown-step1", "value"),
 )
 def populate_profile_dropdown(profile_name):

@@ -55,15 +55,6 @@ def layout():
             dmc.Group(
                 position="left",
                 children=[
-                    # dmc.Button(
-                    #     "Run Strategy",
-                    #     id="run-strategy-button-explorer",
-                    #     variant="outline",
-                    # ),
-                    # dmc.Button("Schedule", id="checksql-explorer", variant="outline"),
-                    # dmc.TextInput(
-                    #     id="schedule-explorer", type="text", value="0 0 10 * * ?"
-                    # ),
                     dmc.Button(
                         "Refresh",
                         id="refresh-button-step4",
@@ -102,9 +93,7 @@ def layout():
                 ],
             ),
             dmc.Space(h=10),
-            # dmc.Text(id="run-strategy-output-explorer"),
             dmc.Space(h=10),
-            # dmc.Text(id="run-strategy-output-schedule-explorer"),
             dmc.Space(h=30),
             html.Div(id="load-optimizer-grid-step4"),
             dmc.Space(h=20),
