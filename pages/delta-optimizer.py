@@ -218,7 +218,7 @@ def populate_profile_dropdown(profile_name):
             engine_url = f"databricks://token:{token}@{host}/?http_path={path}&catalog=main&schema=information_schema"
             big_engine = create_engine(engine_url)
 
-            tables_stmt = "SELECT table_catalog, table_schema, table_name, created, created_by, last_altered, last_altered_by FROM main.INFORMATION_SCHEMA.TABLES"
+            tables_stmt = "SELECT table_catalog, table_schema, table_name, created, created_by, last_altered, last_altered_by FROM system.INFORMATION_SCHEMA.TABLES"
             tables_in_db = pd.read_sql_query(tables_stmt, big_engine)
 
             columnDefs = [
@@ -237,6 +237,14 @@ def populate_profile_dropdown(profile_name):
                 {
                     "headerName": "Database Name",
                     "field": "table_schema",
+                    "filter": True,
+                    "floatingFilter": True,
+                    "filterParams": {"buttons": ["apply", "reset"]},
+                    "minWidth": 180,
+                },
+                {
+                    "headerName": "Catalog Name",
+                    "field": "table_catalog",
                     "filter": True,
                     "floatingFilter": True,
                     "filterParams": {"buttons": ["apply", "reset"]},
@@ -627,7 +635,7 @@ def delta_step_1_optimizer(
                         "Optimizer Output Database:": f"{outputdb}",
                         "Server Hostname:": f"{hostname}",
                         "Catalog Filter Mode": "include_list",
-                        "<dbx_token>": f"{token}",
+                        "Access Token:": f"{token}",
                         "Catalog Filter List (Csv List)": f"{cataloglist}",
                         "Database Filter List (catalog.database) (Csv List)": schemalist,
                         "SQL Warehouse Ids (csv list)": f"{optimizewarehouse}",
@@ -660,9 +668,9 @@ def delta_step_1_optimizer(
             }
         ],
         "git_source": {
-            "git_url": "https://github.com/CodyAustinDavis/edw-best-practices.git",
+            "git_url": "https://github.com/noshadeson/edw-best-practices.git",
             "git_provider": "gitHub",
-            "git_branch": "main",
+            "git_branch": "patch-1",
         },
         "format": "MULTI_TASK",
     }
@@ -688,7 +696,7 @@ def delta_step_1_optimizer(
                     "Optimizer Output Database:": f"{outputdb}",
                     "Server Hostname:": f"{hostname}",
                     "Catalog Filter Mode": "include_list",
-                    "<dbx_token>": f"{token}",
+                    "Access Token:": f"{token}",
                     "Catalog Filter List (Csv List)": f"{cataloglist}",
                     "Database Filter List (catalog.database) (Csv List)": schemalist,
                     "SQL Warehouse Ids (csv list)": optimizewarehouse,

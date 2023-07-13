@@ -371,7 +371,7 @@ def populate_profile_dropdown(profile_name):
             engine_url = f"databricks://token:{token}@{host}/?http_path={path}&catalog=main&schema=information_schema"
             big_engine = create_engine(engine_url)
 
-            tables_stmt = f"SELECT * FROM {CATALOG}.INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'optimizer_results';"
+            tables_stmt = f"SELECT * FROM system.INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'optimizer_results';"
             tables_in_db = pd.read_sql_query(tables_stmt, big_engine)
 
             columnDefs = [
@@ -915,7 +915,7 @@ def create_ag_grid(selected_table, profile_name):
         if host and token and path:
             engine_url = f"databricks://token:{token}@{host}/?http_path={path}&catalog=main&schema=information_schema"
             engine = create_engine(engine_url)
-    stmt = f"select * from {selected_table}"
+    stmt = f"select * from {selected_table[0].strip('[]')}"
     df = pd.read_sql_query(stmt, engine)
     columnDefs = [
         {
@@ -978,10 +978,13 @@ def schema(selected):
         selected_schema = [s["table_schema"] for s in selected]
         selected_schema_unique = set(selected_schema)
         selected_schema_unique_list = list(selected_schema_unique)
-        final = [str("main." + i) for i in selected_schema_unique_list]
-        final = ",".join(final)
-        # json_tables = json.dumps(final)
-        return ", ".join(selected_schema_unique_list), final
+        final = [
+            f"{catalog}{i}"
+            for catalog in selected_catalog
+            for i in selected_schema_unique_list
+        ]
+        final_string = ", ".join(final)
+        return ", ".join(selected_schema_unique_list), final_string
     return "No selections", dash.no_update
 
 
@@ -992,15 +995,17 @@ def schema(selected):
 )
 def tables(selected):
     if selected:
+        selected_catalog = [s["table_catalog"] for s in selected]
         selected_tables = [s["table_name"] for s in selected]
         selected_schema = [s["table_schema"] for s in selected]
         final = [
-            "main." + schema + "." + table
-            for schema, table in zip(selected_schema, selected_tables)
+            f"{catalog}.{schema}.{table}"
+            for catalog, schema, table in zip(
+                selected_catalog, selected_schema, selected_tables
+            )
         ]
-        final = ",".join(final)
-        # json_tables = json.dumps(final)
-        return ", ".join(selected_tables), final
+        final_string = ", ".join(final)
+        return final_string, final
     return "No selections", dash.no_update
 
 
