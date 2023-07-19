@@ -33,13 +33,13 @@ def layout():
                             position="left",
                             mt="xl",
                             children=[
-                                # dmc.Button(
-                                #     "Activate Profile",
-                                #     rightIcon=DashIconify(
-                                #         icon="codicon:run-above",
-                                #     ),
-                                #     id="activate-button",
-                                # ),
+                                dmc.Button(
+                                    "Activate Profile",
+                                    rightIcon=DashIconify(
+                                        icon="codicon:run-above",
+                                    ),
+                                    id="activate-button",
+                                ),
                                 html.Div(id="selected-profile"),
                             ],
                         ),
@@ -186,57 +186,57 @@ def update_profile_dropdown(dummy):
     return options
 
 
-# # Callback to activate the selected profile
-# @callback(
-#     Output("selected-profile", "children"),
-#     Output("selected-profile-store", "data"),
-#     Output("notifications-container", "children"),
-#     [Input("activate-button", "n_clicks")],
-#     [State("profile-dropdown", "value")],
-# )
-# def activate_profile(n_clicks, profile_name):
-#     if n_clicks and profile_name:
-#         command = f"databricks fs ls dbfs:/ --profile {profile_name}"
-#         try:
-#             result = subprocess.run(command, capture_output=True, text=True, shell=True)
-#             output = result.stdout.strip()
+# Callback to activate the selected profile
+@callback(
+    Output("selected-profile", "children"),
+    Output("selected-profile-store", "data"),
+    Output("notifications-container", "children"),
+    [Input("activate-button", "n_clicks")],
+    [State("profile-dropdown", "value")],
+)
+def activate_profile(n_clicks, profile_name):
+    if n_clicks and profile_name:
+        command = f"databricks fs ls dbfs:/ --profile {profile_name}"
+        try:
+            result = subprocess.run(command, capture_output=True, text=True, shell=True)
+            output = result.stdout.strip()
 
-#             url = "https://github.com/CodyAustinDavis/edw-best-practices/raw/main/Delta%20Optimizer/deltaoptimizer-1.5.0-py3-none-any.whl"
-#             local_path = "/tmp/deltaoptimizer-1.5.0-py3-none-any.whl"
-#             dbfs_path = "dbfs:/tmp/deltaoptimizer-1.5.0-py3-none-any.whl"
+            url = "https://github.com/CodyAustinDavis/edw-best-practices/raw/main/Delta%20Optimizer/deltaoptimizer-1.5.0-py3-none-any.whl"
+            local_path = "/tmp/deltaoptimizer-1.5.0-py3-none-any.whl"
+            dbfs_path = "dbfs:/tmp/deltaoptimizer-1.5.0-py3-none-any.whl"
 
-#             test = urllib.request.urlretrieve(url, local_path)
-#             print(test)
+            test = urllib.request.urlretrieve(url, local_path)
+            print(test)
 
-#             upload_command = [
-#                 f"databricks fs cp {local_path} {dbfs_path} --profile {profile_name}"
-#             ]
-#             upload = subprocess.run(
-#                 upload_command, capture_output=True, text=True, shell=True
-#             )
-#             activated_prof_noti = upload.stdout.strip()
+            upload_command = [
+                f"databricks fs cp {local_path} {dbfs_path} --profile {profile_name}"
+            ]
+            upload = subprocess.run(
+                upload_command, capture_output=True, text=True, shell=True
+            )
+            activated_prof_noti = upload.stdout.strip()
 
-#             if "RESOURCE_ALREADY_EXISTS" in activated_prof_noti:
-#                 notification = f"Profile '{profile_name}' already activated."
-#             else:
-#                 notification = f"Profile '{profile_name}' activated successfully. {activated_prof_noti}"
+            if "RESOURCE_ALREADY_EXISTS" in activated_prof_noti:
+                notification = f"Profile '{profile_name}' already activated."
+            else:
+                notification = f"Profile '{profile_name}' activated successfully. {activated_prof_noti}"
 
-#             return [
-#                 html.Div(
-#                     [
-#                         dmc.Text(f"Activated Profile: {profile_name}. "),
-#                     ]
-#                 ),
-#                 profile_name,
-#                 comp.notification_user(notification),
-#             ]
-#         except subprocess.CalledProcessError as e:
-#             error_message = str(e)
-#             notification = f"Error executing command: {error_message}"
+            return [
+                html.Div(
+                    [
+                        dmc.Text(f"Activated Profile: {profile_name}. "),
+                    ]
+                ),
+                profile_name,
+                comp.notification_user(notification),
+            ]
+        except subprocess.CalledProcessError as e:
+            error_message = str(e)
+            notification = f"Error executing command: {error_message}"
 
-#             return [
-#                 html.Div([html.H3(notification)]),
-#                 None,
-#                 comp.notification_user(error_message),
-#             ]
-#     return ["", None, None]
+            return [
+                html.Div([html.H3(notification)]),
+                None,
+                comp.notification_user(error_message),
+            ]
+    return ["", None, None]
