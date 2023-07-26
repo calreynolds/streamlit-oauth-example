@@ -127,9 +127,30 @@ def layout():
     )
 
 
+def is_valid_workspace_url(url):
+    valid_schemes = ["http://", "https://"]
+    valid_suffixes = [
+        ".com",
+        ".org",
+        ".net",
+        ".gov",
+        ".edu",
+    ]  # Add other valid suffixes if needed
+    return (
+        any(url.startswith(scheme) for scheme in valid_schemes)
+        and not url.endswith("/")
+        and any(url.endswith(suffix) for suffix in valid_suffixes)
+    )
+
+
 @callback(
-    Output("generate-button", "n_clicks"),
     Output("notifications-container-profile", "children"),
+    [
+        Output("profile-name", "value"),
+        Output("workspace-url", "value"),
+        Output("token", "value"),
+        Output("path", "value"),
+    ],
     [Input("generate-button", "n_clicks")],
     [
         State("profile-name", "value"),
@@ -141,7 +162,24 @@ def layout():
 def generate_file(n_clicks, profile_name, workspace_url, token, path):
     if n_clicks is not None and n_clicks > 0:
         if not profile_name or not workspace_url or not token or not path:
-            return None, comp.notification_user("Please fill in all the fields.")
+            return (
+                comp.notification_user("Please fill in all the fields."),
+                None,
+                None,
+                None,
+                None,
+            )
+
+        if not is_valid_workspace_url(workspace_url):
+            return (
+                comp.notification_user(
+                    "Invalid workspace URL. The URL must start with 'http://' or 'https://' and should not end with a slash."
+                ),
+                None,
+                None,
+                None,
+                None,
+            )
 
         config = ConfigParser()
         file_path = os.path.expanduser("~/.databrickscfg")
@@ -160,9 +198,11 @@ def generate_file(n_clicks, profile_name, workspace_url, token, path):
             config.write(file)
 
         message = f"Profile '{profile_name}' created successfully."
-        return 0, comp.notification_user(message)
 
-    return n_clicks, None
+        # Clear the input values after successful profile creation
+        return comp.notification_user(message), "", "", "", ""
+
+    return None, None, None, None, None
 
 
 # Function to get the profile names from the databricks config file

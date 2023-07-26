@@ -418,7 +418,7 @@ def get_cluster_state(profile_name, n_clicks, host, path, token):
                 print(token)
                 try:
                     test_job_uri = (
-                        f"https://{host}api/2.0/sql/warehouses/{sqlwarehouse}"
+                        f"https://{host}/api/2.0/sql/warehouses/{sqlwarehouse}"
                     )
                     print(test_job_uri)
                     headers_auth = {"Authorization": f"Bearer {token}"}
