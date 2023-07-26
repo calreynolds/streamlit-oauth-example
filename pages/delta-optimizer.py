@@ -412,15 +412,18 @@ def get_cluster_state(profile_name, n_clicks, host, path, token):
         if profile_name:
             host, token, path = parse_databricks_config(profile_name)
             if host and token and path:
-                sqlwarehouse = path.replace("/sql/1.0/warehouses", "")
-
+                sqlwarehouse = path.replace("/sql/1.0/warehouses/", "")
+                print(sqlwarehouse)
+                print(host)
+                print(token)
                 try:
                     test_job_uri = (
-                        f"https://{host}/api/2.0/sql/warehouses/{sqlwarehouse}"
+                        f"https://{host}api/2.0/sql/warehouses/{sqlwarehouse}"
                     )
+                    print(test_job_uri)
                     headers_auth = {"Authorization": f"Bearer {token}"}
                     test_job = requests.get(test_job_uri, headers=headers_auth).json()
-                    # print(test_job)
+                    print(test_job)
 
                     if test_job["state"] == "TERMINATED":
                         return (
