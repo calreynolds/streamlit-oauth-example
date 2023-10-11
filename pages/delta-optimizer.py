@@ -12,6 +12,13 @@ from dash.exceptions import PreventUpdate
 import subprocess
 from configparser import ConfigParser
 import components as comp
+from components import GitSource, Schedule, Library, NewCluster, NotebookTask
+
+import os
+import time
+
+from databricks.sdk import WorkspaceClient
+from databricks.sdk.service import jobs
 
 dash.register_page(__name__, path="/build-strategy", title="Strategy Builder")
 
@@ -50,104 +57,68 @@ def layout():
         children=dmc.NotificationsProvider(
             [
                 html.Div(
+                    id="engine-test-result",
+                    className="engine-test-result",
+                    # style={
+                    #     "width": "600px",
+                    #     "position": "relative",
+                    #     "left": "20px",
+                    #     "top": "0px",
+                    # },
+                ),
+                html.Div(
                     [
                         html.Div(id="notifications-container-step1"),
                         html.Div(id="cluster-loading-notification"),
                         html.Div(id="cluster-loaded-notification"),
-                        dmc.Title("Build Optimizer Strategy"),
-                        dmc.Divider(variant="solid"),
-                        dmc.Group(
-                            position="left",
-                            mt="xl",
-                            children=[
-                                dmc.Button(
-                                    "Build Strategy",
-                                    id="build-strategy",
-                                    variant="outline",
-                                ),
-                                dmc.Button(
-                                    "Clear Selections",
-                                    id="clear-selection",
-                                    variant="default",
-                                ),
-                                dmc.Button(
-                                    "Refresh",
-                                    id="refresh-button",
-                                    variant="default",
-                                ),
-                                html.Div(
-                                    id="engine-test-result",
-                                    style={
-                                        "width": "300px",
-                                        "position": "relative",
-                                        "left": "20px",
-                                        "top": "0px",
-                                    },
-                                ),
-                                html.Div(
-                                    style={
-                                        "width": "300px",
-                                        "position": "relative",
-                                        "left": "350px",
-                                        "top": "0px",
-                                    },
-                                    children=[
-                                        dmc.Select(
-                                            id="profile-dropdown-step1",
-                                            data=[],
-                                            value="Select Profile",
-                                            style={
-                                                "width": "230px",
-                                                "position": "relative",
-                                                "left": "85px",
-                                                "top": "0px",
-                                            },
-                                        )
-                                    ],
-                                ),
-                            ],
+                        dmc.Title(
+                            "Build Optimizer Strategy",
+                            style={
+                                "fontSize": "24px",
+                                "marginTop": "5px",  # Adjust the font size as needed
+                            },
                         ),
                         dmc.Space(h=10),
-                        html.Div(id="job-id"),
+                        dmc.Divider(variant="solid"),
                         dmc.Space(h=10),
-                        dmc.Text(id="run-strategy-output", align="right"),
-                        dmc.Space(h=10),
-                        dmc.Text(id="run-strategy-output-schedule", align="center"),
-                        dmc.SimpleGrid(
-                            [
+                        # html.Div(id="job-id"),
+                        # dmc.Text(id="run-strategy-output", align="right"),
+                        # dmc.Text(id="run-strategy-output-schedule", align="center"),
+                        dmc.Group(
+                            position="left",
+                            children=[
                                 dmc.TextInput(
                                     id="outputdb",
-                                    label="Enter Delta Optimizer Output DB:",
+                                    label="Name Output DB:",
                                     placeholder="catalog.database",
+                                    className="input-field",
                                 ),
                                 dmc.TextInput(
                                     id="optimizewarehouse",
-                                    label="Enter SQL Warehouse ID:",
+                                    label="SQL Warehouse:",
                                     placeholder="1234-123456-pane123",
+                                    className="input-field",
                                 ),
-                                dmc.Stack(
-                                    [
-                                        dmc.Group(
-                                            position="left",
-                                            children=[
-                                                dmc.NumberInput(
-                                                    id="optimizelookback",
-                                                    label="Enter Lookback Period in days:",
-                                                    stepHoldDelay=500,
-                                                    stepHoldInterval=100,
-                                                    min=1,
-                                                    value=3,
-                                                    style={"width": "300px"},
-                                                ),
-                                            ],
-                                        ),
-                                        dmc.Switch(
-                                            id="startover", label="Start Over", mb=10
-                                        ),
-                                    ]
+                                dmc.NumberInput(
+                                    id="optimizelookback",
+                                    label="Lookback Days:",
+                                    stepHoldDelay=500,
+                                    stepHoldInterval=100,
+                                    min=1,
+                                    value=3,
+                                    style={"width": "100px"},
+                                ),
+                                dmc.Switch(
+                                    id="startover",
+                                    label="Start Over",
+                                    style={
+                                        "width": "200px",
+                                        "position": "relative",
+                                        "left": "20px",
+                                        "top": "10px",
+                                    },
                                 ),
                             ],
-                            cols=2,
                         ),
                         dmc.Text(
                             align="center",
@@ -160,8 +131,39 @@ def layout():
                             },
                         ),
                         dmc.Space(h=10),
-                        html.Div(id="load-optimizer-grid"),
+                        html.Div(
+                            children=dmc.LoadingOverlay(
+                                html.Div("Loading...", id="load-optimizer-grid"),
+                                loaderProps={
+                                    "variant": "dots",
+                                    "color": "orange",
+                                    "size": "xxl",
+                                    # Adjust the loader style here
+                                },
+                            )
+                        ),
                         dmc.Space(h=10),
+                        dmc.Group(
+                            position="left",
+                            mt="xl",
+                            children=[
+                                dmc.Button(
+                                    "Build Strategy",
+                                    id="build-strategy",
+                                    variant="outline",
+                                ),
+                                dmc.Button(
+                                    "Clear Selections",
+                                    id="clear-selections",
+                                    variant="default",
+                                ),
+                                dmc.Button(
+                                    "Refresh",
+                                    id="refresh-button",
+                                    variant="default",
+                                ),
+                            ],
+                        ),
                         dmc.Space(h=10),
                         dmc.Space(h=15),
                         dcc.Store(id="table_selection_store"),
@@ -174,10 +176,12 @@ def layout():
                         dcc.Store(id="hostname-store", storage_type="memory"),
                         dcc.Store(id="path-store", storage_type="memory"),
                         dcc.Store(id="token-store", storage_type="memory"),
+                        dcc.Store(id="profile-store", storage_type="local"),
                         dcc.Interval(
                             id="interval", interval=86400000, n_intervals=0
                         ),  # Update every day
                         dcc.Interval(id="interval_test", interval=1000, n_intervals=0),
+                        html.Div(id="dummy-output1"),
                     ]
                 ),
             ]
@@ -186,103 +190,105 @@ def layout():
 
 
 @callback(
-    Output("profile-dropdown-step1", "data"),
     Output("load-optimizer-grid", "children"),
-    Input("profile-dropdown-step1", "value"),
+    Input("refresh-button", "n_clicks"),
+    State("profile-store", "data"),
 )
-def populate_profile_dropdown(profile_name):
-    config = ConfigParser()
-    file_path = os.path.expanduser("~/.databrickscfg")
+def populate_profile_dropdown(n_clicks, profile_name):
+    if n_clicks or profile_name:
+        if profile_name:
+            config = ConfigParser()
+            file_path = os.path.expanduser("./.databrickscfg")
+            print(profile_name)
+            if os.path.exists(file_path):
+                config.read(file_path)
 
-    if not os.path.exists(file_path):
-        return [], []
+            options = []
 
-    config.read(file_path)
-    options = []
+            for section in config.sections():
+                if (
+                    config.has_option(section, "host")
+                    and config.has_option(section, "path")
+                    and config.has_option(section, "token")
+                ):
+                    options.append({"label": section, "value": section})
 
-    for section in config.sections():
-        if (
-            config.has_option(section, "host")
-            and config.has_option(section, "path")
-            and config.has_option(section, "token")
-        ):
-            options.append({"label": section, "value": section})
+            if config.has_section(profile_name):
+                host = config.get(profile_name, "host")
+                path = config.get(profile_name, "path")
+                token = config.get(profile_name, "token")
+                host = host.replace("https://", "")
+                if host and token and path:
+                    engine_url = f"databricks://token:{token}@{host}/?http_path={path}&catalog={catalog}&schema={schema}"
+                print(engine_url)
+                big_engine = create_engine(engine_url)
 
-    if profile_name:
-        (
-            host,
-            token,
-            path,
-        ) = parse_databricks_config(profile_name)
-        if host and token and path:
-            engine_url = f"databricks://token:{token}@{host}/?http_path={path}&catalog=main&schema=information_schema"
-            big_engine = create_engine(engine_url)
+                tables_stmt = "SELECT table_catalog, table_schema, table_name, created, created_by, last_altered, last_altered_by FROM system.INFORMATION_SCHEMA.TABLES"
+                tables_in_db = pd.read_sql_query(tables_stmt, big_engine)
+                print(tables_in_db)
 
-            tables_stmt = "SELECT table_catalog, table_schema, table_name, created, created_by, last_altered, last_altered_by FROM system.INFORMATION_SCHEMA.TABLES"
-            tables_in_db = pd.read_sql_query(tables_stmt, big_engine)
-
-            columnDefs = [
-                {
-                    "headerName": "Table Name",
-                    "field": "table_name",
-                    "checkboxSelection": True,
-                    "headerCheckboxSelection": True,
-                    "filter": True,
-                    "floatingFilter": True,
-                    "filterParams": {
-                        "buttons": ["apply", "reset"],
+                columnDefs = [
+                    {
+                        "headerName": "Table Name",
+                        "field": "table_name",
+                        "checkboxSelection": True,
+                        # "headerCheckboxSelection": True,
+                        "filter": True,
+                        "floatingFilter": True,
+                        "filterParams": {
+                            "buttons": ["apply", "reset"],
+                        },
+                        "minWidth": 180,
                     },
-                    "minWidth": 180,
-                },
-                {
-                    "headerName": "Database Name",
-                    "field": "table_schema",
-                    "filter": True,
-                    "floatingFilter": True,
-                    "filterParams": {"buttons": ["apply", "reset"]},
-                    "minWidth": 180,
-                },
-                {
-                    "headerName": "Catalog Name",
-                    "field": "table_catalog",
-                    "filter": True,
-                    "floatingFilter": True,
-                    "filterParams": {"buttons": ["apply", "reset"]},
-                    "minWidth": 180,
-                },
-                {
-                    "headerName": "Creator",
-                    "field": "created_by",
-                    "filter": True,
-                    "floatingFilter": True,
-                    "filterParams": {"buttons": ["apply", "reset"]},
-                    "minWidth": 180,
-                },
-                {
-                    "headerName": "Created On",
-                    "field": "created",
-                    "filter": True,
-                    "floatingFilter": True,
-                    "filterParams": {"buttons": ["apply", "reset"]},
-                    "minWidth": 180,
-                },
-                {
-                    "headerName": "Last Altered By",
-                    "field": "last_altered_by",
-                    "filter": True,
-                    "floatingFilter": True,
-                    "filterParams": {"buttons": ["apply", "reset"]},
-                    "minWidth": 180,
-                },
-                {
-                    "headerName": "Last Altered On",
-                    "field": "last_altered",
-                    "filter": True,
-                    "floatingFilter": True,
-                    "filterParams": {"buttons": ["apply", "reset"]},
-                    "minWidth": 180,
-                },
-            ]
+                    {
+                        "headerName": "Database Name",
+                        "field": "table_schema",
+                        "filter": True,
+                        "floatingFilter": True,
+                        "filterParams": {"buttons": ["apply", "reset"]},
+                        "minWidth": 180,
+                    },
+                    {
+                        "headerName": "Catalog Name",
+                        "field": "table_catalog",
+                        "filter": True,
+                        "floatingFilter": True,
+                        "filterParams": {"buttons": ["apply", "reset"]},
+                        "minWidth": 180,
+                    },
+                    {
+                        "headerName": "Creator",
+                        "field": "created_by",
+                        "filter": True,
+                        "floatingFilter": True,
+                        "filterParams": {"buttons": ["apply", "reset"]},
+                        "minWidth": 180,
+                    },
+                    {
+                        "headerName": "Created On",
+                        "field": "created",
+                        "filter": True,
+                        "floatingFilter": True,
+                        "filterParams": {"buttons": ["apply", "reset"]},
+                        "minWidth": 180,
+                    },
+                    {
+                        "headerName": "Last Altered By",
+                        "field": "last_altered_by",
+                        "filter": True,
+                        "floatingFilter": True,
+                        "filterParams": {"buttons": ["apply", "reset"]},
+                        "minWidth": 180,
+                    },
+                    {
+                        "headerName": "Last Altered On",
+                        "field": "last_altered",
+                        "filter": True,
+                        "floatingFilter": True,
+                        "filterParams": {"buttons": ["apply", "reset"]},
+                        "minWidth": 180,
+                    },
+                ]
 
             rowData = tables_in_db.to_dict("records")
 
@@ -293,7 +299,7 @@ def populate_profile_dropdown(profile_name):
                     columnDefs=columnDefs,
                     rowData=rowData,
                     style={"height": "550px"},
-                    dashGridOptions={"rowSelection": "multiple", "sideBar": sideBar},
+                    dashGridOptions={"rowSelection": "multiple"},
                     columnSize="sizeToFit",
                     defaultColDef=dict(
                         resizable=True,
@@ -302,35 +308,13 @@ def populate_profile_dropdown(profile_name):
                         autoHeight=True,
                         width=90,
                     ),
-                ),
-                dmc.SimpleGrid(
-                    cols=3,
-                    children=[
-                        html.Div(
-                            [
-                                dmc.Text("Catalogs", align="center", weight=550),
-                                dmc.Text(id="catalog_selection_output", align="center"),
-                            ]
-                        ),
-                        html.Div(
-                            [
-                                dmc.Text("DBs", align="center", weight=550),
-                                dmc.Text(id="schema_selection_output", align="center"),
-                            ]
-                        ),
-                        html.Div(
-                            [
-                                dmc.Text("Tables", align="center", weight=550),
-                                dmc.Text(id="table_selection_output", align="center"),
-                            ]
-                        ),
-                    ],
+                    className="ag-theme-alpine",
                 ),
             ]
 
-            return options, optimizer_grid
+            return optimizer_grid
 
-    return options, []
+    return []
 
 
 @callback(
@@ -339,13 +323,14 @@ def populate_profile_dropdown(profile_name):
         Output("token-store", "data"),
         Output("path-store", "data"),
     ],
-    [Input("profile-dropdown-step1", "value")],
+    [Input("profile-store", "value")],
     prevent_initial_call=True,
 )
 def parse_databricks_config(profile_name):
     if profile_name:
+        print(profile_name + "test")
         config = ConfigParser()
-        file_path = os.path.expanduser("~/.databrickscfg")
+        file_path = os.path.expanduser("./.databrickscfg")
 
         if os.path.exists(file_path):
             config.read(file_path)
@@ -355,6 +340,9 @@ def parse_databricks_config(profile_name):
                 token = config.get(profile_name, "token")
                 path = config.get(profile_name, "path")
                 host = host.replace("https://", "")
+                print(host + "test")
+                print(token + "test")
+                print(path + "test")
 
                 return host, token, path
 
@@ -367,7 +355,7 @@ def parse_databricks_config(profile_name):
 
 @callback(
     Output("hidden", "children"),
-    [Input("profile-dropdown-step1", "value")],
+    [Input("profile-store", "data")],
     [
         State("hostname-store", "data"),
         State("path-store", "data"),
@@ -398,32 +386,33 @@ def your_callback_function(profile_name, host, path, token):
         Output("engine-test-result", "children"),
     ],
     [
-        Input("profile-dropdown-step1", "value"),
+        # Input("profile-dropdown-step1", "value"),
         Input("refresh-button", "n_clicks"),
     ],
     [
+        State("profile-store", "data"),
         State("hostname-store", "data"),
         State("path-store", "data"),
         State("token-store", "data"),
     ],
 )
-def get_cluster_state(profile_name, n_clicks, host, path, token):
+def get_cluster_state(n_clicks, profile_name, host, path, token):
     if n_clicks or profile_name:
         if profile_name:
             host, token, path = parse_databricks_config(profile_name)
             if host and token and path:
                 sqlwarehouse = path.replace("/sql/1.0/warehouses/", "")
-                print(sqlwarehouse)
-                print(host)
-                print(token)
+                # print(sqlwarehouse)
+                # print(host)
+                # print(token)
                 try:
                     test_job_uri = (
                         f"https://{host}/api/2.0/sql/warehouses/{sqlwarehouse}"
                     )
-                    print(test_job_uri)
+                    # print(test_job_uri)
                     headers_auth = {"Authorization": f"Bearer {token}"}
                     test_job = requests.get(test_job_uri, headers=headers_auth).json()
-                    print(test_job)
+                    # print(test_job)
 
                     if test_job["state"] == "TERMINATED":
                         return (
@@ -450,12 +439,15 @@ def get_cluster_state(profile_name, n_clicks, host, path, token):
                             dmc.LoadingOverlay(
                                 dmc.Badge(
                                     id="engine-connection-badge",
-                                    variant="gradient",
+                                    variant="dot",
                                     gradient={"from": "yellow", "to": "orange"},
                                     color="yellow",
                                     size="lg",
                                     children=[
-                                        html.Span(f"Connecting to Workspace: {host} ")
+                                        html.Span(
+                                            f"Connecting to Workspace: {host}",
+                                            style={"color": "white"},
+                                        )
                                     ],
                                 ),
                             ),
@@ -467,12 +459,15 @@ def get_cluster_state(profile_name, n_clicks, host, path, token):
                             dmc.LoadingOverlay(
                                 dmc.Badge(
                                     id="engine-connection-badge",
-                                    variant="gradient",
-                                    gradient={"from": "teal", "to": "lime", "deg": 105},
+                                    variant="dot",
+                                    # gradient={"from": "teal", "to": "lime", "deg": 105},
                                     color="green",
                                     size="lg",
                                     children=[
-                                        html.Span(f"Connected to Workspace: {host} ")
+                                        html.Span(
+                                            f"Connected to: {host} ",
+                                            style={"color": "white"},
+                                        )
                                     ],
                                 ),
                             ),
@@ -484,31 +479,29 @@ def get_cluster_state(profile_name, n_clicks, host, path, token):
     return dash.no_update, dash.no_update, dash.no_update
 
 
-@callback(
-    Output("optimizer-grid", "selectedRows"),
-    Output("outputdb", "value"),
-    Output("optimizehostname", "value"),
-    Output("optimizewarehouse", "value"),
-    Output("optimizetoken", "value"),
-    Output("optimizelookback", "value"),
-    Output("startover", "checked"),
-    Input("clear-selection", "n_clicks"),
-    prevent_initial_call=True,
-)
-def restart_stepper(click):
-    return [
-        [],
-        "",
-        "",
-        "",
-        "",
-        3,
-        False,
-    ]
+# @callback(
+#     Output("optimizer-grid", "selectedRows"),
+#     Output("outputdb", "value"),
+#     # Output("optimizehostname", "value"),
+#     Output("optimizewarehouse", "value"),
+#     # Output("optimizetoken", "value"),
+#     Output("optimizelookback", "value"),
+#     Output("startover", "checked"),
+#     Input("clear-selections", "n_clicks"),
+#     prevent_initial_call=True,
+# )
+# def restart_stepper(click):
+#     return [
+#         [],
+#         "",
+#         "",
+#         3,
+#         False,
+#     ]
 
 
 @callback(
-    Output("catalog_selection_output", "children"),
+    # Output("catalog_selection_output", "children"),
     Output("catalog_selection_store", "data"),
     Input("optimizer-grid", "selectedRows"),
     prevent_initial_call=True,
@@ -525,14 +518,13 @@ def catalog(selected):
 
 
 @callback(
-    Output("schema_selection_output", "children"),
+    # Output("schema_selection_output", "children"),
     Output("schema_selection_store", "data"),
     Input("optimizer-grid", "selectedRows"),
     prevent_initial_call=True,
 )
 def schema(selected):
     if selected:
-        selected_catalog = [s["table_catalog"] for s in selected]
         selected_schema = [s["table_schema"] for s in selected]
         selected_schema_unique = set(selected_schema)
         selected_schema_unique_list = list(selected_schema_unique)
@@ -544,7 +536,7 @@ def schema(selected):
 
 
 @callback(
-    Output("table_selection_output", "children"),
+    # Output("table_selection_output", "children"),
     Output("table_selection_store", "data"),
     Input("optimizer-grid", "selectedRows"),
     prevent_initial_call=True,
@@ -568,44 +560,71 @@ def tables(selected):
         Output("build-response", "children"),
         Output("general-store", "data"),
         Output("notifications-container-step1", "children"),
+        Output("outputdb", "value"),
+        Output("load-optimizer-grid", "selectedRows"),
+        Output("optimizewarehouse", "value"),
+        Output("optimizelookback", "value"),
+        Output("startover", "checked"),
     ],
-    [Input("build-strategy", "n_clicks")],
+    [
+        Input("build-strategy", "n_clicks"),
+        Input("clear-selections", "n_clicks"),
+    ],
     [
         State("optimizelookback", "value"),
         State("outputdb", "value"),
-        State("hostname-store", "data"),
         State("optimizewarehouse", "value"),
-        State("token-store", "data"),
         State("table_selection_store", "data"),
         State("schema_selection_store", "data"),
         State("catalog_selection_store", "data"),
         State("startover", "checked"),
+        State("profile-store", "data"),
     ],
     prevent_initial_call=True,
 )
-def delta_step_1_optimizer(
-    n_clicks,
-    lookback,
+def test_states(
+    build_n_clicks,
+    clear_n_clicks,
+    optimizelookback,
     outputdb,
-    hostname,
     optimizewarehouse,
-    token,
-    tablelist,
-    schemalist,
-    cataloglist,
+    table_selection,
+    schema_selection,
+    catalog_selection,
     startover,
+    profile_data,
 ):
-    if not n_clicks:
+    ctx = dash.callback_context
+    if not ctx.triggered:
+        raise PreventUpdate
+    else:
+        button_id = ctx.triggered[0]["prop_id"].split(".")[0]
+
+    # If clear-selections button was clicked
+    if button_id == "clear-selections":
+        return (
+            dash.no_update,
+            dash.no_update,
+            dash.no_update,
+            [],  # Reset selectedRows
+            "",  # Reset outputdb value
+            "",  # Reset optimizewarehouse value
+            3,  # Reset optimizelookback value
+            False,  # Reset startover checked state
+        )
+
+    if not build_n_clicks:
         raise PreventUpdate
 
+    # Check for mandatory fields
     if any(
         field is None or field == ""
         for field in [
-            hostname,
-            token,
-            tablelist,
-            schemalist,
-            cataloglist,
+            optimizelookback,
+            outputdb,
+            table_selection,
+            schema_selection,
+            catalog_selection,
             optimizewarehouse,
         ]
     ):
@@ -613,147 +632,151 @@ def delta_step_1_optimizer(
             dash.no_update,
             dash.no_update,
             comp.notification_job1_error("Please fill out all fields."),
+            dash.no_update,
+            dash.no_update,
+            dash.no_update,
+            dash.no_update,
+            dash.no_update,
         )
 
-    # Prepare the job payload
-    optimize_job = {
-        "name": f"{outputdb} Optimzer Strategy",
-        "email_notifications": {"no_alert_for_skipped_runs": False},
-        "webhook_notifications": {},
-        "timeout_seconds": 0,
-        "max_concurrent_runs": 1,
-        "schedule": {
-            "quartz_cron_expression": "0 0 10 * * ?",
-            "timezone_id": "US/Pacific",
-            "pause_status": "UNPAUSED",
-        },
-        "tasks": [
-            {
-                "task_key": "Delta_Optimizer-Step1",
-                "notebook_task": {
-                    "notebook_path": "Delta Optimizer/Step 1_ Optimization Strategy Builder",
-                    "source": "GIT",
-                    "notebook_params": {
-                        "Query History Lookback Period (days)": f"{lookback}",
-                        "Optimizer Output Database:": f"{outputdb}",
-                        "Server Hostname:": f"{hostname}",
-                        "Catalog Filter Mode": "include_list",
-                        "Access Token:": f"{token}",
-                        "Catalog Filter List (Csv List)": f"{cataloglist}",
-                        "Database Filter List (catalog.database) (Csv List)": schemalist,
-                        "SQL Warehouse Ids (csv list)": f"{optimizewarehouse}",
-                        "Table Filter Mode": "include_list",
-                        "Database Filter Mode": "include_list",
-                        "Table Filter List (catalog.database.table) (Csv List)": tablelist,
-                        "Start Over?": "Yes" if startover else "No",
-                    },
-                },
-                "new_cluster": {
-                    "node_type_id": "i3.xlarge",
-                    "spark_version": "12.1.x-scala2.12",
-                    "num_workers": 8,
-                    "spark_conf": {"spark.databricks.delta.preview.enabled": "true"},
-                    "spark_env_vars": {
-                        "PYSPARK_PYTHON": "/databricks/python3/bin/python3"
-                    },
-                    "enable_elastic_disk": True,
-                },
-                "aws_attributes": {"availability": "ON_DEMAND"},
-                "libraries": [
-                    {"whl": "dbfs:/tmp/deltaoptimizer-1.5.0-py3-none-any.whl"},
-                ],
-                "timeout_seconds": 0,
-                "notification_settings": {
-                    "no_alert_for_skipped_runs": False,
-                    "no_alert_for_canceled_runs": False,
-                    "alert_on_last_attempt": False,
-                },
-            }
-        ],
-        "git_source": {
-            "git_url": "https://github.com/noshadeson/edw-best-practices.git",
-            "git_provider": "gitHub",
-            "git_branch": "patch-1",
-        },
-        "format": "MULTI_TASK",
-    }
+    # Print the state values to the terminal
+    print(f"Lookback Value: {optimizelookback}")
+    print(f"Output DB Value: {outputdb}")
+    print(f"Warehouse Value: {optimizewarehouse}")
+    print(f"Table Selection: {table_selection}")
+    print(f"Schema Selection: {schema_selection}")
+    print(f"Catalog Selection: {catalog_selection}")
+    print(f"Start Over Checked: {startover}")
+    print(f"Profile Data: {profile_data}")
 
-    try:
-        # Send the request to create the job
-        create_job_uri = f"https://{hostname}/api/2.1/jobs/create"
-        headers_auth = {"Authorization": f"Bearer {token}"}
-        create_job_resp = requests.post(
-            create_job_uri, json=optimize_job, headers=headers_auth
-        ).json()
-        print(create_job_resp)
+    # Get the necessary data and construct the job configuration
+    if profile_data:
+        print(profile_data + "test")
+    config = ConfigParser()
+    file_path = os.path.expanduser("./.databrickscfg")
 
-        if "job_id" in create_job_resp:
-            job_id = create_job_resp["job_id"]
+    if os.path.exists(file_path):
+        config.read(file_path)
 
-            # Send the request to run the job
-            run_now_uri = f"https://{hostname}/api/2.1/jobs/run-now"
-            job_run = {
-                "job_id": job_id,
-                "notebook_params": {
-                    "Query History Lookback Period (days)": f"{lookback}",
-                    "Optimizer Output Database:": f"{outputdb}",
-                    "Server Hostname:": f"{hostname}",
-                    "Catalog Filter Mode": "include_list",
-                    "Access Token:": f"{token}",
-                    "Catalog Filter List (Csv List)": f"{cataloglist}",
-                    "Database Filter List (catalog.database) (Csv List)": schemalist,
-                    "SQL Warehouse Ids (csv list)": optimizewarehouse,
-                    "Table Filter Mode": "include_list",
-                    "Database Filter Mode": "include_list",
-                    "Table Filter List (catalog.database.table) (Csv List)": tablelist,
-                    "Start Over?": f"{startover}",
-                },
-            }
+    if config.has_section(profile_data):
+        host = config.get(profile_data, "host")
+        token = config.get(profile_data, "token")
+        path = config.get(profile_data, "path")
+        host = host.replace("https://", "")
 
-            run_resp = requests.post(
-                run_now_uri, json=job_run, headers=headers_auth
-            ).json()
+        w = WorkspaceClient()
 
-            if "run_id" in run_resp:
-                return (
-                    [
-                        f"Optimizer ran with Job ID: {job_id}",
-                        dmc.Space(h=10),
-                        "You can now use the optimizer strategy to optimize your tables.",
-                        dmc.Anchor(
-                            "Delta Optimizer - Runner page.",
-                            href=dash.get_relative_path("/optimizer-runner"),
-                            target="_blank",
-                            style={"font-size": "14px"},
-                        ),
-                    ],
-                    job_id,
-                    comp.notification_user_step_1(
-                        f"Optimizer ran with Job ID: {job_id}"
+        base_parameters = {
+            "Query History Lookback Period (days)": str(optimizelookback),
+            "Optimizer Output Database:": str(outputdb),
+            "Server Hostname:": str(host),
+            "Catalog Filter Mode": "include_list",
+            "Access Token:": str(token),
+            "Catalog Filter List (Csv List)": str(catalog_selection),
+            "Database Filter List (catalog.database) (Csv List)": str(schema_selection),
+            "SQL Warehouse Ids (csv list)": str(optimizewarehouse),
+            "Table Filter Mode": "include_list",
+            "Database Filter Mode": "include_list",
+            "Table Filter List (catalog.database.table) (Csv List)": str(
+                table_selection
+            ),
+            "Start Over?": "Yes" if startover else "No",
+        }
+
+        created_job = w.jobs.create(
+            name=f"{outputdb} Optimizer Strategy",
+            git_source=GitSource(
+                git_url="https://github.com/noshadeson/edw-best-practices.git",
+                git_provider="GITHUB",
+                git_branch="patch-1",
+            ),
+            max_concurrent_runs=1,
+            schedule=Schedule("0 0 10 * * ?", "US/Pacific", "UNPAUSED"),
+            tasks=[
+                jobs.Task(
+                    task_key="Delta_Optimizer-Step1",
+                    notebook_task=NotebookTask(
+                        "Delta Optimizer/Step 1_ Optimization Strategy Builder",
+                        base_parameters,
                     ),
-                )
+                    new_cluster=NewCluster(
+                        "i3.xlarge",
+                        "12.1.x-scala2.12",
+                        8,
+                        {"spark.databricks.delta.preview.enabled": "true"},
+                        {"PYSPARK_PYTHON": "/databricks/python3/bin/python3"},
+                        True,
+                    ),
+                    # aws_attributes={"availability": "ON_DEMAND"},
+                    libraries=[
+                        Library("dbfs:/tmp/deltaoptimizer-1.5.0-py3-none-any.whl"),
+                    ],
+                    timeout_seconds=0,
+                ),
+            ],
+            timeout_seconds=0,
+            webhook_notifications={},
+        )
 
-            # Handle specific error conditions
-            if "error" in run_resp:
-                error_message = run_resp["error"]["message"]
-                error_message_string = str(error_message)
-                if "run_id" in run_resp["error"]:
-                    job_id = run_resp["error"]["run_id"]
-                    return (
-                        f"Error occurred while running the optimizer: {error_message} (Job ID: {job_id})",
-                        None,
-                        comp.notification_user_step_1(
-                            f"Error while running optimizer{error_message_string}"
-                        ),
-                    )
-                else:
-                    return (
-                        f"Error occurred while running the optimizer: {error_message}",
-                        None,
-                        comp.notification_user_step_1(error_message_string),
-                    )
+        job_id = created_job.job_id
+        print(job_id)
+        run_resp = w.jobs.run_now(job_id=created_job.job_id)
+        print(run_resp)
+        run_id = run_resp.response.run_id
+        print(run_id)
 
-        return "Error occurred while creating the job.", None, None
+    if run_id is not None:
+        return (
+            [
+                f"Optimizer ran with Job ID: {job_id}",
+                "You can now use the optimizer strategy to optimize your tables.",
+            ],
+            job_id,
+            comp.notification_user_step_1(f"Optimizer ran with Job ID: {job_id}"),
+            [],  # Reset selectedRows
+            "",  # Reset outputdb value
+            "",  # Reset optimizewarehouse value
+            3,  # Reset optimizelookback value
+            False,  # Reset startover checked state
+        )
 
-    except requests.exceptions.RequestException as e:
-        return f"Error occurred while running the optimizer: {str(e)}", None, None
+    if "error" in run_resp.response:
+        error_message = run_resp["error"]["message"]
+        error_message_string = str(error_message)
+
+        if "run_id" in run_resp["error"]:
+            job_id = run_resp["error"]["run_id"]
+            return (
+                f"Error occurred while running the optimizer: {error_message} (Job ID: {job_id})",
+                None,
+                comp.notification_user_step_1(
+                    f"Error while running optimizer{error_message_string}"
+                ),
+                dash.no_update,
+                dash.no_update,
+                dash.no_update,
+                dash.no_update,
+                dash.no_update,
+            )
+        else:
+            return (
+                f"Error occurred while running the optimizer: {error_message}",
+                None,
+                comp.notification_user_step_1(error_message_string),
+                dash.no_update,
+                dash.no_update,
+                dash.no_update,
+                dash.no_update,
+                dash.no_update,
+            )
+
+    return (
+        "Error occurred while creating the job.",
+        None,
+        None,
+        dash.no_update,
+        dash.no_update,
+        dash.no_update,
+        dash.no_update,
+        dash.no_update,
+    )

@@ -1,4 +1,4 @@
-from dash import Dash, dcc
+from dash import Dash, dcc, html
 import dash_mantine_components as dmc
 import dash_bootstrap_components as dbc
 import dash
@@ -16,6 +16,7 @@ server = app.server
 from components import (
     LEFT_SIDEBAR,
     FOOTER_FIXED,
+    TOP_NAVBAR,
 )  # noqa: E402 isort:skip - must be imported after app is defined
 
 app.layout = dmc.MantineProvider(
@@ -37,24 +38,51 @@ app.layout = dmc.MantineProvider(
         },
     },
     children=[
-        dmc.Grid(
-            m=0,
-            children=[
-                dmc.Col(
-                    LEFT_SIDEBAR,
-                    span=2,
-                    style={"backgroundColor": "#0F1D22"},
-                    p=0,
-                ),
-                dmc.Col(
-                    dash.page_container,
-                    className="page",
-                    span=10,
-                    p=20,
-                ),
-            ],
+        html.Script(
+            """
+        document.addEventListener('mousemove', function(e) {
+            let x = e.clientX;
+            let y = e.clientY;
+            let windowWidth = window.innerWidth;
+            let windowHeight = window.innerHeight;
+
+            let percentageX = (x / windowWidth) * 100;
+            let percentageY = (y / windowHeight) * 100;
+
+            let element = document.querySelector('.my-animation');
+            if (element) {
+                element.style.background = `linear-gradient(${percentageX}deg, red, blue), linear-gradient(${percentageY}deg, yellow, green)`;
+            }
+        });
+    """
         ),
-        FOOTER_FIXED,
+        TOP_NAVBAR,
+        LEFT_SIDEBAR,
+        dmc.Container(
+            className="background-container",
+        ),
+        dmc.Container(
+            dash.page_container,
+            className="page",
+        ),
+        # dmc.Grid(
+        #     m=0,
+        #     children=[
+        #         dmc.Col(
+        #             LEFT_SIDEBAR,
+        #             span=2,
+        #             style={"backgroundColor": "#0F1D22"},
+        #             p=0,
+        #         ),
+        #         dmc.Col(
+        #             dash.page_container,
+        #             className="page",
+        #             span="auto",
+        #             p=20,
+        #         ),
+        #     ],
+        # ),
+        # FOOTER_FIXED,
         dcc.Store(
             id="general-store", data={"outputdpdn2": "main.delta_optimizer_mercury"}
         ),

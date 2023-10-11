@@ -7,7 +7,7 @@ import plotly_express as px
 import dash_mantine_components as dmc
 import dash_chart_editor as dce
 import dash_bootstrap_components as dbc
-import components as compo
+import components as comp
 
 import pandas as pd
 import dash_ag_grid as dag
@@ -15,7 +15,7 @@ import sqlalchemy.exc
 import os
 from configparser import ConfigParser
 from sqlalchemy.engine import create_engine
-import result_page_table_config as comp
+import result_page_table_config 
 from result_page_table_config import (
     create_accordion_item,
     create_ag_grid,

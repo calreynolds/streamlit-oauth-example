@@ -16,3 +16,11 @@ EXPOSE 8050
 
 # Command to start your Dash app when the container starts
 CMD ["python", "app.py"]
+
+# Add the .whl file to the Docker image
+COPY deltaoptimizer-1.5.0-py3-none-any.whl /app/deltaoptimizer-1.5.0-py3-none-any.whl
+
+# Install dependencies, including the .whl file
+RUN pip install --no-cache-dir -r requirements.txt && \
+    pip install --no-cache-dir /app/deltaoptimizer-1.5.0-py3-none-any.whl
+
