@@ -14,6 +14,8 @@ from dash import Dash, dcc, html
 import dash_mantine_components as dmc
 import dash_bootstrap_components as dbc
 import dash
+from flask_session import Session
+import redis
 
 
 load_dotenv()
@@ -38,6 +40,18 @@ app = Dash(
 
 server = app.server
 server.secret_key = secrets.token_urlsafe(32)
+
+# Configure Flask-Session with Redis
+server.config['SESSION_TYPE'] = 'redis'
+server.config['SESSION_PERMANENT'] = False
+server.config['SESSION_USE_SIGNER'] = True
+server.config['SESSION_KEY_PREFIX'] = 'session:'
+redis_instance = redis.StrictRedis.from_url(os.environ.get("REDIS_URL", "redis://127.0.0.1:6379"))
+server.config['SESSION_REDIS'] = redis_instance
+
+# Initialize Flask-Session
+Session(server)
+
 
 oauth_client = OAuthClient(
     host=DATABRICKS_HOST,
@@ -81,15 +95,23 @@ def check_authentication():
 def login():
     log_prefix = "[Login Route]"
     
+    # If creds are found in session, redirect to the main app page
     if "creds" in session:
         logging.info(f"{log_prefix} User is already authenticated. Redirecting to main app page. Session State: {session}")
         return redirect('/delta-optimizer/build-strategy')
-
+    
+    # If creds are not found, initiate the OAuth flow
     logging.info(f"{log_prefix} Initiating OAuth flow.")
-    consent = oauth_client.initiate_consent()
-    session["consent"] = consent.as_dict()
-    logging.debug(f"{log_prefix} Consent stored in session: {session['consent']}")
-    return redirect(consent.auth_url)
+    try:
+        consent = oauth_client.initiate_consent()
+        session["consent"] = consent.as_dict()
+        logging.debug(f"{log_prefix} Consent URL generated: {consent.auth_url}")
+        return redirect(consent.auth_url)
+    except Exception as e:
+        logging.error(f"{log_prefix} Error initiating OAuth flow: {e}")
+        # You might want to handle this error differently, e.g., show an error page or message to the user
+        return "Error initiating authentication."
+
 
 @server.route("/delta-optimizer/callback")
 def callback():

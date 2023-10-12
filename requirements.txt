@@ -17,5 +17,5 @@ dash-chart-editor
 dash-bootstrap-components
 python-dotenv
 databricks-sdk
-
-
+redis
+Flask-Session
