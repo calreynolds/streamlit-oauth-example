@@ -105,13 +105,14 @@ app.layout = dmc.MantineProvider(
 
 
 # 1. Before request hook to check for authentication
-@server.before_request
-def check_authentication():
-    print("Current endpoint:", request.endpoint)
-    
-    if "creds" not in session and request.endpoint not in ["delta-optimizer.login", "delta-optimizer.callback"]:
-        logging.debug("No creds in session. Redirecting to login.")
-        return redirect(url_for('login'))
+# @server.before_request
+# def check_authentication():
+#     logging.debug(f"Current endpoint: {request.endpoint}")
+#     logging.debug(f"Creds in session: {'creds' in session}")
+
+#     if "creds" not in session and request.endpoint not in ["delta-optimizer.login", "delta-optimizer.callback"]:
+#         logging.debug("Redirecting to login.")
+#         return redirect(url_for('login'))
 
 # 2. Separate login route to initiate the OAuth process
 @server.route('/delta-optimizer/login')
