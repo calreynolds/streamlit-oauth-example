@@ -68,24 +68,24 @@ LEFT_SIDEBAR = dmc.Navbar(
     mb=20,
     ml=20,
     children=[
-        # html.A(
-        #     [
-        #         html.Img(
-        #             src='/assets/plotly_DO.png',
-        #             style={
-        #                 "height": "100%",
-        #                 "width": "100%",
-        #                 "float": "center",
-        #                 "position": "relative",
-        #                 "padding-top": 20,
-        #                 "padding-right": 20,
-        #                 "padding-left": 20,
-        #                 "padding-bottom": 10,
-        #             },
-        #         )
-        #     ],
-        #     href="https://databricks-dash.aws.plotly.host/databrickslakeside/dbx-console",
-        # ),
+        html.A(
+            [
+                html.Img(
+                    src='/assets/plotly_DO.png',
+                    style={
+                        "height": "100%",
+                        "width": "100%",
+                        "float": "center",
+                        "position": "relative",
+                        "padding-top": 20,
+                        "padding-right": 20,
+                        "padding-left": 20,
+                        "padding-bottom": 10,
+                    },
+                )
+            ],
+            href="https://databricks-dash.aws.plotly.host/databrickslakeside/dbx-console",
+        ),
         dmc.Space(h=10),
         dmc.NavLink(
             label="Data Explorer",
