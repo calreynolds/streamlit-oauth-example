@@ -108,10 +108,10 @@ app.layout = dmc.MantineProvider(
 @server.before_request
 def check_authentication():
     if "creds" not in session and request.endpoint not in ["login", "callback"]:
-        return redirect("/login")
+        return redirect("/delta-optimizer/login")
 
 # 2. Separate login route to initiate the OAuth process
-@server.route('/login')
+@server.route('/delta-optimizer/login')
 def login():
     consent = oauth_client.initiate_consent()
     session["consent"] = consent.as_dict()
@@ -133,7 +133,7 @@ def callback():
         logging.error(f"Error processing callback: {e}")
     
     logging.debug("Redirecting to the default delta-optimizer page.")
-    return redirect('/delta-optimizer/')  # Redirect to the main app page
+    return redirect('/delta-optimizer/build_strategy')  # Redirect to the main app page
 
 # 4. Dash callback to display the page content (simplified without the creds check)
 @app.callback(
