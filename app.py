@@ -36,7 +36,7 @@ app = Dash(
     external_stylesheets=[dbc.themes.BOOTSTRAP],
     use_pages=True,
     suppress_callback_exceptions=True
-    )
+)
 
 server = app.server
 server.secret_key = secrets.token_urlsafe(32)
@@ -51,6 +51,7 @@ server.config['SESSION_REDIS'] = redis_instance
 
 # Initialize Flask-Session
 Session(server)
+
 
 
 oauth_client = OAuthClient(
@@ -89,7 +90,8 @@ def check_authentication():
         if "creds" not in session:
             logging.warning(f"{log_prefix} No creds found in session. Redirecting to login. Session State: {session}")
             return redirect(url_for('login'))
-        
+
+# ...
 
 @server.route('/delta-optimizer/login')
 def login():
@@ -97,7 +99,7 @@ def login():
     
     # If creds are found in session, redirect to the main app page
     if "creds" in session:
-        logging.info(f"{log_prefix} User is already authenticated. Redirecting to main app page. Session State: {session}")
+        logging.info(f"{log_prefix} User is already authenticated. Redirecting to the main app page. Session State: {session}")
         return redirect('/delta-optimizer/build-strategy')
     
     # If creds are not found, initiate the OAuth flow
@@ -112,6 +114,7 @@ def login():
         # You might want to handle this error differently, e.g., show an error page or message to the user
         return "Error initiating authentication."
 
+# ...
 
 @server.route("/delta-optimizer/callback")
 def callback():
