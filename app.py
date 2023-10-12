@@ -117,20 +117,21 @@ def login():
 # 3. Your callback remains the same but adjusted for dash-pages
 @server.route("/delta-optimizer/callback")
 def callback():
-    logging.debug(f"Callback accessed with arguments: {request.args}")
+    logging.debug(f"===== Callback accessed with arguments: {request.args} =====")
     
-    if "consent" in session:
-        consent = Consent.from_dict(oauth_client, session["consent"])
-        try:
+    try:
+        if "consent" in session:
+            logging.debug("Step 7: Consent found in session.")
+            consent = Consent.from_dict(oauth_client, session["consent"])
             session["creds"] = consent.exchange_callback_parameters(request.args).as_dict()
-            logging.info("Credentials successfully obtained and stored in session.")
-            return redirect('/delta-optimizer/build-strategy')
-        except Exception as e:
-            logging.error(f"Error processing callback: {e}")
-            return "An error occurred during authentication. Please try again.", 500
-    else:
-        logging.warning("No consent found in session during callback.")
-        return "Session expired. Please start the authentication process again.", 400
+            logging.debug("Step 8: Credentials successfully obtained and stored in session.")
+        else:
+            logging.warning("Step 9: No consent found in session during callback.")
+    except Exception as e:
+        logging.error(f"Step 10: Error processing callback: {e}")
+    
+    logging.debug("Step 11: Redirecting to the clusters page.")
+    return redirect('/delta-optimizer/build-strategy')
 
 
 if __name__ == "__main__":
