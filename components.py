@@ -89,7 +89,7 @@ LEFT_SIDEBAR = dmc.Navbar(
         dmc.Space(h=10),
         dmc.NavLink(
             label="Data Explorer",
-            href="/explorer",
+            href="/delta-optimizer/explorer",
             variant="subtle",
             icon=DashIconify(icon="ri:pie-chart-fill", width=20, color="#FFFFFF"),
             className="nav-link-component",

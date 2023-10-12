@@ -59,7 +59,7 @@ def layout():
                         dmc.Space(h=10),
                         dmc.Space(h=10),
                         html.Div(id="library-status"),
-                        html.Div(id="engine-test-result"),
+                        # html.Div(id="engine-test-result"),
                         dmc.Space(h=10),
                         dmc.TextInput(
                             id="profile-name",
