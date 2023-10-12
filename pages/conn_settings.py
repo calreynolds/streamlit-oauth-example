@@ -15,9 +15,6 @@ from databricks.sdk import WorkspaceClient
 from databricks.sdk.oauth import SessionCredentials
 from flask import redirect, session, url_for, request
 
-from dotenv import load_dotenv
-
-load_dotenv(dotenv_path='/home/workspaceuser/app/.env')
 
 
 # Fetch variables from the .env file

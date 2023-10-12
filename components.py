@@ -101,21 +101,21 @@ LEFT_SIDEBAR = dmc.Navbar(
             children=[
                 dmc.NavLink(
                     label="Build Strategy",
-                    href="/build-strategy",
+                    href="/delta-optimizer/build-strategy",
                     variant="subtle",
                     icon=DashIconify(icon="mdi:brain", width=20, color="#FFFFFF"),
                     className="nav-link-component",
                 ),
                 dmc.NavLink(
                     label="Schedule + Run",
-                    href="/optimizer-runner",
+                    href="/delta-optimizer/optimizer-runner",
                     variant="subtle",
                     icon=DashIconify(icon="carbon:run", width=20, color="#FFFFFF"),
                     className="nav-link-component",
                 ),
                 dmc.NavLink(
                     label="Results",
-                    href="/optimizer-results",
+                    href="/delta-optimizer/optimizer-results",
                     variant="subtle",
                     icon=DashIconify(
                         icon="mingcute:presentation-2-fill", width=20, color="#FFFFFF"
@@ -127,7 +127,7 @@ LEFT_SIDEBAR = dmc.Navbar(
         ),
         dmc.NavLink(
             label="Settings",
-            href="/connection_settings",
+            href="/delta-optimizer/connection_settings",
             icon=DashIconify(
                 icon="material-symbols:settings", width=20, color="#FFFFFF"
             ),
