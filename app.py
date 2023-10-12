@@ -15,6 +15,7 @@ import dash_mantine_components as dmc
 import dash_bootstrap_components as dbc
 import dash
 
+
 load_dotenv()
 
 # Fetch variables from the .env file
@@ -28,9 +29,8 @@ APP_NAME = "delta_optimizer"
 
 app = Dash(
     __name__,
-    use_pages=True,
-    suppress_callback_exceptions=True,
     external_stylesheets=[dbc.themes.BOOTSTRAP],
+    use_pages=True,
     routes_pathname_prefix="/delta-optimizer/")
 
 server = app.server
@@ -74,12 +74,36 @@ app.layout = dmc.MantineProvider(
         dmc.Container(
             className="background-container",
         ),
+        dcc.Location(id='url', refresh=False),
         dmc.Container(
-            dash.page_container,
+           dash.page_container,
             className="page",
         ),
     ],
 )   
+
+# # Assuming you've defined a div with the id 'page-content' in your main layout:
+# @app.callback(Output('page-content', 'children'),
+#               [Input('url', 'pathname')])
+# def display_page(pathname):
+#     if pathname == '/delta-optimizer/build-strategy':
+#         return build_strategy.layout
+#     elif pathname == '/delta-optimizer/conn-settings':
+#         return conn_settings.layout
+#     elif pathname == '/delta-optimizer/dbx-console':
+#         return dbx_console.layout
+#     elif pathname == '/delta-optimizer/main':
+#         return main.layout
+#     elif pathname == '/delta-optimizer/results':
+#         return results.layout
+#     elif pathname == '/delta-optimizer/run-strategy':
+#         return run_strategy.layout
+#     else:
+#         # This is if no match is found. You can redirect to a default page or display a 404 message.
+#         return "404 Page not found"
+
+
+
 
 @app.callback(
     Output(dash.page_container, 'children'),
