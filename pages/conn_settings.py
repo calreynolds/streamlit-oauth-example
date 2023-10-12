@@ -42,7 +42,7 @@ oauth_client = OAuthClient(
 w = WorkspaceClient(host=oauth_client.host)
 
 
-dash.register_page(__name__, path="/delta-optimizer/connection_settings", title="Connection Settings")
+# dash.register_page(__name__, path="/delta-optimizer/connection_settings", title="Connection Settings")
 
 
 def layout():

@@ -24,13 +24,15 @@ DATABICKS_CLIENT_ID = os.environ.get("DATABRICKS_CLIENT_ID")
 DATABRICKS_CLIENT_SECRET = os.environ.get("DATABRICKS_CLIENT_SECRET")
 DATABRICKS_APP_URL = os.environ.get("DATABRICKS_APP_URL")
 
+
+from pages import build_strategy, conn_settings, dbx_console, main, results, run_strategy
+
 APP_NAME = "delta_optimizer"
 
 
 app = Dash(
     __name__,
     external_stylesheets=[dbc.themes.BOOTSTRAP],
-    use_pages=True,
     routes_pathname_prefix="/delta-optimizer/")
 
 server = app.server
@@ -75,6 +77,12 @@ app.layout = dmc.MantineProvider(
             className="background-container",
         ),
         dcc.Location(id='url', refresh=False),
+        html.Div(id='page-build_strategy', children=build_strategy.layout(), style={'display': 'none'}),
+        html.Div(id='page-conn_settings', children=conn_settings.layout(), style={'display': 'none'}),
+        html.Div(id='page-dbx_console', children=dbx_console.layout(), style={'display': 'none'}),
+        html.Div(id='page-main', children=main.layout(), style={'display': 'none'}),
+        html.Div(id='page-results', children=results.layout(), style={'display': 'none'}),
+        html.Div(id='page-run_strategy', children=run_strategy.layout(), style={'display': 'none'}),
         dmc.Container(
            dash.page_container,
             className="page",
@@ -140,37 +148,37 @@ def callback():
     return redirect('/delta-optimizer/build_strategy')  # Redirect to the main app page
 
 # 4. Dash callback to display the page content (simplified without the creds check)
-@app.callback(
-    Output(dash.page_container, 'children'),
-    Input('url', 'pathname')
+@app.callback([
+    Output('page-build_strategy', 'children'),
+    Output('page-conn_settings', 'children'),
+    Output('page-dbx_console', 'children'),
+    Output('page-main', 'children'),
+    Output('page-results', 'children'),
+    Output('page-run_strategy', 'children')],
+
+    [Input('url', 'pathname')]
 )
 def display_page(pathname):
     logging.debug(f"===== Display page accessed with pathname: {pathname} =====")
-    
-    return dmc.MantineProvider(
-        withGlobalStyles=True,
-        theme={
-            "primaryColor": "dbx-orange",
-            "colors": {
-                "dbx-orange": [
-                    "#FFB4AC", "#FFB4AC", "#FFB4AC", "#FFB4AC",
-                    "#FF9B90", "#FF8174", "#FF6859", "#FF4F3D", "#FF3621"
-                ]
-            },
-        },
-        children=[
-            TOP_NAVBAR,
-            LEFT_SIDEBAR,
-            dmc.Container(
-                className="background-container",
-            ),
-            dmc.Container(
-                dash.page_container,
-                className="page",
-            ),
-        ],
-    )
-
+    build_strategy_content = None
+    conn_settings_content = None
+    dbx_console_content = None
+    main_content = None
+    results_content = None
+    run_strategy_content = None
+    if pathname == '/delta-optimizer/build-strategy':
+        build_strategy_content = build_strategy.layout()
+    elif pathname == '/delta-optimizer/conn-settings':
+        conn_settings_content = conn_settings.layout()
+    elif pathname == '/delta-optimizer/dbx-console':
+        dbx_console_content = dbx_console.layout()
+    elif pathname == '/delta-optimizer/main':
+        main_content = main.layout()
+    elif pathname == '/delta-optimizer/results':
+        results_content = results.layout()
+    elif pathname == '/delta-optimizer/run-strategy':
+        run_strategy_content = run_strategy.layout()
+    return build_strategy_content, conn_settings_content, dbx_console_content, main_content, results_content, run_strategy_content
 
 
 if __name__ == "__main__":
