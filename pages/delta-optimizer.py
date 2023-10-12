@@ -20,7 +20,7 @@ import time
 from databricks.sdk import WorkspaceClient
 from databricks.sdk.service import jobs
 
-dash.register_page(__name__, path="/build-strategy", title="Strategy Builder")
+dash.register_page(__name__, path="/delta-optimizer/build-strategy", title="Strategy Builder")
 
 
 sideBar = {

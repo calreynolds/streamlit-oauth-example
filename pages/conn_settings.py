@@ -7,14 +7,39 @@ from dash import html, dcc, callback, Input, Output, State, ctx
 import dash_mantine_components as dmc
 from dash_iconify import DashIconify
 from sqlalchemy.engine import create_engine
+from databricks.sdk.oauth import OAuthClient, Consent
+
 
 import components as comp
 from databricks.sdk import WorkspaceClient
+from databricks.sdk.oauth import SessionCredentials
+from flask import redirect, session, url_for, request
 
-w = WorkspaceClient()
+from dotenv import load_dotenv
+
+load_dotenv()
 
 
-dash.register_page(__name__, path="/connection_settings", title="Connection Settings")
+# Fetch variables from the .env file
+DATABRICKS_HOST = os.environ.get("DATABRICKS_HOST")
+DATABICKS_CLIENT_ID = os.environ.get("DATABRICKS_CLIENT_ID")
+DATABRICKS_CLIENT_SECRET = os.environ.get("DATABRICKS_CLIENT_SECRET")
+DATABRICKS_APP_URL = os.environ.get("DATABRICKS_APP_URL")
+
+oauth_client = OAuthClient(
+    host=DATABRICKS_HOST,
+    client_id=DATABICKS_CLIENT_ID,
+    client_secret=DATABRICKS_CLIENT_SECRET,
+    redirect_url=DATABRICKS_APP_URL,
+    scopes=["all-apis"]
+)
+
+
+
+w = WorkspaceClient(host=oauth_client.host)
+
+
+dash.register_page(__name__, path="/delta-optimizer/connection_settings", title="Connection Settings")
 
 
 def layout():

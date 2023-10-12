@@ -15,5 +15,7 @@ databricks-cli==0.17.7
 configparser
 dash-chart-editor
 dash-bootstrap-components
+python-dotenv
+databricks-sdk
 
 
