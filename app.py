@@ -85,41 +85,51 @@ app.layout = dmc.MantineProvider(
     ],
 )   
 
+import logging
+logging.basicConfig(level=logging.DEBUG)
+
 
 # 1. Before request hook to check for authentication
 @server.before_request
 def check_authentication():
-    # Assuming dash-pages uses request.endpoint to denote different pages/routes.
-    # You might want to exclude more endpoints, especially static file serving, etc.
+    logging.debug(f"Checking authentication for endpoint: {request.endpoint}")
+    
     if request.endpoint not in ['login', 'callback', 'static']:
         if "creds" not in session:
+            logging.warning("No creds found in session. Redirecting to login.")
             return redirect(url_for('login'))
-
+        else:
+            logging.info("Creds found in session. Continuing with the request.")
 
 # 2. Separate login route to initiate the OAuth process
 @server.route('/delta-optimizer/login')
 def login():
     if "creds" in session:
-        # User is already authenticated. Redirect to main app page.
+        logging.info("User is already authenticated. Redirecting to main app page.")
         return redirect('/delta-optimizer/build-strategy')
 
-    # Otherwise, initiate OAuth flow
+    logging.info("Initiating OAuth flow.")
     consent = oauth_client.initiate_consent()
     session["consent"] = consent.as_dict()
+    logging.debug(f"Consent stored in session: {session['consent']}")
     return redirect(consent.auth_url)
 
 # 3. Your callback remains the same but adjusted for dash-pages
 @server.route("/delta-optimizer/callback")
 def callback():
+    logging.debug(f"Callback accessed with arguments: {request.args}")
+    
     if "consent" in session:
         consent = Consent.from_dict(oauth_client, session["consent"])
         try:
             session["creds"] = consent.exchange_callback_parameters(request.args).as_dict()
+            logging.info("Credentials successfully obtained and stored in session.")
             return redirect('/delta-optimizer/build-strategy')
         except Exception as e:
             logging.error(f"Error processing callback: {e}")
             return "An error occurred during authentication. Please try again.", 500
     else:
+        logging.warning("No consent found in session during callback.")
         return "Session expired. Please start the authentication process again.", 400
 
 
