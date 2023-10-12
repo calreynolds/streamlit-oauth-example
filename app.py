@@ -33,8 +33,7 @@ app = Dash(
     __name__,
     external_stylesheets=[dbc.themes.BOOTSTRAP],
     use_pages=True,
-    suppress_callback_exceptions=True,
-    routes_pathname_prefix='/delta-optimizer/'
+    suppress_callback_exceptions=True
     )
 
 server = app.server
@@ -90,29 +89,38 @@ app.layout = dmc.MantineProvider(
 # 1. Before request hook to check for authentication
 @server.before_request
 def check_authentication():
-    if request.endpoint not in ['login', 'callback'] and "creds" not in session:
-        return redirect(url_for('login'))
-
+    # Assuming dash-pages uses request.endpoint to denote different pages/routes.
+    # You might want to exclude more endpoints, especially static file serving, etc.
+    if request.endpoint not in ['login', 'callback', 'static']:
+        if "creds" not in session:
+            return redirect(url_for('login'))
 
 
 # 2. Separate login route to initiate the OAuth process
 @server.route('/delta-optimizer/login')
 def login():
+    if "creds" in session:
+        # User is already authenticated. Redirect to main app page.
+        return redirect('/delta-optimizer/build-strategy')
+
+    # Otherwise, initiate OAuth flow
     consent = oauth_client.initiate_consent()
     session["consent"] = consent.as_dict()
     return redirect(consent.auth_url)
-
 
 # 3. Your callback remains the same but adjusted for dash-pages
 @server.route("/delta-optimizer/callback")
 def callback():
     if "consent" in session:
         consent = Consent.from_dict(oauth_client, session["consent"])
-        session["creds"] = consent.exchange_callback_parameters(request.args).as_dict()
-
-    # Redirect to the main app page
-    return redirect('/delta-optimizer/build-strategy')
-
+        try:
+            session["creds"] = consent.exchange_callback_parameters(request.args).as_dict()
+            return redirect('/delta-optimizer/build-strategy')
+        except Exception as e:
+            logging.error(f"Error processing callback: {e}")
+            return "An error occurred during authentication. Please try again.", 500
+    else:
+        return "Session expired. Please start the authentication process again.", 400
 
 
 if __name__ == "__main__":
