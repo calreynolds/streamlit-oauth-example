@@ -70,19 +70,19 @@ LEFT_SIDEBAR = dmc.Navbar(
     children=[
         html.A(
             [
-                # html.Img(
-                #     src=dash.get_asset_url("plotly_DO.png"),
-                #     style={
-                #         "height": "100%",
-                #         "width": "100%",
-                #         "float": "center",
-                #         "position": "relative",
-                #         "padding-top": 20,
-                #         "padding-right": 20,
-                #         "padding-left": 20,
-                #         "padding-bottom": 10,
-                #     },
-                # )
+                html.Img(
+                    src='/assets/plotly_DO.png',
+                    style={
+                        "height": "100%",
+                        "width": "100%",
+                        "float": "center",
+                        "position": "relative",
+                        "padding-top": 20,
+                        "padding-right": 20,
+                        "padding-left": 20,
+                        "padding-bottom": 10,
+                    },
+                )
             ],
             href="https://databricks-dash.aws.plotly.host/databrickslakeside/dbx-console",
         ),

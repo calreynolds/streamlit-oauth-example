@@ -104,51 +104,20 @@ app.layout = dmc.MantineProvider(
 
 
 
+# 1. Before request hook to check for authentication
+@server.before_request
+def check_authentication():
+    if "creds" not in session and request.endpoint not in ["login", "callback"]:
+        return redirect("/login")
 
-@app.callback(
-    Output(dash.page_container, 'children'),
-    Input('url', 'pathname')
-)
-def display_page(pathname):
-    logging.debug(f"===== Display page accessed with pathname: {pathname} =====")
-    
-    if "creds" not in session:
-        logging.debug("No creds found in session, initiating consent.")
-        consent = oauth_client.initiate_consent()
-        session["consent"] = consent.as_dict()
-        return html.Div([
-            html.H1("Please authenticate"),
-            html.A("Authenticate with Databricks", href=consent.auth_url)
-        ])
-    else:
-        return dmc.MantineProvider(
-            withGlobalStyles=True,
-            theme={
-                "primaryColor": "dbx-orange",
-                "colors": {
-                    "dbx-orange": [
-                        "#FFB4AC", "#FFB4AC", "#FFB4AC", "#FFB4AC",
-                        "#FF9B90", "#FF8174", "#FF6859", "#FF4F3D", "#FF3621"
-                    ]
-                },
-            },
-            children=[
-                TOP_NAVBAR,
-                LEFT_SIDEBAR,
-                dmc.Container(
-                    className="background-container",
-                ),
-                dmc.Container(
-                    dash.page_container,
-                    className="page",
-                ),
-                dcc.Store(
-                    id="general-store",
-                    data={"outputdpdn2": "main.delta_optimizer_mercury"}
-                ),
-            ],
-        )
+# 2. Separate login route to initiate the OAuth process
+@server.route('/login')
+def login():
+    consent = oauth_client.initiate_consent()
+    session["consent"] = consent.as_dict()
+    return redirect(consent.auth_url)
 
+# 3. Your callback remains the same
 @server.route("/delta-optimizer/callback")
 def callback():
     logging.debug(f"Callback accessed with arguments: {request.args}")
@@ -164,7 +133,39 @@ def callback():
         logging.error(f"Error processing callback: {e}")
     
     logging.debug("Redirecting to the default delta-optimizer page.")
-    return redirect('/delta-optimizer/')  # Redirect to the desired page in your app
+    return redirect('/delta-optimizer/')  # Redirect to the main app page
+
+# 4. Dash callback to display the page content (simplified without the creds check)
+@app.callback(
+    Output(dash.page_container, 'children'),
+    Input('url', 'pathname')
+)
+def display_page(pathname):
+    logging.debug(f"===== Display page accessed with pathname: {pathname} =====")
+    
+    return dmc.MantineProvider(
+        withGlobalStyles=True,
+        theme={
+            "primaryColor": "dbx-orange",
+            "colors": {
+                "dbx-orange": [
+                    "#FFB4AC", "#FFB4AC", "#FFB4AC", "#FFB4AC",
+                    "#FF9B90", "#FF8174", "#FF6859", "#FF4F3D", "#FF3621"
+                ]
+            },
+        },
+        children=[
+            TOP_NAVBAR,
+            LEFT_SIDEBAR,
+            dmc.Container(
+                className="background-container",
+            ),
+            dmc.Container(
+                dash.page_container,
+                className="page",
+            ),
+        ],
+    )
 
 
 
