@@ -27,7 +27,7 @@ DATABRICKS_CLIENT_SECRET = os.environ.get("DATABRICKS_CLIENT_SECRET")
 DATABRICKS_APP_URL = os.environ.get("DATABRICKS_APP_URL")
 
 oauth_client = OAuthClient(
-    host="https://plotly-customer-success.cloud.databricks.com",
+    host=DATABRICKS_HOST,
     client_id=DATABICKS_CLIENT_ID,
     client_secret=DATABRICKS_CLIENT_SECRET,
     redirect_url=DATABRICKS_APP_URL,
