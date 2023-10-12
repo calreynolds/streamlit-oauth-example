@@ -53,41 +53,11 @@ from components import (
     TOP_NAVBAR,
 )  # noqa: E402 isort:skip - must be imported after app is defined
 
-app.layout = dmc.MantineProvider(
-    withGlobalStyles=True,
-    theme={
-        "primaryColor": "dbx-orange",
-        "colors": {
-            "dbx-orange": [
-                "#FFB4AC",
-                "#FFB4AC",
-                "#FFB4AC",
-                "#FFB4AC",
-                "#FF9B90",
-                "#FF8174",
-                "#FF6859",
-                "#FF4F3D",
-                "#FF3621",
-            ]
-        },
-    },
-    children=[
-        TOP_NAVBAR,
-        LEFT_SIDEBAR,
-        dmc.Container(
-            className="background-container",
-        ),
-        dcc.Location(id='url', refresh=False),
-        dmc.Container(
-           dash.page_container,
-            className="page",
-        ),
-    ],
-)   
-
 import logging
+from dash import dcc, html
+import dash_mantine_components as dmc
+
 logging.basicConfig(level=logging.DEBUG)
-import traceback
 
 @server.before_request
 def check_authentication():
@@ -99,14 +69,13 @@ def check_authentication():
         return
 
     logging.debug(f"{log_prefix} Checking authentication for endpoint: {request.endpoint}")
-    
+
     # Exclude some endpoints from the authentication check
     if request.endpoint not in ['login', 'callback', 'static']:
-        # Check if the session lacks credentials AND the request is not already for the 'login' endpoint
-        if "creds" not in session and request.endpoint != 'login':
+        if "creds" not in session:
             logging.warning(f"{log_prefix} No creds found in session. Redirecting to login. Session State: {session}")
             return redirect(url_for('login'))
-
+        
 
 @server.route('/delta-optimizer/login')
 def login():
@@ -137,10 +106,43 @@ def callback():
         else:
             logging.warning(f"{log_prefix} No consent found in session during callback. Session State: {session}")
     except Exception as e:
-        logging.error(f"{log_prefix} Error processing callback: {e}\nFull traceback: {traceback.format_exc()}")
+        logging.error(f"{log_prefix} Error processing callback: {e}")
     
-    logging.debug(f"{log_prefix} Redirecting to the clusters page.")
+    logging.debug(f"{log_prefix} Redirecting to the main content page.")
     return redirect('/delta-optimizer/build-strategy')
+
+# Define your app's layout
+app.layout = dmc.MantineProvider(
+    withGlobalStyles=True,
+    theme={
+        "primaryColor": "dbx-orange",
+        "colors": {
+            "dbx-orange": [
+                "#FFB4AC",
+                "#FFB4AC",
+                "#FFB4AC",
+                "#FFB4AC",
+                "#FF9B90",
+                "#FF8174",
+                "#FF6859",
+                "#FF4F3D",
+                "#FF3621",
+            ]
+        },
+    },
+    children=[
+        TOP_NAVBAR,
+        LEFT_SIDEBAR,
+        dmc.Container(
+            className="background-container",
+        ),
+        dcc.Location(id='url', refresh=False),
+        dmc.Container(
+            dash.page_container,
+            className="page",
+        ),
+    ],
+)
 
 
 if __name__ == "__main__":
