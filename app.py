@@ -33,7 +33,9 @@ app = Dash(
     __name__,
     external_stylesheets=[dbc.themes.BOOTSTRAP],
     use_pages=True,
-    suppress_callback_exceptions=True)
+    suppress_callback_exceptions=True,
+    routes_pathname_prefix='/delta-optimizer/'
+    )
 
 server = app.server
 server.secret_key = secrets.token_urlsafe(32)
