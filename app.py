@@ -87,50 +87,59 @@ app.layout = dmc.MantineProvider(
 
 import logging
 logging.basicConfig(level=logging.DEBUG)
+import traceback
 
-
-# 1. Before request hook to check for authentication
 @server.before_request
 def check_authentication():
-    logging.debug(f"Checking authentication for endpoint: {request.endpoint}")
+    log_prefix = "[Before Request]"
     
-    if request.endpoint not in ['login', 'callback', 'static']:
-        if "creds" not in session:
-            logging.warning("No creds found in session. Redirecting to login.")
-            return redirect(url_for('login'))
-        else:
-            logging.info("Creds found in session. Continuing with the request.")
+    # If credentials are already present in the session, simply return
+    if "creds" in session:
+        logging.debug(f"{log_prefix} Creds found in session. Skipping authentication checks.")
+        return
 
-# 2. Separate login route to initiate the OAuth process
+    logging.debug(f"{log_prefix} Checking authentication for endpoint: {request.endpoint}")
+    
+    # Exclude some endpoints from the authentication check
+    if request.endpoint not in ['login', 'callback', 'static']:
+        # Check if the session lacks credentials AND the request is not already for the 'login' endpoint
+        if "creds" not in session and request.endpoint != 'login':
+            logging.warning(f"{log_prefix} No creds found in session. Redirecting to login. Session State: {session}")
+            return redirect(url_for('login'))
+
+
 @server.route('/delta-optimizer/login')
 def login():
+    log_prefix = "[Login Route]"
+    
     if "creds" in session:
-        logging.info("User is already authenticated. Redirecting to main app page.")
+        logging.info(f"{log_prefix} User is already authenticated. Redirecting to main app page. Session State: {session}")
         return redirect('/delta-optimizer/build-strategy')
 
-    logging.info("Initiating OAuth flow.")
+    logging.info(f"{log_prefix} Initiating OAuth flow.")
     consent = oauth_client.initiate_consent()
     session["consent"] = consent.as_dict()
-    logging.debug(f"Consent stored in session: {session['consent']}")
+    logging.debug(f"{log_prefix} Consent stored in session: {session['consent']}")
     return redirect(consent.auth_url)
 
-# 3. Your callback remains the same but adjusted for dash-pages
 @server.route("/delta-optimizer/callback")
 def callback():
-    logging.debug(f"===== Callback accessed with arguments: {request.args} =====")
+    log_prefix = "[Callback Route]"
+    
+    logging.debug(f"{log_prefix} Callback accessed with arguments: {request.args}")
     
     try:
         if "consent" in session:
-            logging.debug("Step 7: Consent found in session.")
+            logging.debug(f"{log_prefix} Consent found in session. Session State: {session}")
             consent = Consent.from_dict(oauth_client, session["consent"])
             session["creds"] = consent.exchange_callback_parameters(request.args).as_dict()
-            logging.debug("Step 8: Credentials successfully obtained and stored in session.")
+            logging.debug(f"{log_prefix} Credentials successfully obtained and stored in session. Session State: {session}")
         else:
-            logging.warning("Step 9: No consent found in session during callback.")
+            logging.warning(f"{log_prefix} No consent found in session during callback. Session State: {session}")
     except Exception as e:
-        logging.error(f"Step 10: Error processing callback: {e}")
+        logging.error(f"{log_prefix} Error processing callback: {e}\nFull traceback: {traceback.format_exc()}")
     
-    logging.debug("Step 11: Redirecting to the clusters page.")
+    logging.debug(f"{log_prefix} Redirecting to the clusters page.")
     return redirect('/delta-optimizer/build-strategy')
 
 
