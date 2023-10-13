@@ -1,6 +1,6 @@
 import dash
 
-dash.register_page(__name__, path="/delta_optimizer", title="Welcome")
+dash.register_page(__name__, path="/delta-optimizer", title="Welcome")
 
 
 def layout():
