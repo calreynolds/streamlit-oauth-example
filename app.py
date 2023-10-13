@@ -62,27 +62,40 @@ logging.basicConfig(level=logging.DEBUG)
 
 
 
-@server.before_request
-def check_authentication():
-    log_prefix = "[Before Request]"
+# @server.before_request
+# def check_authentication():
+#     log_prefix = "[Before Request]"
 
-    # Set session to be permanent and define its lifetime
-    session.permanent = True
-    server.permanent_session_lifetime = timedelta(minutes=5)
+#     # Set session to be permanent and define its lifetime
+#     session.permanent = True
+#     server.permanent_session_lifetime = timedelta(minutes=5)
 
-    # If credentials are already present in the session, simply return
-    if "creds" in session:
-        logging.debug(f"{log_prefix} Creds found in session. Skipping authentication checks.")
-        return
+#     # If credentials are already present in the session, simply return
+#     if "creds" in session:
+#         logging.debug(f"{log_prefix} Creds found in session. Skipping authentication checks.")
+#         return
 
-    logging.debug(f"{log_prefix} Checking authentication for endpoint: {request.endpoint}")
+#     logging.debug(f"{log_prefix} Checking authentication for endpoint: {request.endpoint}")
 
-    # Exclude some endpoints from the authentication check
-    if request.endpoint not in ['login', 'callback', 'static']:
-        if "creds" not in session:
-            logging.warning(f"{log_prefix} No creds found in session. Redirecting to login. Session State: {session}")
-            return redirect(url_for('login'))
-        
+#     # Exclude some endpoints from the authentication check
+#     if request.endpoint not in ['login', 'callback', 'static']:
+#         if "creds" not in session:
+#             logging.warning(f"{log_prefix} No creds found in session. Redirecting to login. Session State: {session}")
+#             return redirect(url_for('login'))
+
+
+@app.callback(Output('url', 'pathname'),
+              [Input('url', 'pathname')])
+def redirect_page(pathname):
+    if "creds" not in session:
+        # If creds are not in session, redirect to the Flask login route
+        return '/delta-optimizer/login'
+    elif pathname == '/delta-optimizer/build-strategy':
+        # If on main page and creds are in session, no need to redirect
+        return '/delta-optimizer/build-strategy'
+    else:
+        # Default behavior can be set as needed
+        return '/delta-optimzer'
 
 @server.route('/delta-optimizer/login')
 def login():
