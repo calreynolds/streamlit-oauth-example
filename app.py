@@ -14,8 +14,6 @@ from dash import Dash, dcc, html
 import dash_mantine_components as dmc
 import dash_bootstrap_components as dbc
 import dash
-from flask_session import Session
-import redis
 
 
 load_dotenv()
@@ -31,57 +29,15 @@ DATABRICKS_APP_URL = os.environ.get("DATABRICKS_APP_URL")
 APP_NAME = "delta_optimizer_latest"
 
 
-from flask_session import RedisSessionInterface
-
-class CustomRedisSessionInterface(RedisSessionInterface):
-    
-    def save_session(self, app, session, response):
-        # Generate a unique session ID
-        session_id = secrets.token_urlsafe()
-        
-        # Serialize the session data
-        session_data = self.get_signing_serializer(app).dumps(dict(session))
-
-        # Store the serialized session data in Redis
-        redis_store = app.config['SESSION_REDIS']
-        redis_store.setex(
-            name=app.config['SESSION_KEY_PREFIX'] + session_id,
-            value=session_data,
-            time=app.config.get('PERMANENT_SESSION_LIFETIME')
-        )
-
-        # Call the original save_session but pass the session_id for the cookie
-        response.set_cookie(app.config["SESSION_COOKIE_NAME"], session_id)
-
-
-
-
 app = Dash(
     __name__,
     external_stylesheets=[dbc.themes.BOOTSTRAP],
     use_pages=True,
     suppress_callback_exceptions=True
-)
+    )
 
 server = app.server
 server.secret_key = secrets.token_urlsafe(32)
-
-# Configure Flask-Session with Redis
-server.config['SESSION_TYPE'] = 'redis'
-server.config['SESSION_PERMANENT'] = False
-server.config['SESSION_USE_SIGNER'] = True
-server.config['SESSION_KEY_PREFIX'] = 'session:'
-server.config['SESSION_COOKIE_NAME'] = 'myapp_session'  # Add this line
-redis_instance = redis.StrictRedis.from_url(os.environ.get("REDIS_URL", "redis://127.0.0.1:6379"))
-server.config['SESSION_REDIS'] = redis_instance
-server.session_interface = CustomRedisSessionInterface(server.config['SESSION_REDIS'], key_prefix=server.config['SESSION_KEY_PREFIX'])
-
-
-
-# Initialize Flask-Session
-Session(server)
-
-
 
 oauth_client = OAuthClient(
     host=DATABRICKS_HOST,
@@ -119,8 +75,7 @@ def check_authentication():
         if "creds" not in session:
             logging.warning(f"{log_prefix} No creds found in session. Redirecting to login. Session State: {session}")
             return redirect(url_for('login'))
-
-# ...
+        
 
 @server.route('/delta-optimizer/login')
 def login():
@@ -128,7 +83,7 @@ def login():
     
     # If creds are found in session, redirect to the main app page
     if "creds" in session:
-        logging.info(f"{log_prefix} User is already authenticated. Redirecting to the main app page. Session State: {session}")
+        logging.info(f"{log_prefix} User is already authenticated. Redirecting to main app page. Session State: {session}")
         return redirect('/delta-optimizer/build-strategy')
     
     # If creds are not found, initiate the OAuth flow
@@ -143,7 +98,6 @@ def login():
         # You might want to handle this error differently, e.g., show an error page or message to the user
         return "Error initiating authentication."
 
-# ...
 
 @server.route("/delta-optimizer/callback")
 def callback():
