@@ -26,7 +26,7 @@ DATABRICKS_APP_URL = os.environ.get("DATABRICKS_APP_URL")
 
 
 
-APP_NAME = "delta_optimizer_latest"
+APP_NAME = "delta_optimizer_latest_one"
 
 
 app = Dash(
@@ -40,7 +40,7 @@ server = app.server
 server.secret_key = secrets.token_urlsafe(32)
 
 oauth_client = OAuthClient(
-    host=DATABRICKS_HOST,
+    host=DATABRICKS_HOST,   
     client_id=DATABICKS_CLIENT_ID,
     client_secret=DATABRICKS_CLIENT_SECRET,
     redirect_url=DATABRICKS_APP_URL,
