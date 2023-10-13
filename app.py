@@ -46,8 +46,10 @@ server.config['SESSION_TYPE'] = 'redis'
 server.config['SESSION_PERMANENT'] = False
 server.config['SESSION_USE_SIGNER'] = True
 server.config['SESSION_KEY_PREFIX'] = 'session:'
+server.config['SESSION_COOKIE_NAME'] = 'myapp_session'  # Add this line
 redis_instance = redis.StrictRedis.from_url(os.environ.get("REDIS_URL", "redis://127.0.0.1:6379"))
 server.config['SESSION_REDIS'] = redis_instance
+
 
 # Initialize Flask-Session
 Session(server)
