@@ -62,44 +62,44 @@ logging.basicConfig(level=logging.DEBUG)
 
 
 
-# @server.before_request
-# def check_authentication():
-#     log_prefix = "[Before Request]"
+@server.before_request
+def check_authentication():
+    log_prefix = "[Before Request]"
 
-#     # Set session to be permanent and define its lifetime
-#     session.permanent = True
-#     server.permanent_session_lifetime = timedelta(minutes=5)
+    # Set session to be permanent and define its lifetime
+    session.permanent = True
+    server.permanent_session_lifetime = timedelta(minutes=5)
 
-#     # If credentials are already present in the session, simply return
-#     if "creds" in session:
-#         logging.debug(f"{log_prefix} Creds found in session. Skipping authentication checks.")
-#         return
+    # If credentials are already present in the session, simply return
+    if "creds" in session:
+        logging.debug(f"{log_prefix} Creds found in session. Skipping authentication checks.")
+        return
 
-#     logging.debug(f"{log_prefix} Checking authentication for endpoint: {request.endpoint}")
+    logging.debug(f"{log_prefix} Checking authentication for endpoint: {request.endpoint}")
 
-#     # Exclude some endpoints from the authentication check
-#     if request.endpoint not in ['login', 'callback', 'static']:
-#         if "creds" not in session:
-#             logging.warning(f"{log_prefix} No creds found in session. Redirecting to login. Session State: {session}")
-#             return redirect(url_for('login'))
+    # Exclude some endpoints from the authentication check
+    if request.endpoint not in ['login', 'callback', 'static']:
+        if "creds" not in session:
+            logging.warning(f"{log_prefix} No creds found in session. Redirecting to login. Session State: {session}")
+            return redirect(url_for('login'))
 
 
-@app.callback(Output('auth-action', 'children'),
-              [Input('url', 'pathname')])
-def redirect_page(pathname):
-    if "creds" not in session:
-        logging.debug("Step 1: No creds found in session, initiating consent.")
-        consent = oauth_client.initiate_consent()
-        session["consent"] = consent.as_dict()
+# @app.callback(Output('auth-action', 'children'),
+#               [Input('url', 'pathname')])
+# def redirect_page(pathname):
+#     if "creds" not in session:
+#         logging.debug("Step 1: No creds found in session, initiating consent.")
+#         consent = oauth_client.initiate_consent()
+#         session["consent"] = consent.as_dict()
 
-        # Instead of redirecting, return a button or link for the user to click
-        return html.A("Click here to authenticate", href=consent.auth_url)
-    elif pathname == '/delta-optimizer/build-strategy':
-        # If on main page and creds are in session, no need to redirect
-        return None  # Do not display the login link/button
-    else:
-        # Default behavior can be set as needed
-        return "Please navigate to the main page or authenticate if necessary."
+#         # Instead of redirecting, return a button or link for the user to click
+#         return html.A("Click here to authenticate", href=consent.auth_url)
+#     elif pathname == '/delta-optimizer/build-strategy':
+#         # If on main page and creds are in session, no need to redirect
+#         return None  # Do not display the login link/button
+#     else:
+#         # Default behavior can be set as needed
+#         return "Please navigate to the main page or authenticate if necessary."
 
 
 @server.route('/delta-optimizer/login')
@@ -167,7 +167,7 @@ app.layout = dmc.MantineProvider(
         className="page",
         children=[
             dash.page_container,
-            html.Div(id='auth-action')  # Placeholder for the authentication link
+            # html.Div(id='auth-action')  # Placeholder for the authentication link
         ]
     )
 
