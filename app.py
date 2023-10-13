@@ -88,6 +88,9 @@ logging.basicConfig(level=logging.DEBUG)
               [Input('url', 'pathname')])
 def redirect_page(pathname):
     if "creds" not in session:
+        logging.debug("Step 1: No creds found in session, initiating consent.")
+        consent = oauth_client.initiate_consent()
+        session["consent"] = consent.as_dict()
         # If creds are not in session, redirect to the Flask login route
         return '/delta-optimizer/login'
     elif pathname == '/delta-optimizer/build-strategy':
@@ -95,7 +98,7 @@ def redirect_page(pathname):
         return '/delta-optimizer/build-strategy'
     else:
         # Default behavior can be set as needed
-        return '/delta-optimzer'
+        return '/delta-optimizer'
 
 @server.route('/delta-optimizer/login')
 def login():
