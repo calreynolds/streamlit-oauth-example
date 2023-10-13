@@ -33,6 +33,7 @@ app = Dash(
     __name__,
     external_stylesheets=[dbc.themes.BOOTSTRAP],
     use_pages=True,
+    routes_pathname_prefix="/delta-optimizer/",
     suppress_callback_exceptions=True
     )
 
