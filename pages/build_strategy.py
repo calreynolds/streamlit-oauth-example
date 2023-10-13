@@ -18,7 +18,7 @@ import os
 import time
 
 from databricks.sdk import WorkspaceClient
-from databricks.sdk.service import jobs\
+from databricks.sdk.service import jobs
 
 
 
