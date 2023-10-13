@@ -68,7 +68,7 @@ server.config['SESSION_KEY_PREFIX'] = 'session:'
 server.config['SESSION_COOKIE_NAME'] = 'myapp_session'  # Add this line
 redis_instance = redis.StrictRedis.from_url(os.environ.get("REDIS_URL", "redis://127.0.0.1:6379"))
 server.config['SESSION_REDIS'] = redis_instance
-server.session_interface = CustomRedisSessionInterface(server.config['SESSION_REDIS'])
+server.session_interface = CustomRedisSessionInterface(server.config['SESSION_REDIS'], key_prefix=server.config['SESSION_KEY_PREFIX'])
 
 
 
