@@ -84,57 +84,57 @@ logging.basicConfig(level=logging.DEBUG)
 #             return redirect(url_for('login'))
 
 
-# @app.callback(Output('auth-action', 'children'),
-#               [Input('url', 'pathname')])
-# def redirect_page(pathname):
-#     if "creds" not in session:
-#         logging.debug("Step 1: No creds found in session, initiating consent.")
-#         consent = oauth_client.initiate_consent()
-#         session["consent"] = consent.as_dict()
+@app.callback(Output('auth-action', 'children'),
+              [Input('url', 'pathname')])
+def redirect_page(pathname):
+    if "creds" not in session:
+        logging.debug("Step 1: No creds found in session, initiating consent.")
+        consent = oauth_client.initiate_consent()
+        session["consent"] = consent.as_dict()
 
-#         # Instead of redirecting, return a button or link for the user to click
-#         return html.A("Click here to authenticate", href=consent.auth_url)
-#     elif pathname == '/delta-optimizer/build-strategy':
-#         # If on main page and creds are in session, no need to redirect
-#         return None  # Do not display the login link/button
-#     else:
-#         # Default behavior can be set as needed
-#         return "Please navigate to the main page or authenticate if necessary."
+        # Instead of redirecting, return a button or link for the user to click
+        return html.A("Click here to authenticate", href=consent.auth_url)
+    elif pathname == '/delta-optimizer/build-strategy':
+        # If on main page and creds are in session, no need to redirect
+        return None  # Do not display the login link/button
+    else:
+        # Default behavior can be set as needed
+        return "Please navigate to the main page or authenticate if necessary."
 
 
-# @server.route('/delta-optimizer/login')
-# def login():
-#     log_prefix = "[Login Route]"
+@server.route('/delta-optimizer/login')
+def login():
+    log_prefix = "[Login Route]"
     
-#     # If creds are found in session, redirect to the main app page
-#     if "creds" in session:
-#         logging.info(f"{log_prefix} User is already authenticated. Redirecting to main app page. Session State: {session}")
-#         return redirect('/delta-optimizer/build-strategy')
+    # If creds are found in session, redirect to the main app page
+    if "creds" in session:
+        logging.info(f"{log_prefix} User is already authenticated. Redirecting to main app page. Session State: {session}")
+        return redirect('/delta-optimizer/build-strategy')
     
-#     # Inform the user to authenticate from the main page
-#     return "Please go back to the main page and click the authentication link."
+    # Inform the user to authenticate from the main page
+    return "Please go back to the main page and click the authentication link."
 
 
 
-# @server.route("/delta-optimizer/callback")
-# def callback():
-#     log_prefix = "[Callback Route]"
+@server.route("/delta-optimizer/callback")
+def callback():
+    log_prefix = "[Callback Route]"
     
-#     logging.debug(f"{log_prefix} Callback accessed with arguments: {request.args}")
+    logging.debug(f"{log_prefix} Callback accessed with arguments: {request.args}")
     
-#     try:
-#         if "consent" in session:
-#             logging.debug(f"{log_prefix} Consent found in session. Session State: {session}")
-#             consent = Consent.from_dict(oauth_client, session["consent"])
-#             session["creds"] = consent.exchange_callback_parameters(request.args).as_dict()
-#             logging.debug(f"{log_prefix} Credentials successfully obtained and stored in session. Session State: {session}")
-#         else:
-#             logging.warning(f"{log_prefix} No consent found in session during callback. Session State: {session}")
-#     except Exception as e:
-#         logging.error(f"{log_prefix} Error processing callback: {e}")
+    try:
+        if "consent" in session:
+            logging.debug(f"{log_prefix} Consent found in session. Session State: {session}")
+            consent = Consent.from_dict(oauth_client, session["consent"])
+            session["creds"] = consent.exchange_callback_parameters(request.args).as_dict()
+            logging.debug(f"{log_prefix} Credentials successfully obtained and stored in session. Session State: {session}")
+        else:
+            logging.warning(f"{log_prefix} No consent found in session during callback. Session State: {session}")
+    except Exception as e:
+        logging.error(f"{log_prefix} Error processing callback: {e}")
     
-#     logging.debug(f"{log_prefix} Redirecting to the main content page.")
-#     return redirect('/delta-optimizer/build-strategy')
+    logging.debug(f"{log_prefix} Redirecting to the main content page.")
+    return redirect('/delta-optimizer/build-strategy')
 
 # Define your app's layout
 app.layout = dmc.MantineProvider(
@@ -167,7 +167,7 @@ app.layout = dmc.MantineProvider(
         className="page",
         children=[
             dash.page_container,
-            # html.Div(id='auth-action')  # Placeholder for the authentication link
+            html.Div(id='auth-action')  # Placeholder for the authentication link
         ]
     )
 
