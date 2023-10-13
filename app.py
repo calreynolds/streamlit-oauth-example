@@ -67,14 +67,15 @@ def display_page(pathname):
         logging.debug("Step 1: No creds found in session, initiating consent.")
         consent = oauth_client.initiate_consent()
         session["consent"] = consent.as_dict()
+        session["requested_path"] = pathname  # Store the current pathname
         logging.debug(f"Step 2: Consent URL generated: {consent.auth_url}")
         logging.debug("Step 3: Prompting user to click authentication link.")
         return html.A("Click here to authenticate", href=consent.auth_url)
     else:
-        # If the user is authenticated, we can show them the desired page or redirect them.
-        # For this example, I'll simply return an empty Div to signify they're authenticated.
-        # Adjust this to suit your application's needs.
-        return html.Div([])
+        # If the user is authenticated, redirect them to the originally requested page
+        requested_path = session.get("requested_path", "/delta-optimizer/build-strategy")
+        return dcc.Location(pathname=requested_path, id='redirect')
+
  
 @server.route("/delta-optimizer/callback")
 def callback():
@@ -86,13 +87,13 @@ def callback():
             consent = Consent.from_dict(oauth_client, session["consent"])
             session["creds"] = consent.exchange_callback_parameters(request.args).as_dict()
             logging.debug("Step 8: Credentials successfully obtained and stored in session.")
-        else:
-            logging.warning("Step 9: No consent found in session during callback.")
     except Exception as e:
         logging.error(f"Step 10: Error processing callback: {e}")
-    
-    logging.debug("Step 11: Redirecting to the build strategy page.")
-    return redirect('/delta-optimizer/build-strategy')
+
+    logging.debug("Step 11: Redirecting to the originally requested page.")
+    requested_path = session.get("requested_path", "/delta-optimizer/build-strategy")
+    return redirect(requested_path)
+
 
 
 # Define your app's layout
