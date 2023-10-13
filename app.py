@@ -34,17 +34,24 @@ APP_NAME = "delta_optimizer_latest"
 from flask_session import RedisSessionInterface
 
 class CustomRedisSessionInterface(RedisSessionInterface):
-
+    
     def save_session(self, app, session, response):
-        # Get the session_id
-        session_id = self.get_signing_serializer(app).dumps(dict(session))
-
-        # Decode the session_id if it's bytes
-        if isinstance(session_id, bytes):
-            session_id = session_id.decode('utf-8')
+        # Generate a unique session ID
+        session_id = secrets.token_urlsafe()
         
-        # Call the original save_session but pass the decoded session_id
-        super().save_session(app, dict(session), response)
+        # Serialize the session data
+        session_data = self.get_signing_serializer(app).dumps(dict(session))
+
+        # Store the serialized session data in Redis
+        redis_store = app.config['SESSION_REDIS']
+        redis_store.setex(
+            name=app.config['SESSION_KEY_PREFIX'] + session_id,
+            value=session_data,
+            time=app.config.get('PERMANENT_SESSION_LIFETIME')
+        )
+
+        # Call the original save_session but pass the session_id for the cookie
+        response.set_cookie(app.config["SESSION_COOKIE_NAME"], session_id)
 
 
 
