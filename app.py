@@ -66,17 +66,17 @@ from datetime import timedelta
 @server.before_request
 def check_authentication():
     if "creds" not in session and request.endpoint not in ["login", "callback"]:
-        return redirect("/delta-optimizer/login")
+        return redirect("/login")
 
 # 2. Separate login route to initiate the OAuth process
-@server.route('/delta-optimizer/login')
+@server.route('/login')
 def login():
     consent = oauth_client.initiate_consent()
     session["consent"] = consent.as_dict()
     return redirect(consent.auth_url)
 
 # 3. Your callback remains the same
-@server.route("/delta-optimizer/callback")
+@server.route("/callback")
 def callback():
     logging.debug(f"Callback accessed with arguments: {request.args}")
     
@@ -91,7 +91,7 @@ def callback():
         logging.error(f"Error processing callback: {e}")
     
     logging.debug("Redirecting to the default delta-optimizer page.")
-    return redirect('/delta-optimizer/')  # Redirect to the main app page
+    return redirect('/')  # Redirect to the main app page
 
 # Define your app's layout
 app.layout = dmc.MantineProvider(
