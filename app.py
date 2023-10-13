@@ -56,20 +56,24 @@ from components import (
 import logging
 from dash import dcc, html
 import dash_mantine_components as dmc
+from datetime import timedelta
 
 logging.basicConfig(level=logging.DEBUG)
 
 
 
-@server.before_first_request
+@server.before_request
 def check_authentication():
     log_prefix = "[Before Request]"
-    
+
+    # Set session to be permanent and define its lifetime
+    session.permanent = True
+    server.permanent_session_lifetime = timedelta(minutes=5)
+
     # If credentials are already present in the session, simply return
     if "creds" in session:
         logging.debug(f"{log_prefix} Creds found in session. Skipping authentication checks.")
         return
-    
 
     logging.debug(f"{log_prefix} Checking authentication for endpoint: {request.endpoint}")
 
