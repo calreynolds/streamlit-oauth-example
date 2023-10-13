@@ -13,13 +13,23 @@ import subprocess
 from configparser import ConfigParser
 import components as comp
 from components import GitSource, Schedule, Library, NewCluster, NotebookTask
-
+from flask import session
+from databricks.sdk.oauth import OAuthClient, Consent, SessionCredentials
 import os
 import time
 
 from databricks.sdk import WorkspaceClient
 from databricks.sdk.service import jobs
 
+from dotenv import load_dotenv
+
+load_dotenv()
+
+DATABRICKS_HOST = os.environ.get("DATABRICKS_HOST")
+DATABICKS_CLIENT_ID = os.environ.get("DATABRICKS_CLIENT_ID")
+DATABRICKS_CLIENT_SECRET = os.environ.get("DATABRICKS_CLIENT_SECRET")
+DATABRICKS_APP_URL = os.environ.get("DATABRICKS_APP_URL")
+APP_NAME= "delta-optimizer"
 
 
 dash.register_page(__name__, path="/build-strategy", title="Strategy Builder")
@@ -216,18 +226,10 @@ def populate_profile_dropdown(n_clicks, profile_name):
                     options.append({"label": section, "value": section})
 
             if config.has_section(profile_name):
-                host = config.get(profile_name, "host")
-                path = config.get(profile_name, "path")
-                token = config.get(profile_name, "token")
-                host = host.replace("https://", "")
-                if host and token and path:
-                    engine_url = f"databricks://token:{token}@{host}/?http_path={path}&catalog={catalog}&schema={schema}"
-                print(engine_url)
-                big_engine = create_engine(engine_url)
+                
 
-                tables_stmt = "SELECT table_catalog, table_schema, table_name, created, created_by, last_altered, last_altered_by FROM system.INFORMATION_SCHEMA.TABLES"
-                tables_in_db = pd.read_sql_query(tables_stmt, big_engine)
-                print(tables_in_db)
+                
+                
 
                 columnDefs = [
                     {
@@ -291,7 +293,17 @@ def populate_profile_dropdown(n_clicks, profile_name):
                         "minWidth": 180,
                     },
                 ]
-
+            
+            host = config.get(profile_name, "host")
+            path = config.get(profile_name, "path")
+            token = config.get(profile_name, "token")
+            host = host.replace("https://", "")
+            if host and token and path:
+                    engine_url = f"databricks://token:{token}@{host}/?http_path={path}&catalog={catalog}&schema={schema}"
+            print(engine_url)
+            big_engine = create_engine(engine_url)
+            tables_stmt = "SELECT table_catalog, table_schema, table_name, created, created_by, last_altered, last_altered_by FROM system.INFORMATION_SCHEMA.TABLES"    
+            tables_in_db = pd.read_sql_query(tables_stmt, big_engine)
             rowData = tables_in_db.to_dict("records")
 
             optimizer_grid = [
@@ -404,9 +416,9 @@ def get_cluster_state(n_clicks, profile_name, host, path, token):
             host, token, path = parse_databricks_config(profile_name)
             if host and token and path:
                 sqlwarehouse = path.replace("/sql/1.0/warehouses/", "")
-                # print(sqlwarehouse)
-                # print(host)
-                # print(token)
+                print(sqlwarehouse)
+                print(host)
+                print(token)
                 try:
                     test_job_uri = (
                         f"https://{host}/api/2.0/sql/warehouses/{sqlwarehouse}"
@@ -560,7 +572,7 @@ def tables(selected):
 @callback(
     [
         Output("build-response", "children"),
-        Output("general-store", "data"),
+        # Output("general-store", "data"),
         Output("notifications-container-step1", "children"),
         Output("outputdb", "value"),
         Output("load-optimizer-grid", "selectedRows"),
@@ -661,13 +673,27 @@ def test_states(
         config.read(file_path)
 
     if config.has_section(profile_data):
-        host = config.get(profile_data, "host")
+        host_full = config.get(profile_data, "host")
         token = config.get(profile_data, "token")
         path = config.get(profile_data, "path")
-        host = host.replace("https://", "")
+        host = host_full.replace("https://", "")
 
-        w = WorkspaceClient()
-
+        oauth_client = OAuthClient(
+        host=DATABRICKS_HOST,
+        client_id=DATABICKS_CLIENT_ID,
+        client_secret=DATABRICKS_CLIENT_SECRET,
+        redirect_url=DATABRICKS_APP_URL,
+        scopes=["all-apis"]
+        )
+        consent = oauth_client.initiate_consent(
+        )
+        session["consent"] = consent.as_dict()
+        credentials_provider = SessionCredentials.from_dict(oauth_client, session["creds"])
+        w= WorkspaceClient(
+            host=oauth_client.host,
+            product=APP_NAME,
+            credentials_provider=credentials_provider
+        )
         base_parameters = {
             "Query History Lookback Period (days)": str(optimizelookback),
             "Optimizer Output Database:": str(outputdb),

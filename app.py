@@ -62,65 +62,36 @@ from datetime import timedelta
 
 
 
-# # Setting session to be permanent and define its lifetime
-# server.config['SESSION_PERMANENT'] = True
-# server.config['PERMANENT_SESSION_LIFETIME'] = timedelta(minutes=5)
+# 1. Before request hook to check for authentication
+@server.before_request
+def check_authentication():
+    if "creds" not in session and request.endpoint not in ["login", "callback"]:
+        return redirect("/login")
 
-# @server.before_request
-# def check_authentication():
-#     log_prefix = "[Before Request]"
+# 2. Separate login route to initiate the OAuth process
+@server.route('/login')
+def login():
+    consent = oauth_client.initiate_consent()
+    session["consent"] = consent.as_dict()
+    return redirect(consent.auth_url)
 
-#     # If credentials are already present in the session, simply return
-#     if "creds" in session:
-#         logging.debug(f"{log_prefix} Creds found in session. Skipping authentication checks.")
-#         return
-
-#     logging.debug(f"{log_prefix} Checking authentication for endpoint: {request.endpoint}")
-
-#     # Exclude some endpoints from the authentication check
-#     excluded_endpoints = ['login', 'callback', 'static']
-
-#     if request.endpoint and request.endpoint not in excluded_endpoints:
-#         logging.warning(f"{log_prefix} No creds found in session. Redirecting to login. Session State: {session}")
-#         return redirect(url_for('login'))
-
-# @server.route('/delta-optimizer/login')
-# def login():
-#     log_prefix = "[Login Route]"
+# 3. Your callback remains the same
+@server.route("/delta-optimizer/callback")
+def callback():
+    logging.debug(f"Callback accessed with arguments: {request.args}")
     
-#     # If creds are found in session, redirect to the main app page
-#     if "creds" in session:
-#         logging.info(f"{log_prefix} User is already authenticated. Redirecting to main app page. Session State: {session}")
-#         return redirect('/delta-optimizer/build-strategy')
+    try:
+        if "consent" in session:
+            logging.debug("Consent found in session.")
+            consent = Consent.from_dict(oauth_client, session["consent"])
+            session["creds"] = consent.exchange_callback_parameters(request.args).as_dict()
+        else:
+            logging.warning("No consent found in session during callback.")
+    except Exception as e:
+        logging.error(f"Error processing callback: {e}")
     
-#     # If no creds are in session and user is at the login route, present them with an authentication link
-#     consent = oauth_client.initiate_consent()
-#     session["consent"] = consent.as_dict()
-
-#     # Instead of redirecting, return a button or link for the user to click
-#     auth_link = f'<a href="{consent.auth_url}">Click here to authenticate</a>'
-#     return auth_link
-
-
-# @server.route("/delta-optimizer/callback")
-# def callback():
-#     log_prefix = "[Callback Route]"
-    
-#     logging.debug(f"{log_prefix} Callback accessed with arguments: {request.args}")
-    
-#     try:
-#         if "consent" in session:
-#             logging.debug(f"{log_prefix} Consent found in session. Session State: {session}")
-#             consent = Consent.from_dict(oauth_client, session["consent"])
-#             session["creds"] = consent.exchange_callback_parameters(request.args).as_dict()
-#             logging.debug(f"{log_prefix} Credentials successfully obtained and stored in session. Session State: {session}")
-#         else:
-#             logging.warning(f"{log_prefix} No consent found in session during callback. Session State: {session}")
-#     except Exception as e:
-#         logging.error(f"{log_prefix} Error processing callback: {e}")
-    
-#     logging.debug(f"{log_prefix} Redirecting to the main content page.")
-#     return redirect('/delta-optimizer/build-strategy')
+    logging.debug("Redirecting to the default delta-optimizer page.")
+    return redirect('/delta-optimizer/')  # Redirect to the main app page
 
 # Define your app's layout
 app.layout = dmc.MantineProvider(
