@@ -7,10 +7,13 @@ import sys
 from dash import html, dcc, Output, Input
 from dotenv import load_dotenv
 from flask import redirect, session, url_for, request
+from flask import Flask, session, redirect, request, make_response
+
 from databricks.sdk.oauth import OAuthClient, Consent
 from databricks.sdk import WorkspaceClient
 from databricks.sdk.oauth import SessionCredentials
 from dash import Dash, dcc, html
+from flask_session import Session
 import dash_mantine_components as dmc
 import dash_bootstrap_components as dbc
 import dash
@@ -39,6 +42,8 @@ app = Dash(
 
 server = app.server
 server.secret_key = secrets.token_urlsafe(32)
+
+Session(server)
 
 oauth_client = OAuthClient(
     host=DATABRICKS_HOST,   
@@ -114,6 +119,8 @@ def callback():
         logging.error(f"Error processing callback: {e}")
         # Clearing the session in case of errors
         session.clear()
+        # session.pop("consent", None)
+
         return "Error processing authentication. Please try again later.", 500
     
     logging.debug("Redirecting to the default delta-optimizer page.")
