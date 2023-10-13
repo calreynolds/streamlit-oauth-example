@@ -26,7 +26,7 @@ DATABRICKS_APP_URL = os.environ.get("DATABRICKS_APP_URL")
 
 
 
-APP_NAME = "delta_optimizer_latest"
+APP_NAME = "delta_optimizer"
 
 
 app = Dash(
