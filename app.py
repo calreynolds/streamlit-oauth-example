@@ -66,10 +66,10 @@ from datetime import timedelta
 @server.before_request
 def check_authentication():
     if "creds" not in session and request.endpoint not in ["login", "callback"]:
-        return redirect("/login")
+        return redirect("/delta-optimizer/login")
 
 # 2. Separate login route to initiate the OAuth process
-@server.route('/login')
+@server.route('/delta-optimizer/login')
 def login():
     consent = oauth_client.initiate_consent()
     session["consent"] = consent.as_dict()
