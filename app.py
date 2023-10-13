@@ -70,12 +70,11 @@ def display_page(pathname):
         logging.debug(f"Step 2: Consent URL generated: {consent.auth_url}")
         logging.debug("Step 3: Prompting user to click authentication link.")
         return html.A("Click here to authenticate", href=consent.auth_url)
-    elif pathname == "/delta-optimizer/build-strategy":
-        logging.debug("Step 4: Creds found in session. Proceeding to build strategy.")
-        return None  # You can return None or "Authenticated" or any message you prefer
     else:
-        return html.A("Click here to proceed", href="/delta-optimizer/build-strategy")
-
+        # If the user is authenticated, we can show them the desired page or redirect them.
+        # For this example, I'll simply return an empty Div to signify they're authenticated.
+        # Adjust this to suit your application's needs.
+        return html.Div([])
  
 @server.route("/delta-optimizer/callback")
 def callback():
