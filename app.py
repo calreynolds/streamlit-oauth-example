@@ -59,7 +59,9 @@ import dash_mantine_components as dmc
 
 logging.basicConfig(level=logging.DEBUG)
 
-@server.before_request
+
+
+@server.before_first_request
 def check_authentication():
     log_prefix = "[Before Request]"
     
@@ -67,6 +69,7 @@ def check_authentication():
     if "creds" in session:
         logging.debug(f"{log_prefix} Creds found in session. Skipping authentication checks.")
         return
+    
 
     logging.debug(f"{log_prefix} Checking authentication for endpoint: {request.endpoint}")
 
