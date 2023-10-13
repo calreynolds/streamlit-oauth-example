@@ -33,7 +33,7 @@ app = Dash(
     __name__,
     external_stylesheets=[dbc.themes.BOOTSTRAP],
     use_pages=True,
-    routes_pathname_prefix="/delta-optimizer/",
+    routes_pathname_prefix="/",
     suppress_callback_exceptions=True
     )
 
@@ -67,17 +67,17 @@ from datetime import timedelta
 @server.before_request
 def check_authentication():
     if "creds" not in session and request.endpoint not in ["login", "callback"]:
-        return redirect("/login")
+        return redirect("/delta-optimizer/login")
 
 # 2. Separate login route to initiate the OAuth process
-@server.route('/login')
+@server.route('/delta-optimizer/login')
 def login():
     consent = oauth_client.initiate_consent()
     session["consent"] = consent.as_dict()
     return redirect(consent.auth_url)
 
 # 3. Your callback remains the same
-@server.route("/callback")
+@server.route("/delta-optimizer/callback")
 def callback():
     logging.debug(f"Callback accessed with arguments: {request.args}")
     
@@ -92,7 +92,7 @@ def callback():
         logging.error(f"Error processing callback: {e}")
     
     logging.debug("Redirecting to the default delta-optimizer page.")
-    return redirect('/')  # Redirect to the main app page
+    return redirect('/delta_optimizer')  # Redirect to the main app page
 
 # Define your app's layout
 app.layout = dmc.MantineProvider(

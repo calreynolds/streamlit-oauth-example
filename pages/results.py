@@ -29,7 +29,7 @@ from datetime import datetime, timedelta
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import Table, create_engine, MetaData
 
-dash.register_page(__name__, path="/optimizer-results", title="Results")
+dash.register_page(__name__, path="/delta-optimizer/optimizer-results", title="Results")
 
 
 CATALOG = "main"

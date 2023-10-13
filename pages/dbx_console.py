@@ -13,7 +13,8 @@ import pandas as pd
 import dash_ag_grid as dag
 from sqlalchemy.engine import create_engine
 
-dash.register_page(__name__, path="/explorer", title="Explorer")
+dash.register_page(__name__, path="/delta-optimizer/explorer", title="Explorer")
+
 CATALOG = "main"
 SCHEMA = "information_schema"
 
