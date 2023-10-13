@@ -75,6 +75,9 @@ server.config['SESSION_PERMANENT'] = True
 # Session Cookie Secure Flag (only if using HTTPS)
 server.config['SESSION_COOKIE_SECURE'] = True
 
+server.config['SESSION_COOKIE_SAMESITE'] = 'None'
+
+
 # 2. Before request hook to check for authentication
 @server.before_request
 def check_authentication():
