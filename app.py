@@ -26,15 +26,14 @@ DATABRICKS_APP_URL = os.environ.get("DATABRICKS_APP_URL")
 
 
 
-APP_NAME = "delta_optimizer"
+APP_NAME = "delta_optimizer_latest"
 
 
 app = Dash(
     __name__,
     external_stylesheets=[dbc.themes.BOOTSTRAP],
     use_pages=True,
-    suppress_callback_exceptions=True,
-    # routes_pathname_prefix='/delta-optimizer/',
+    suppress_callback_exceptions=True
     )
 
 server = app.server
@@ -68,7 +67,7 @@ from datetime import timedelta
 def check_authentication():
     if "creds" not in session and request.endpoint not in ["login", "callback"]:
         logging.debug(f"Authentication check failed for endpoint: {request.endpoint}")
-        logging.debug(f"Session data Test: {session}")
+        logging.debug(f"Session data: {session}")
         return redirect("/delta-optimizer/login")
 
 # 2. Separate login route to initiate the OAuth process
