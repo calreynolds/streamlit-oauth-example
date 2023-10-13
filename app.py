@@ -31,6 +31,25 @@ DATABRICKS_APP_URL = os.environ.get("DATABRICKS_APP_URL")
 APP_NAME = "delta_optimizer_latest"
 
 
+from flask_session import RedisSessionInterface
+
+class CustomRedisSessionInterface(RedisSessionInterface):
+
+    def save_session(self, app, session, response):
+        # Get the session_id
+        session_id = self.get_signing_serializer(app).dumps(dict(session))
+
+        # Decode the session_id if it's bytes
+        if isinstance(session_id, bytes):
+            session_id = session_id.decode('utf-8')
+        
+        # Call the original save_session but pass the decoded session_id
+        super().save_session(app, dict(session), response)
+
+
+
+
+
 app = Dash(
     __name__,
     external_stylesheets=[dbc.themes.BOOTSTRAP],
@@ -49,6 +68,8 @@ server.config['SESSION_KEY_PREFIX'] = 'session:'
 server.config['SESSION_COOKIE_NAME'] = 'myapp_session'  # Add this line
 redis_instance = redis.StrictRedis.from_url(os.environ.get("REDIS_URL", "redis://127.0.0.1:6379"))
 server.config['SESSION_REDIS'] = redis_instance
+server.session_interface = CustomRedisSessionInterface(server.config['SESSION_REDIS'])
+
 
 
 # Initialize Flask-Session
