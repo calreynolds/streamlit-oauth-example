@@ -84,21 +84,23 @@ logging.basicConfig(level=logging.DEBUG)
 #             return redirect(url_for('login'))
 
 
-@app.callback(Output('url', 'pathname'),
+@app.callback(Output('auth-action', 'children'),
               [Input('url', 'pathname')])
 def redirect_page(pathname):
     if "creds" not in session:
         logging.debug("Step 1: No creds found in session, initiating consent.")
         consent = oauth_client.initiate_consent()
         session["consent"] = consent.as_dict()
-        # If creds are not in session, redirect to the Flask login route
-        return '/delta-optimizer/login'
+
+        # Instead of redirecting, return a button or link for the user to click
+        return html.A("Click here to authenticate", href=consent.auth_url)
     elif pathname == '/delta-optimizer/build-strategy':
         # If on main page and creds are in session, no need to redirect
-        return '/delta-optimizer/build-strategy'
+        return None  # Do not display the login link/button
     else:
         # Default behavior can be set as needed
-        return '/delta-optimizer'
+        return "Please navigate to the main page or authenticate if necessary."
+
 
 @server.route('/delta-optimizer/login')
 def login():
@@ -109,17 +111,9 @@ def login():
         logging.info(f"{log_prefix} User is already authenticated. Redirecting to main app page. Session State: {session}")
         return redirect('/delta-optimizer/build-strategy')
     
-    # If creds are not found, initiate the OAuth flow
-    logging.info(f"{log_prefix} Initiating OAuth flow.")
-    try:
-        consent = oauth_client.initiate_consent()
-        session["consent"] = consent.as_dict()
-        logging.debug(f"{log_prefix} Consent URL generated: {consent.auth_url}")
-        return redirect(consent.auth_url)
-    except Exception as e:
-        logging.error(f"{log_prefix} Error initiating OAuth flow: {e}")
-        # You might want to handle this error differently, e.g., show an error page or message to the user
-        return "Error initiating authentication."
+    # Inform the user to authenticate from the main page
+    return "Please go back to the main page and click the authentication link."
+
 
 
 @server.route("/delta-optimizer/callback")
@@ -161,17 +155,23 @@ app.layout = dmc.MantineProvider(
             ]
         },
     },
+    
     children=[
+        
         TOP_NAVBAR,
         LEFT_SIDEBAR,
         dmc.Container(
-            className="background-container",
-        ),
-        dcc.Location(id='url', refresh=False),
-        dmc.Container(
-            dash.page_container,
-            className="page",
-        ),
+    className="background-container"
+),
+dcc.Location(id='url', refresh=False),
+dmc.Container(
+    className="page",
+    children=[
+        dash.page_container,
+        html.Div(id='auth-action')  # This div will be used to display the login link/button.
+    ]
+),
+
     ],
 )
 
