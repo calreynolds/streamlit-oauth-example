@@ -62,13 +62,13 @@ logging.basicConfig(level=logging.DEBUG)
 
 
 
+# Setting session to be permanent and define its lifetime
+server.config['SESSION_PERMANENT'] = True
+server.config['PERMANENT_SESSION_LIFETIME'] = timedelta(minutes=5)
+
 @server.before_request
 def check_authentication():
     log_prefix = "[Before Request]"
-
-    # Set session to be permanent and define its lifetime
-    session.permanent = True
-    server.permanent_session_lifetime = timedelta(minutes=5)
 
     # If credentials are already present in the session, simply return
     if "creds" in session:
@@ -78,29 +78,11 @@ def check_authentication():
     logging.debug(f"{log_prefix} Checking authentication for endpoint: {request.endpoint}")
 
     # Exclude some endpoints from the authentication check
-    if request.endpoint not in ['login', 'callback', 'static']:
-        if "creds" not in session:
-            logging.warning(f"{log_prefix} No creds found in session. Redirecting to login. Session State: {session}")
-            return redirect(url_for('login'))
+    excluded_endpoints = ['login', 'callback', 'static']
 
-
-# @app.callback(Output('auth-action', 'children'),
-#               [Input('url', 'pathname')])
-# def redirect_page(pathname):
-#     if "creds" not in session:
-#         logging.debug("Step 1: No creds found in session, initiating consent.")
-#         consent = oauth_client.initiate_consent()
-#         session["consent"] = consent.as_dict()
-
-#         # Instead of redirecting, return a button or link for the user to click
-#         return html.A("Click here to authenticate", href=consent.auth_url)
-#     elif pathname == '/delta-optimizer/build-strategy':
-#         # If on main page and creds are in session, no need to redirect
-#         return None  # Do not display the login link/button
-#     else:
-#         # Default behavior can be set as needed
-#         return "Please navigate to the main page or authenticate if necessary."
-
+    if request.endpoint and request.endpoint not in excluded_endpoints:
+        logging.warning(f"{log_prefix} No creds found in session. Redirecting to login. Session State: {session}")
+        return redirect(url_for('login'))
 
 @server.route('/delta-optimizer/login')
 def login():
@@ -111,9 +93,13 @@ def login():
         logging.info(f"{log_prefix} User is already authenticated. Redirecting to main app page. Session State: {session}")
         return redirect('/delta-optimizer/build-strategy')
     
-    # Inform the user to authenticate from the main page
-    return "Please go back to the main page and click the authentication link."
+    # If no creds are in session and user is at the login route, present them with an authentication link
+    consent = oauth_client.initiate_consent()
+    session["consent"] = consent.as_dict()
 
+    # Instead of redirecting, return a button or link for the user to click
+    auth_link = f'<a href="{consent.auth_url}">Click here to authenticate</a>'
+    return auth_link
 
 
 @server.route("/delta-optimizer/callback")
