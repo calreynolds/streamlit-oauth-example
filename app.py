@@ -34,6 +34,7 @@ app = Dash(
     external_stylesheets=[dbc.themes.BOOTSTRAP],
     use_pages=True,
     suppress_callback_exceptions=True
+    routes_pathname_prefix='/delta-optimizer/',
     )
 
 server = app.server
@@ -117,7 +118,7 @@ app.layout = dmc.MantineProvider(
     },
     
     children=[
-        
+        dcc.Location(id='url', refresh=False),
         TOP_NAVBAR,
         LEFT_SIDEBAR,
         dmc.Container(
