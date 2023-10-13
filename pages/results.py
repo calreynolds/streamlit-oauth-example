@@ -55,86 +55,103 @@ def layout():
     return dmc.MantineProvider(
         children=dmc.NotificationsProvider(
             [
-                html.Div(id="cluster-loading-notification-step3"),
-                html.Div(id="cluster-loaded-notification-step3"),
-                dmc.Title("Results"),
-                dmc.Divider(variant="solid"),
-                dmc.Space(h=20),
-                dmc.Group(
-                    position="left",
-                    children=[
-                        dmc.Select(
-                            id="output_db_select",
-                            # options=[],
-                            data=[],
-                            placeholder="Select one",
-                            searchable=True,
-                            style={
-                                "width": "300px",
-                                "position": "relative",
-                                "top": "0px",
-                            },
-                        ),
-                        dmc.Button(
-                            "Refresh",
-                            id="refresh-button-step3",
-                            variant="default",
-                            style={
-                                "width": "120px",
-                                "position": "relative",
-                                "top": "0px",
-                            },
-                        ),
-                        html.Div(
-                            id="engine-test-result-step3",
-                            style={
-                                "width": "300px",
-                                "position": "relative",
-                                "left": "20px",
-                                "top": "0px",
-                            },
-                        ),
-                        html.Div(
-                            style={
-                                "width": "300px",
-                                "position": "relative",
-                                "left": "350px",
-                                "top": "0px",
-                            },
+                html.Div(
+                    id="engine-test-result-step3",
+                    className="engine-test-result",
+                    # style={
+                    #     "width": "600px",
+                    #     "position": "relative",
+                    #     "left": "20px",
+                    #     "top": "0px",
+                    # },
+                ),
+                html.Div(
+                    [
+                        html.Div(id="cluster-loading-notification-step3"),
+                        html.Div(id="cluster-loaded-notification-step3"),
+                        dmc.Title("Results"),
+                        dmc.Divider(variant="solid"),
+                        dmc.Space(h=20),
+                        dmc.Group(
+                            position="left",
                             children=[
                                 dmc.Select(
-                                    id="profile-dropdown-step3",
+                                    id="output_db_select",
+                                    # options=[],
                                     data=[],
-                                    value="Select Profile",
+                                    placeholder="Select one",
+                                    searchable=True,
                                     style={
-                                        "width": "230px",
+                                        "width": "300px",
                                         "position": "relative",
-                                        "left": "55px",
                                         "top": "0px",
                                     },
-                                )
+                                ),
+                                dmc.Button(
+                                    "Refresh",
+                                    id="refresh-button-step3",
+                                    variant="default",
+                                    style={
+                                        "width": "120px",
+                                        "position": "relative",
+                                        "top": "0px",
+                                    },
+                                ),
+                                # html.Div(
+                                #     id="engine-test-result-step3",
+                                #     style={
+                                #         "width": "300px",
+                                #         "position": "relative",
+                                #         "left": "20px",
+                                #         "top": "0px",
+                                #     },
+                                # ),
+                                html.Div(
+                                    style={
+                                        "width": "300px",
+                                        "position": "relative",
+                                        "left": "350px",
+                                        "top": "0px",
+                                    },
+                                    children=[
+                                        # dmc.Select(
+                                        #     id="profile-dropdown-step3",
+                                        #     data=[],
+                                        #     value="Select Profile",
+                                        #     style={
+                                        #         "width": "230px",
+                                        #         "position": "relative",
+                                        #         "left": "55px",
+                                        #         "top": "0px",
+                                        #     },
+                                        # )
+                                    ],
+                                ),
                             ],
                         ),
-                    ],
+                        dmc.Space(h=20),
+                        dmc.LoadingOverlay(
+                            overlayOpacity=0.95,
+                            loaderProps=dict(color="#FF3621", variant="bars"),
+                            children=html.Div(id="result-page-layout"),
+                        ),
+                        html.Div(id="sqlalchemycheck"),
+                        dcc.Store(id="hostname-store3", storage_type="memory"),
+                        dcc.Store(id="path-store3", storage_type="memory"),
+                        dcc.Store(id="token-store3", storage_type="memory"),
+                        dcc.Store(id="cluster-id-store3", storage_type="memory"),
+                        dcc.Store(id="cluster-name-store3", storage_type="memory"),
+                        dcc.Store(id="user-name-store3", storage_type="memory"),
+                        # dcc.Store(id="output-db-select", storage_type="memory"),
+                        dcc.Store(id="profile-store", storage_type="local"),
+                        dcc.Interval(
+                            id="interval",
+                            interval=1000 * 60 * 60 * 24,
+                            n_intervals=0,
+                        ),
+                        component_chatbot(),
+                    ]
                 ),
-                dmc.Space(h=20),
-                dmc.LoadingOverlay(
-                    overlayOpacity=0.95,
-                    loaderProps=dict(color="#FF3621", variant="bars"),
-                    children=html.Div(id="result-page-layout"),
-                ),
-                html.Div(id="sqlalchemycheck"),
-                dcc.Store(id="hostname-store3", storage_type="memory"),
-                dcc.Store(id="path-store3", storage_type="memory"),
-                dcc.Store(id="token-store3", storage_type="memory"),
-                dcc.Store(id="cluster-id-store3", storage_type="memory"),
-                dcc.Store(id="cluster-name-store3", storage_type="memory"),
-                dcc.Store(id="user-name-store3", storage_type="memory"),
-                # dcc.Store(id="output-db-select", storage_type="memory"),
-                dcc.Interval(
-                    id="interval", interval=1000 * 60 * 60 * 24, n_intervals=0
-                ),
-                component_chatbot(),
             ]
         )
     )
@@ -143,16 +160,21 @@ def layout():
 @callback(
     Output("output_db_select", "data"),
     Input("refresh-button-step3", "n_clicks"),
+    Input("profile-store", "data"),
     Input("hostname-store3", "data"),
     Input("path-store3", "data"),
     Input("token-store3", "data"),
 )
-def fetch_schema_names(n_clicks, hostname, path, token):
-    if not hostname or not path or not token:
-        return []
-
-    engine_url = f"databricks://token:{token}@{hostname}/?http_path={path}&catalog={CATALOG}&schema={SCHEMA}"
-    big_engine = create_engine(engine_url)
+def fetch_schema_names(n_clicks, profile_name,hostname, path, token):
+    if profile_name:
+        (
+            host,
+            token,
+            path,
+        ) = parse_databricks_config(profile_name)
+        if host and token and path:
+            engine_url = f"databricks://token:{token}@{host}/?http_path={path}&catalog=main&schema=information_schema"
+        big_engine = create_engine(engine_url)
 
     schemas_init_statement = (
         f"SELECT schema_name FROM {CATALOG}.{SCHEMA}.SCHEMATA ORDER BY created DESC;"
@@ -165,33 +187,88 @@ def fetch_schema_names(n_clicks, hostname, path, token):
     return schema_select_data
 
 
-@callback(
-    Output("profile-dropdown-step3", "data"),
-    Input("profile-dropdown-step3", "value"),
-)
-def populate_profile_dropdown(profile_name):
-    config = ConfigParser()
-    file_path = os.path.expanduser("~/.databrickscfg")
 
-    if not os.path.exists(file_path):
-        return [], []
+# @callback(
+#     Output("hidden3", "children"),
+#     [Input("profile-store", "data")],
+#     [
+#         State("hostname-store3", "data"),
+#         State("path-store3", "data"),
+#         State("token-store3", "data"),
+#     ],
+# )
+# def your_callback_function(profile_name, host, path, token):
+#     if profile_name:
+#         (
+#             host,
+#             token,
+#             path,
+#         ) = parse_databricks_config(profile_name)
+#         if host and token and path:
+#             engine_url = f"databricks://token:{token}@{host}/?http_path={path}&catalog=main&schema=information_schema"
+#         engine = create_engine(engine_url)
+#         result = engine.execute("SELECT 1").fetchone()
 
-    config.read(file_path)
-    options = []
+#         return str(result)
 
-    for section in config.sections():
-        if (
-            config.has_option(section, "host")
-            and config.has_option(section, "path")
-            and config.has_option(section, "token")
-            # and config.has_option(section, "cluster_name")
-            # and config.has_option(section, "cluster_id")
-            # and config.has_option(section, "user_name")
-        ):
-            options.append({"label": section, "value": section})
+#     return "Invalid configuration"
 
-    return options
 
+# @callback(
+#     Output("profile-dropdown-step3", "data"),
+#     Input("profile-dropdown-step3", "value"),
+# )
+# def populate_profile_dropdown(profile_name):
+#     config = ConfigParser()
+#     file_path = os.path.expanduser("~/.databrickscfg")
+
+#     if not os.path.exists(file_path):
+#         return [], []
+
+#     config.read(file_path)
+#     options = []
+
+#     for section in config.sections():
+#         if (
+#             config.has_option(section, "host")
+#             and config.has_option(section, "path")
+#             and config.has_option(section, "token")
+#             # and config.has_option(section, "cluster_name")
+#             # and config.has_option(section, "cluster_id")
+#             # and config.has_option(section, "user_name")
+#         ):
+#             options.append({"label": section, "value": section})
+
+#     return options
+
+
+# @callback(
+#     [
+#         Output("hostname-store3", "data"),
+#         Output("token-store3", "data"),
+#         Output("path-store3", "data"),
+#     ],
+#     [Input("profile-dropdown-step3", "value")],
+#     prevent_initial_call=True,
+# )
+# def parse_databricks_config(profile_name):
+#     if profile_name:
+#         config = ConfigParser()
+#         file_path = os.path.expanduser("~/.databrickscfg")
+
+#         if os.path.exists(file_path):
+#             config.read(file_path)
+
+#             if config.has_section(profile_name):
+#                 host = config.get(profile_name, "host")
+#                 token = config.get(profile_name, "token")
+#                 path = config.get(profile_name, "path")
+
+#                 host = host.replace("https://", "")
+
+#                 return host, token, path
+
+#     return None, None, None
 
 @callback(
     [
@@ -199,13 +276,14 @@ def populate_profile_dropdown(profile_name):
         Output("token-store3", "data"),
         Output("path-store3", "data"),
     ],
-    [Input("profile-dropdown-step3", "value")],
+    [Input("profile-store", "data")],
     prevent_initial_call=True,
 )
 def parse_databricks_config(profile_name):
     if profile_name:
+        print(profile_name + "test")
         config = ConfigParser()
-        file_path = os.path.expanduser("~/.databrickscfg")
+        file_path = os.path.expanduser("./.databrickscfg")
 
         if os.path.exists(file_path):
             config.read(file_path)
@@ -214,12 +292,19 @@ def parse_databricks_config(profile_name):
                 host = config.get(profile_name, "host")
                 token = config.get(profile_name, "token")
                 path = config.get(profile_name, "path")
-
                 host = host.replace("https://", "")
+                print(host + "test")
+                print(token + "test")
+                print(path + "test")
 
                 return host, token, path
 
-    return None, None, None
+    return (
+        None,
+        None,
+        None,
+    )
+
 
 
 @callback(
@@ -229,46 +314,44 @@ def parse_databricks_config(profile_name):
         Output("engine-test-result-step3", "children"),
     ],
     [
-        Input("profile-dropdown-step3", "value"),
+        # Input("profile-dropdown-step3", "value"),
         Input("refresh-button-step3", "n_clicks"),
     ],
     [
+        State("profile-store", "data"),
         State("hostname-store3", "data"),
         State("path-store3", "data"),
         State("token-store3", "data"),
     ],
 )
-def get_cluster_state(profile_name, n_clicks, host, path, token):
+def get_cluster_state(n_clicks, profile_name, host, path, token):
     if n_clicks or profile_name:
         if profile_name:
             host, token, path = parse_databricks_config(profile_name)
             if host and token and path:
-                sqlwarehouse = path.replace("/sql/1.0/warehouses", "")
-
+                sqlwarehouse = path.replace("/sql/1.0/warehouses/", "")
+                print(sqlwarehouse)
+                print(host)
+                print(token)
                 try:
                     test_job_uri = (
                         f"https://{host}/api/2.0/sql/warehouses/{sqlwarehouse}"
                     )
+                    # print(test_job_uri)
                     headers_auth = {"Authorization": f"Bearer {token}"}
                     test_job = requests.get(test_job_uri, headers=headers_auth).json()
                     # print(test_job)
 
                     if test_job["state"] == "TERMINATED":
                         return (
-                            compo.cluster_loading("Cluster is loading..."),
-                            dash.no_update,
-                            dash.no_update,
-                        )
-
-                    if test_job["state"] == "STARTING":
-                        return (
-                            compo.cluster_loading("Cluster is loading..."),
+                            comp.cluster_loading("Cluster is loading..."),
                             dash.no_update,
                             dmc.LoadingOverlay(
                                 dmc.Badge(
                                     id="engine-connection-badge",
                                     variant="gradient",
-                                    gradient={"from": "yellow", "to": "orange"},
+                                    color="yellow",
+                                    gradient={"from": "yeloow", "to": "orange"},
                                     size="lg",
                                     children=[
                                         html.Span(f"Connecting to Workspace: {host} ")
@@ -276,19 +359,43 @@ def get_cluster_state(profile_name, n_clicks, host, path, token):
                                 ),
                             ),
                         )
-                    elif test_job["state"] == "RUNNING":
+
+                    if test_job["state"] == "STARTING":
                         return (
+                            comp.cluster_loading("Cluster is loading..."),
                             dash.no_update,
-                            compo.cluster_loaded("Cluster is loaded"),
                             dmc.LoadingOverlay(
                                 dmc.Badge(
                                     id="engine-connection-badge",
-                                    variant="gradient",
-                                    gradient={"from": "teal", "to": "lime", "deg": 105},
+                                    variant="dot",
+                                    gradient={"from": "yellow", "to": "orange"},
+                                    color="yellow",
+                                    size="lg",
+                                    children=[
+                                        html.Span(
+                                            f"Connecting to Workspace: {host}",
+                                            style={"color": "white"},
+                                        )
+                                    ],
+                                ),
+                            ),
+                        )
+                    elif test_job["state"] == "RUNNING":
+                        return (
+                            dash.no_update,
+                            comp.cluster_loaded("Cluster is loaded"),
+                            dmc.LoadingOverlay(
+                                dmc.Badge(
+                                    id="engine-connection-badge",
+                                    variant="dot",
+                                    # gradient={"from": "teal", "to": "lime", "deg": 105},
                                     color="green",
                                     size="lg",
                                     children=[
-                                        html.Span(f"Connected to Workspace: {host} ")
+                                        html.Span(
+                                            f"Connected to: {host} ",
+                                            style={"color": "white"},
+                                        )
                                     ],
                                 ),
                             ),
@@ -300,6 +407,7 @@ def get_cluster_state(profile_name, n_clicks, host, path, token):
     return dash.no_update, dash.no_update, dash.no_update
 
 
+
 cardinality_stats = pd.DataFrame()
 most_expensive = pd.DataFrame()
 num_queries_per_day = pd.DataFrame()
@@ -307,7 +415,7 @@ num_queries_per_day = pd.DataFrame()
 
 @callback(
     Output("result-page-layout", "children"),
-    [Input("refresh-button-step3", "n_clicks"), Input("output_db_select", "value")],
+    [Input("profile-store", "data"), Input("output_db_select", "value")],
     [
         State("hostname-store3", "data"),
         State("path-store3", "data"),
@@ -315,10 +423,16 @@ num_queries_per_day = pd.DataFrame()
     ],
     prevent_initial_call=True,
 )
-def create_dynamic_results_layout(n_clicks, selected_db, hostname, path, token):
-    results_engine = create_engine(
-        f"databricks://token:{token}@{hostname}/?http_path={path}&catalog={CATALOG}&schema={selected_db}"
-    )
+def create_dynamic_results_layout(profile_name,selected_db, hostname, path, token):
+    if profile_name:
+        (
+            host,
+            token,
+            path,
+        ) = parse_databricks_config(profile_name)
+        if host and token and path:
+            engine_url = f"databricks://token:{token}@{host}/?http_path={path}&catalog=main&schema=information_schema"
+        results_engine = create_engine(engine_url)
 
     get_optimizer_results = f"Select * FROM {selected_db}.optimizer_results"
     optimizer_results = pd.read_sql_query(get_optimizer_results, results_engine)
