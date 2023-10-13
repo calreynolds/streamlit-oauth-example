@@ -49,7 +49,6 @@ class CustomRedisSessionInterface(RedisSessionInterface):
 
 
 
-
 app = Dash(
     __name__,
     external_stylesheets=[dbc.themes.BOOTSTRAP],
