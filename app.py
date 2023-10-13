@@ -34,7 +34,7 @@ app = Dash(
     external_stylesheets=[dbc.themes.BOOTSTRAP],
     use_pages=True,
     suppress_callback_exceptions=True,
-    routes_pathname_prefix='/delta-optimizer/',
+    # routes_pathname_prefix='/delta-optimizer/',
     )
 
 server = app.server
@@ -68,7 +68,7 @@ from datetime import timedelta
 def check_authentication():
     if "creds" not in session and request.endpoint not in ["login", "callback"]:
         logging.debug(f"Authentication check failed for endpoint: {request.endpoint}")
-        logging.debug(f"Session data: {session}")
+        logging.debug(f"Session data Test: {session}")
         return redirect("/delta-optimizer/login")
 
 # 2. Separate login route to initiate the OAuth process
