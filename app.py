@@ -26,6 +26,7 @@ DATABRICKS_HOST = os.environ.get("DATABRICKS_HOST")
 DATABICKS_CLIENT_ID = os.environ.get("DATABRICKS_CLIENT_ID")
 DATABRICKS_CLIENT_SECRET = os.environ.get("DATABRICKS_CLIENT_SECRET")
 DATABRICKS_APP_URL = os.environ.get("DATABRICKS_APP_URL")
+SECRET_KEY = os.environ.get("SECRET_KEY")
 
 
 
@@ -34,7 +35,9 @@ APP_NAME = "delta_optimizer_latest_one"
 
 app = dash.Dash(__name__, use_pages=True, suppress_callback_exceptions=True, routes_pathname_prefix="/delta-optimizer/")
 server = app.server
-server.secret_key = secrets.token_urlsafe(32)
+server.secret_key = SECRET_KEY
+
+print(server.config)
 
 
 # Session(app)
@@ -52,49 +55,88 @@ from components import (
     TOP_NAVBAR,
 )  # noqa: E402 isort:skip - must be imported after app is defined
 
+from flask import Flask, session, redirect, request, jsonify
 import logging
-from dash import dcc, html, Output, Input
-import dash_mantine_components as dmc
-from datetime import timedelta
 
-logging.basicConfig(level=logging.DEBUG)
 
-@app.callback(Output("auth-action", "children"), [Input("url", "pathname")])
-def display_page(pathname):
-    logging.debug(f"===== Display page accessed with pathname: {pathname} =====")
-    
+# Assuming you've already initialized your server and oauth_client elsewhere in your code.
+
+# 1. Improve Session Management
+server.config['SESSION_PERMANENT'] = True
+# Optionally set a specific lifetime: server.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=1)
+
+# Session Cookie Secure Flag (only if using HTTPS)
+server.config['SESSION_COOKIE_SECURE'] = False
+
+server.config['SESSION_COOKIE_SAMESITE'] = 'None'
+
+
+# 1. Enhanced Logging Configuration
+logging.basicConfig(level=logging.DEBUG,
+                   format='[%(asctime)s] %(levelname)s in %(module)s: %(message)s',
+                   handlers=[logging.StreamHandler(), logging.FileHandler("app_debug.log")])
+
+# 2. More Debugging Information in Session Management
+@server.after_request
+def log_session_cookie(response):
+    logging.debug(f"Set-Cookie Header: {response.headers.get('Set-Cookie')}")
+    return response
+
+# 3. Enhanced Logging in Authentication Check
+@server.before_request
+def check_authentication():
     if "creds" not in session:
-        logging.debug("Step 1: No creds found in session, initiating consent.")
-        consent = oauth_client.initiate_consent()
-        session["consent"] = consent.as_dict()
-        session["requested_path"] = pathname  # Store the current pathname
-        logging.debug(f"Step 2: Consent URL generated: {consent.auth_url}")
-        logging.debug("Step 3: Prompting user to click authentication link.")
-        return html.A("Click here to authenticate", href=consent.auth_url)
-    else:
-        # If the user is authenticated, redirect them to the originally requested page
-        requested_path = session.get("requested_path", "/delta-optimizer/build-strategy")
-        return dcc.Location(pathname=requested_path, id='redirect')
+        if request.endpoint in ["login", "callback"]:
+            pass  # Allow unauthenticated access to these routes.
+        else:
+            logging.debug(f"Unauthenticated access attempt to endpoint: {request.endpoint}")
+            logging.debug(f"Headers: {request.headers}")
+            logging.debug(f"Remote Address: {request.remote_addr}")
+            logging.debug(f"Session data: {session}")
+            return redirect("/delta-optimizer/login")
 
- 
+# 3. Separate login route to initiate the OAuth process
+@server.route('/delta-optimizer/login')
+def login():
+    consent = oauth_client.initiate_consent()
+    logging.debug(f"Initiated consent: {consent.as_dict()}")
+    session["consent"] = consent.as_dict()
+    return redirect(consent.auth_url)
+
+# 4. Your callback remains the same with enhanced handling and logging
 @server.route("/delta-optimizer/callback")
 def callback():
-    logging.debug("Step 5: Callback received. Fetching credentials.")
-
+    logging.debug(f"Callback accessed. Full request: {request}")
+    
     try:
         if "consent" in session:
-            logging.debug("Step 7: Consent found in session.")
+            logging.debug("Consent found in session.")
             consent = Consent.from_dict(oauth_client, session["consent"])
             session["creds"] = consent.exchange_callback_parameters(request.args).as_dict()
-            logging.debug("Step 8: Credentials successfully obtained and stored in session.")
+        else:
+            logging.warning("No consent found in session during callback.")
+            logging.debug(f"Session data: {session}")
     except Exception as e:
-        logging.error(f"Step 10: Error processing callback: {e}")
+        logging.error(f"Error processing callback: {e}")
+        # Clearing the session in case of errors
+        session.clear()
+        # session.pop("consent", None)
 
-    logging.debug("Step 11: Redirecting to the originally requested page.")
-    requested_path = session.get("requested_path", "/delta-optimizer/build-strategy")
-    return redirect(requested_path)
+        return "Error processing authentication. Please try again later.", 500
+    
+    logging.debug("Redirecting to the default delta-optimizer page.")
+    return redirect('/delta-optimizer')  # Redirect to the main app page
 
+# 5. Periodic Session Debugging
+@server.route('/debug/session')
+def debug_session():
+    return jsonify(session)
 
+# 6. Error Handling
+@server.errorhandler(Exception)
+def handle_unexpected_error(error):
+    logging.exception("An unexpected error occurred.")
+    return "An unexpected error occurred.", 500
 
 # Define your app's layout
 app.layout = dmc.MantineProvider(

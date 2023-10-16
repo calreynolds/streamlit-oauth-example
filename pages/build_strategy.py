@@ -756,15 +756,13 @@ def test_states(
     if run_id is not None:
         return (
             [
-                f"Optimizer ran with Job ID: {job_id}",
-                "You can now use the optimizer strategy to optimize your tables.",
+                f"Optimizer ran with Job ID: {job_id}. You can now use the optimizer strategy to optimize your tables.",
             ],
             job_id,
             comp.notification_user_step_1(f"Optimizer ran with Job ID: {job_id}"),
             [],  # Reset selectedRows
             "",  # Reset outputdb value
             "",  # Reset optimizewarehouse value
-            3,  # Reset optimizelookback value
             False,  # Reset startover checked state
         )
 
