@@ -743,7 +743,6 @@ def test_states(
                 ),
             ],
             timeout_seconds=0,
-            webhook_notifications={},
         )
 
         job_id = created_job.job_id
