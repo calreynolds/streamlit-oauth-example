@@ -1,0 +1,219 @@
+[2023-11-21 18:10:35,565] DEBUG in connectionpool: https://plotly-customer-success.cloud.databricks.com:443 "GET /oidc/.well-known/oauth-authorization-server HTTP/1.1" 200 None
+[2023-11-21 18:10:48,338] DEBUG in oauth: Retrieving token for 793dbcac-9b34-409a-a234-7ad1d4de71a7
+[2023-11-21 18:10:48,340] DEBUG in connectionpool: Starting new HTTPS connection (1): plotly-customer-success.cloud.databricks.com:443
+[2023-11-21 18:10:48,358] DEBUG in connectionpool: https://plotly-customer-success.cloud.databricks.com:443 "GET /oidc/.well-known/oauth-authorization-server HTTP/1.1" 200 None
+[2023-11-21 18:10:48,359] DEBUG in oauth: Retrieving token for 793dbcac-9b34-409a-a234-7ad1d4de71a7
+[2023-11-21 18:10:48,361] DEBUG in connectionpool: Starting new HTTPS connection (1): plotly-customer-success.cloud.databricks.com:443
+[2023-11-21 18:10:48,555] DEBUG in connectionpool: https://plotly-customer-success.cloud.databricks.com:443 "POST /oidc/v1/token HTTP/1.1" 400 132
+[2023-11-21 18:10:48,587] DEBUG in connectionpool: https://plotly-customer-success.cloud.databricks.com:443 "POST /oidc/v1/token HTTP/1.1" 400 132
+[2023-11-21 18:10:48,944] DEBUG in connectionpool: Starting new HTTPS connection (1): plotly-customer-success.cloud.databricks.com:443
+[2023-11-21 18:10:49,186] DEBUG in connectionpool: https://plotly-customer-success.cloud.databricks.com:443 "GET /oidc/.well-known/oauth-authorization-server HTTP/1.1" 200 None
+[2023-11-21 18:10:49,192] DEBUG in oauth: Retrieving token for 793dbcac-9b34-409a-a234-7ad1d4de71a7
+[2023-11-21 18:10:49,198] DEBUG in connectionpool: Starting new HTTPS connection (1): plotly-customer-success.cloud.databricks.com:443
+[2023-11-21 18:10:49,426] DEBUG in connectionpool: https://plotly-customer-success.cloud.databricks.com:443 "POST /oidc/v1/token HTTP/1.1" 400 132
+[2023-11-21 18:11:14,124] DEBUG in oauth: Retrieving token for 793dbcac-9b34-409a-a234-7ad1d4de71a7
+[2023-11-21 18:11:14,126] DEBUG in connectionpool: Starting new HTTPS connection (1): plotly-customer-success.cloud.databricks.com:443
+[2023-11-21 18:11:14,185] DEBUG in connectionpool: https://plotly-customer-success.cloud.databricks.com:443 "GET /oidc/.well-known/oauth-authorization-server HTTP/1.1" 200 None
+[2023-11-21 18:11:14,186] DEBUG in oauth: Retrieving token for 793dbcac-9b34-409a-a234-7ad1d4de71a7
+[2023-11-21 18:11:14,188] DEBUG in connectionpool: Starting new HTTPS connection (1): plotly-customer-success.cloud.databricks.com:443
+[2023-11-21 18:11:14,284] DEBUG in connectionpool: https://plotly-customer-success.cloud.databricks.com:443 "GET /oidc/.well-known/oauth-authorization-server HTTP/1.1" 200 None
+[2023-11-21 18:11:14,285] DEBUG in oauth: Retrieving token for 793dbcac-9b34-409a-a234-7ad1d4de71a7
+[2023-11-21 18:11:14,287] DEBUG in connectionpool: Starting new HTTPS connection (1): plotly-customer-success.cloud.databricks.com:443
+[2023-11-21 18:11:14,318] DEBUG in connectionpool: https://plotly-customer-success.cloud.databricks.com:443 "POST /oidc/v1/token HTTP/1.1" 400 132
+[2023-11-21 18:11:14,390] DEBUG in connectionpool: https://plotly-customer-success.cloud.databricks.com:443 "POST /oidc/v1/token HTTP/1.1" 400 132
+[2023-11-21 18:11:14,508] DEBUG in connectionpool: https://plotly-customer-success.cloud.databricks.com:443 "POST /oidc/v1/token HTTP/1.1" 400 132
+[2023-11-21 18:11:14,947] DEBUG in connectionpool: Starting new HTTPS connection (1): plotly-customer-success.cloud.databricks.com:443
+[2023-11-21 18:11:15,164] DEBUG in connectionpool: https://plotly-customer-success.cloud.databricks.com:443 "GET /oidc/.well-known/oauth-authorization-server HTTP/1.1" 200 None
+[2023-11-21 18:11:15,172] DEBUG in oauth: Retrieving token for 793dbcac-9b34-409a-a234-7ad1d4de71a7
+[2023-11-21 18:11:15,175] DEBUG in connectionpool: Starting new HTTPS connection (1): plotly-customer-success.cloud.databricks.com:443
+[2023-11-21 18:11:15,389] DEBUG in connectionpool: https://plotly-customer-success.cloud.databricks.com:443 "POST /oidc/v1/token HTTP/1.1" 400 132
+[2023-11-21 18:12:41,212] DEBUG in oauth: Retrieving token for 793dbcac-9b34-409a-a234-7ad1d4de71a7
+[2023-11-21 18:12:41,216] DEBUG in connectionpool: Starting new HTTPS connection (1): plotly-customer-success.cloud.databricks.com:443
+[2023-11-21 18:12:41,409] DEBUG in connectionpool: https://plotly-customer-success.cloud.databricks.com:443 "POST /oidc/v1/token HTTP/1.1" 400 132
+[2023-11-21 18:13:37,055] DEBUG in oauth: Retrieving token for 793dbcac-9b34-409a-a234-7ad1d4de71a7
+[2023-11-21 18:13:37,058] DEBUG in connectionpool: Starting new HTTPS connection (1): plotly-customer-success.cloud.databricks.com:443
+[2023-11-21 18:13:37,257] DEBUG in connectionpool: https://plotly-customer-success.cloud.databricks.com:443 "POST /oidc/v1/token HTTP/1.1" 400 132
+[2023-11-21 18:16:40,959] DEBUG in connectionpool: Starting new HTTPS connection (1): plotly-customer-success.cloud.databricks.com:443
+[2023-11-21 18:16:41,185] DEBUG in connectionpool: https://plotly-customer-success.cloud.databricks.com:443 "GET /oidc/.well-known/oauth-authorization-server HTTP/1.1" 200 None
+[2023-11-21 18:19:04,013] DEBUG in connectionpool: Starting new HTTPS connection (1): plotly-customer-success.cloud.databricks.com:443
+[2023-11-21 18:19:04,249] DEBUG in connectionpool: https://plotly-customer-success.cloud.databricks.com:443 "GET /oidc/.well-known/oauth-authorization-server HTTP/1.1" 200 None
+[2023-11-21 18:29:10,657] DEBUG in connectionpool: Starting new HTTPS connection (1): plotly-customer-success.cloud.databricks.com:443
+[2023-11-21 18:29:10,658] DEBUG in connectionpool: Starting new HTTPS connection (1): plotly-customer-success.cloud.databricks.com:443
+[2023-11-21 18:29:11,021] DEBUG in connectionpool: https://plotly-customer-success.cloud.databricks.com:443 "GET /oidc/.well-known/oauth-authorization-server HTTP/1.1" 200 None
+[2023-11-21 18:29:11,021] DEBUG in connectionpool: https://plotly-customer-success.cloud.databricks.com:443 "GET /oidc/.well-known/oauth-authorization-server HTTP/1.1" 200 None
+[2023-11-21 18:53:21,332] DEBUG in connectionpool: Starting new HTTPS connection (1): plotly-customer-success.cloud.databricks.com:443
+[2023-11-21 18:53:21,332] DEBUG in connectionpool: Starting new HTTPS connection (1): plotly-customer-success.cloud.databricks.com:443
+[2023-11-21 18:53:21,627] DEBUG in connectionpool: https://plotly-customer-success.cloud.databricks.com:443 "GET /oidc/.well-known/oauth-authorization-server HTTP/1.1" 200 None
+[2023-11-21 18:53:21,631] DEBUG in connectionpool: https://plotly-customer-success.cloud.databricks.com:443 "GET /oidc/.well-known/oauth-authorization-server HTTP/1.1" 200 None
+[2023-11-22 08:17:20,119] DEBUG in connectionpool: Starting new HTTPS connection (1): plotly-customer-success.cloud.databricks.com:443
+[2023-11-22 08:17:20,371] DEBUG in connectionpool: https://plotly-customer-success.cloud.databricks.com:443 "GET /oidc/.well-known/oauth-authorization-server HTTP/1.1" 200 None
+[2023-11-22 08:18:32,926] DEBUG in connectionpool: Starting new HTTPS connection (1): plotly-customer-success.cloud.databricks.com:443
+[2023-11-22 08:18:33,141] DEBUG in connectionpool: https://plotly-customer-success.cloud.databricks.com:443 "GET /oidc/.well-known/oauth-authorization-server HTTP/1.1" 200 None
+[2023-11-22 08:18:35,125] DEBUG in connectionpool: Starting new HTTPS connection (1): plotly-customer-success.cloud.databricks.com:443
+[2023-11-22 08:18:35,354] DEBUG in connectionpool: https://plotly-customer-success.cloud.databricks.com:443 "GET /oidc/.well-known/oauth-authorization-server HTTP/1.1" 200 None
+[2023-11-22 08:18:36,124] DEBUG in connectionpool: Starting new HTTPS connection (1): plotly-customer-success.cloud.databricks.com:443
+[2023-11-22 08:18:36,382] DEBUG in connectionpool: https://plotly-customer-success.cloud.databricks.com:443 "GET /oidc/.well-known/oauth-authorization-server HTTP/1.1" 200 None
+[2023-11-22 08:18:48,735] DEBUG in connectionpool: https://plotly-customer-success.cloud.databricks.com:443 "GET /oidc/.well-known/oauth-authorization-server HTTP/1.1" 200 None
+[2023-11-22 08:18:48,767] DEBUG in connectionpool: https://plotly-customer-success.cloud.databricks.com:443 "GET /oidc/.well-known/oauth-authorization-server HTTP/1.1" 200 None
+[2023-11-22 08:18:48,768] DEBUG in connectionpool: https://plotly-customer-success.cloud.databricks.com:443 "GET /oidc/.well-known/oauth-authorization-server HTTP/1.1" 200 None
+[2023-11-22 08:18:50,107] DEBUG in connectionpool: Starting new HTTPS connection (1): plotly-customer-success.cloud.databricks.com:443
+[2023-11-22 08:18:50,354] DEBUG in connectionpool: https://plotly-customer-success.cloud.databricks.com:443 "GET /oidc/.well-known/oauth-authorization-server HTTP/1.1" 200 None
+[2023-11-22 08:19:04,106] DEBUG in connectionpool: Starting new HTTPS connection (1): plotly-customer-success.cloud.databricks.com:443
+[2023-11-22 08:19:04,132] DEBUG in connectionpool: https://plotly-customer-success.cloud.databricks.com:443 "GET /oidc/.well-known/oauth-authorization-server HTTP/1.1" 200 None
+[2023-11-22 08:19:04,333] DEBUG in connectionpool: https://plotly-customer-success.cloud.databricks.com:443 "GET /oidc/.well-known/oauth-authorization-server HTTP/1.1" 200 None
+[2023-11-22 08:19:04,996] DEBUG in connectionpool: Starting new HTTPS connection (1): plotly-customer-success.cloud.databricks.com:443
+[2023-11-22 08:19:04,996] DEBUG in connectionpool: Starting new HTTPS connection (1): plotly-customer-success.cloud.databricks.com:443
+[2023-11-22 08:19:05,111] DEBUG in connectionpool: Starting new HTTPS connection (1): plotly-customer-success.cloud.databricks.com:443
+[2023-11-22 08:19:05,116] DEBUG in connectionpool: Starting new HTTPS connection (1): plotly-customer-success.cloud.databricks.com:443
+[2023-11-22 08:19:05,233] DEBUG in connectionpool: https://plotly-customer-success.cloud.databricks.com:443 "GET /oidc/.well-known/oauth-authorization-server HTTP/1.1" 200 None
+[2023-11-22 08:19:05,265] DEBUG in connectionpool: https://plotly-customer-success.cloud.databricks.com:443 "GET /oidc/.well-known/oauth-authorization-server HTTP/1.1" 200 None
+[2023-11-22 08:19:05,363] DEBUG in connectionpool: https://plotly-customer-success.cloud.databricks.com:443 "GET /oidc/.well-known/oauth-authorization-server HTTP/1.1" 200 None
+[2023-11-22 08:19:05,364] DEBUG in connectionpool: https://plotly-customer-success.cloud.databricks.com:443 "GET /oidc/.well-known/oauth-authorization-server HTTP/1.1" 200 None
+[2023-11-22 08:19:05,541] DEBUG in connectionpool: Starting new HTTPS connection (1): plotly-customer-success.cloud.databricks.com:443
+[2023-11-22 08:19:05,756] DEBUG in connectionpool: https://plotly-customer-success.cloud.databricks.com:443 "GET /oidc/.well-known/oauth-authorization-server HTTP/1.1" 200 None
+[2023-11-22 08:19:06,106] DEBUG in connectionpool: Starting new HTTPS connection (1): plotly-customer-success.cloud.databricks.com:443
+[2023-11-22 08:19:06,332] DEBUG in connectionpool: https://plotly-customer-success.cloud.databricks.com:443 "GET /oidc/.well-known/oauth-authorization-server HTTP/1.1" 200 None
+[2023-11-22 08:19:10,832] DEBUG in connectionpool: Starting new HTTPS connection (1): plotly-customer-success.cloud.databricks.com:443
+[2023-11-22 08:19:11,066] DEBUG in connectionpool: https://plotly-customer-success.cloud.databricks.com:443 "GET /oidc/.well-known/oauth-authorization-server HTTP/1.1" 200 None
+[2023-11-22 08:19:14,861] DEBUG in connectionpool: Starting new HTTPS connection (1): plotly-customer-success.cloud.databricks.com:443
+[2023-11-22 08:19:15,089] DEBUG in connectionpool: https://plotly-customer-success.cloud.databricks.com:443 "GET /oidc/.well-known/oauth-authorization-server HTTP/1.1" 200 None
+[2023-11-22 08:20:17,913] DEBUG in connectionpool: Starting new HTTPS connection (1): plotly-customer-success.cloud.databricks.com:443
+[2023-11-22 08:20:18,174] DEBUG in connectionpool: https://plotly-customer-success.cloud.databricks.com:443 "GET /oidc/.well-known/oauth-authorization-server HTTP/1.1" 200 None
+[2023-11-22 08:20:18,766] DEBUG in connectionpool: Starting new HTTPS connection (1): plotly-customer-success.cloud.databricks.com:443
+[2023-11-22 08:20:19,012] DEBUG in connectionpool: https://plotly-customer-success.cloud.databricks.com:443 "GET /oidc/.well-known/oauth-authorization-server HTTP/1.1" 200 None
+[2023-11-22 08:20:21,113] DEBUG in connectionpool: Starting new HTTPS connection (1): plotly-customer-success.cloud.databricks.com:443
+[2023-11-22 08:20:21,330] DEBUG in connectionpool: https://plotly-customer-success.cloud.databricks.com:443 "GET /oidc/.well-known/oauth-authorization-server HTTP/1.1" 200 None
+[2023-11-22 08:20:27,425] DEBUG in connectionpool: Starting new HTTPS connection (1): plotly-customer-success.cloud.databricks.com:443
+[2023-11-22 08:20:27,665] DEBUG in connectionpool: https://plotly-customer-success.cloud.databricks.com:443 "GET /oidc/.well-known/oauth-authorization-server HTTP/1.1" 200 None
+[2023-11-22 08:20:50,907] DEBUG in connectionpool: Starting new HTTPS connection (1): plotly-customer-success.cloud.databricks.com:443
+[2023-11-22 08:20:51,149] DEBUG in connectionpool: https://plotly-customer-success.cloud.databricks.com:443 "GET /oidc/.well-known/oauth-authorization-server HTTP/1.1" 200 None
+[2023-11-22 08:22:08,121] DEBUG in connectionpool: Starting new HTTPS connection (1): plotly-customer-success.cloud.databricks.com:443
+[2023-11-22 08:22:08,348] DEBUG in connectionpool: https://plotly-customer-success.cloud.databricks.com:443 "GET /oidc/.well-known/oauth-authorization-server HTTP/1.1" 200 None
+[2023-11-22 08:22:16,209] DEBUG in connectionpool: Starting new HTTPS connection (1): plotly-customer-success.cloud.databricks.com:443
+[2023-11-22 08:22:16,440] DEBUG in connectionpool: https://plotly-customer-success.cloud.databricks.com:443 "GET /oidc/.well-known/oauth-authorization-server HTTP/1.1" 200 None
+[2023-11-22 08:22:17,045] DEBUG in connectionpool: Starting new HTTPS connection (1): plotly-customer-success.cloud.databricks.com:443
+[2023-11-22 08:22:17,280] DEBUG in connectionpool: https://plotly-customer-success.cloud.databricks.com:443 "GET /oidc/.well-known/oauth-authorization-server HTTP/1.1" 200 None
+[2023-11-22 08:22:27,057] DEBUG in connectionpool: Starting new HTTPS connection (1): plotly-customer-success.cloud.databricks.com:443
+[2023-11-22 08:22:27,300] DEBUG in connectionpool: https://plotly-customer-success.cloud.databricks.com:443 "GET /oidc/.well-known/oauth-authorization-server HTTP/1.1" 200 None
+[2023-11-22 08:22:32,724] DEBUG in connectionpool: https://plotly-customer-success.cloud.databricks.com:443 "GET /oidc/.well-known/oauth-authorization-server HTTP/1.1" 200 None
+[2023-11-22 08:22:32,730] DEBUG in connectionpool: https://plotly-customer-success.cloud.databricks.com:443 "GET /oidc/.well-known/oauth-authorization-server HTTP/1.1" 200 None
+[2023-11-22 08:22:32,733] DEBUG in connectionpool: https://plotly-customer-success.cloud.databricks.com:443 "GET /oidc/.well-known/oauth-authorization-server HTTP/1.1" 200 None
+[2023-11-22 08:22:33,205] DEBUG in connectionpool: Starting new HTTPS connection (1): plotly-customer-success.cloud.databricks.com:443
+[2023-11-22 08:22:33,425] DEBUG in connectionpool: https://plotly-customer-success.cloud.databricks.com:443 "GET /oidc/.well-known/oauth-authorization-server HTTP/1.1" 200 None
+[2023-11-22 08:22:33,506] DEBUG in connectionpool: Starting new HTTPS connection (1): plotly-customer-success.cloud.databricks.com:443
+[2023-11-22 08:22:33,716] DEBUG in connectionpool: https://plotly-customer-success.cloud.databricks.com:443 "GET /oidc/.well-known/oauth-authorization-server HTTP/1.1" 200 None
+[2023-11-22 08:22:34,643] DEBUG in connectionpool: Starting new HTTPS connection (1): plotly-customer-success.cloud.databricks.com:443
+[2023-11-22 08:22:34,875] DEBUG in connectionpool: https://plotly-customer-success.cloud.databricks.com:443 "GET /oidc/.well-known/oauth-authorization-server HTTP/1.1" 200 None
+[2023-11-22 08:30:05,108] DEBUG in connectionpool: Starting new HTTPS connection (1): plotly-customer-success.cloud.databricks.com:443
+[2023-11-22 08:30:05,324] DEBUG in connectionpool: https://plotly-customer-success.cloud.databricks.com:443 "GET /oidc/.well-known/oauth-authorization-server HTTP/1.1" 200 None
+[2023-11-22 08:31:23,344] DEBUG in connectionpool: https://plotly-customer-success.cloud.databricks.com:443 "GET /oidc/.well-known/oauth-authorization-server HTTP/1.1" 200 None
+[2023-11-22 08:31:23,371] DEBUG in connectionpool: https://plotly-customer-success.cloud.databricks.com:443 "GET /oidc/.well-known/oauth-authorization-server HTTP/1.1" 200 None
+[2023-11-22 08:33:50,117] DEBUG in connectionpool: Starting new HTTPS connection (1): plotly-customer-success.cloud.databricks.com:443
+[2023-11-22 08:33:50,353] DEBUG in connectionpool: https://plotly-customer-success.cloud.databricks.com:443 "GET /oidc/.well-known/oauth-authorization-server HTTP/1.1" 200 None
+[2023-11-22 08:37:29,091] DEBUG in connectionpool: Starting new HTTPS connection (1): plotly-customer-success.cloud.databricks.com:443
+[2023-11-22 08:37:29,106] DEBUG in connectionpool: Starting new HTTPS connection (1): plotly-customer-success.cloud.databricks.com:443
+[2023-11-22 08:37:29,308] DEBUG in connectionpool: https://plotly-customer-success.cloud.databricks.com:443 "GET /oidc/.well-known/oauth-authorization-server HTTP/1.1" 200 None
+[2023-11-22 08:37:29,308] DEBUG in connectionpool: https://plotly-customer-success.cloud.databricks.com:443 "GET /oidc/.well-known/oauth-authorization-server HTTP/1.1" 200 None
+[2023-11-22 08:39:50,473] DEBUG in connectionpool: https://plotly-customer-success.cloud.databricks.com:443 "GET /oidc/.well-known/oauth-authorization-server HTTP/1.1" 200 None
+[2023-11-22 08:40:29,642] DEBUG in connectionpool: https://plotly-customer-success.cloud.databricks.com:443 "GET /oidc/.well-known/oauth-authorization-server HTTP/1.1" 200 None
+[2023-11-22 08:40:29,643] DEBUG in connectionpool: https://plotly-customer-success.cloud.databricks.com:443 "GET /oidc/.well-known/oauth-authorization-server HTTP/1.1" 200 None
+[2023-11-22 08:40:44,107] DEBUG in connectionpool: Starting new HTTPS connection (1): plotly-customer-success.cloud.databricks.com:443
+[2023-11-22 08:40:44,346] DEBUG in connectionpool: https://plotly-customer-success.cloud.databricks.com:443 "GET /oidc/.well-known/oauth-authorization-server HTTP/1.1" 200 None
+[2023-11-22 08:40:48,119] DEBUG in connectionpool: Starting new HTTPS connection (1): plotly-customer-success.cloud.databricks.com:443
+[2023-11-22 08:40:48,352] DEBUG in connectionpool: https://plotly-customer-success.cloud.databricks.com:443 "GET /oidc/.well-known/oauth-authorization-server HTTP/1.1" 200 None
+[2023-11-22 08:45:49,490] DEBUG in connectionpool: https://plotly-customer-success.cloud.databricks.com:443 "GET /oidc/.well-known/oauth-authorization-server HTTP/1.1" 200 None
+[2023-11-22 08:45:49,491] DEBUG in connectionpool: https://plotly-customer-success.cloud.databricks.com:443 "GET /oidc/.well-known/oauth-authorization-server HTTP/1.1" 200 None
+[2023-11-22 08:45:50,114] DEBUG in connectionpool: Starting new HTTPS connection (1): plotly-customer-success.cloud.databricks.com:443
+[2023-11-22 08:45:50,357] DEBUG in connectionpool: https://plotly-customer-success.cloud.databricks.com:443 "GET /oidc/.well-known/oauth-authorization-server HTTP/1.1" 200 None
+[2023-11-22 08:45:51,110] DEBUG in connectionpool: Starting new HTTPS connection (1): plotly-customer-success.cloud.databricks.com:443
+[2023-11-22 08:45:51,336] DEBUG in connectionpool: https://plotly-customer-success.cloud.databricks.com:443 "GET /oidc/.well-known/oauth-authorization-server HTTP/1.1" 200 None
+[2023-11-22 08:46:22,925] DEBUG in connectionpool: https://plotly-customer-success.cloud.databricks.com:443 "GET /oidc/.well-known/oauth-authorization-server HTTP/1.1" 200 None
+[2023-11-22 08:46:22,954] DEBUG in connectionpool: https://plotly-customer-success.cloud.databricks.com:443 "GET /oidc/.well-known/oauth-authorization-server HTTP/1.1" 200 None
+[2023-11-22 08:46:23,046] DEBUG in connectionpool: https://plotly-customer-success.cloud.databricks.com:443 "GET /oidc/.well-known/oauth-authorization-server HTTP/1.1" 200 None
+[2023-11-22 08:46:49,197] DEBUG in connectionpool: Starting new HTTPS connection (1): plotly-customer-success.cloud.databricks.com:443
+[2023-11-22 08:46:49,434] DEBUG in connectionpool: https://plotly-customer-success.cloud.databricks.com:443 "GET /oidc/.well-known/oauth-authorization-server HTTP/1.1" 200 None
+[2023-11-22 08:51:21,982] DEBUG in streamlit_oauth: streamlit_app: Initiating OAuth flow
+[2023-11-22 08:51:21,983] DEBUG in streamlit_oauth: streamlit_app: Consent set in session state: <databricks.sdk.oauth.Consent object at 0x11e165f50>
+[2023-11-22 08:51:22,100] DEBUG in connectionpool: Starting new HTTPS connection (1): plotly-customer-success.cloud.databricks.com:443
+[2023-11-22 08:51:22,116] DEBUG in connectionpool: Starting new HTTPS connection (1): plotly-customer-success.cloud.databricks.com:443
+[2023-11-22 08:51:22,121] DEBUG in connectionpool: https://plotly-customer-success.cloud.databricks.com:443 "GET /oidc/.well-known/oauth-authorization-server HTTP/1.1" 200 None
+[2023-11-22 08:51:22,123] DEBUG in streamlit_oauth: streamlit_app: Initiating OAuth flow
+[2023-11-22 08:51:22,123] DEBUG in streamlit_oauth: streamlit_app: Consent set in session state: <databricks.sdk.oauth.Consent object at 0x11e1ead90>
+[2023-11-22 08:51:22,200] DEBUG in connectionpool: Starting new HTTPS connection (1): plotly-customer-success.cloud.databricks.com:443
+[2023-11-22 08:51:22,330] DEBUG in connectionpool: https://plotly-customer-success.cloud.databricks.com:443 "GET /oidc/.well-known/oauth-authorization-server HTTP/1.1" 200 None
+[2023-11-22 08:51:22,330] DEBUG in connectionpool: https://plotly-customer-success.cloud.databricks.com:443 "GET /oidc/.well-known/oauth-authorization-server HTTP/1.1" 200 None
+[2023-11-22 08:51:22,332] DEBUG in streamlit_oauth: streamlit_app: Initiating OAuth flow
+[2023-11-22 08:51:22,332] DEBUG in streamlit_oauth: streamlit_app: Consent set in session state: <databricks.sdk.oauth.Consent object at 0x11e248f10>
+[2023-11-22 08:51:22,361] DEBUG in streamlit_oauth: streamlit_app: Initiating OAuth flow
+[2023-11-22 08:51:22,361] DEBUG in streamlit_oauth: streamlit_app: Consent set in session state: <databricks.sdk.oauth.Consent object at 0x11e1b81d0>
+[2023-11-22 08:51:22,425] DEBUG in connectionpool: https://plotly-customer-success.cloud.databricks.com:443 "GET /oidc/.well-known/oauth-authorization-server HTTP/1.1" 200 None
+[2023-11-22 08:51:22,426] DEBUG in streamlit_oauth: streamlit_app: Initiating OAuth flow
+[2023-11-22 08:51:22,427] DEBUG in streamlit_oauth: streamlit_app: Consent set in session state: <databricks.sdk.oauth.Consent object at 0x11e164410>
+[2023-11-22 08:51:34,334] DEBUG in streamlit_oauth: CallbackHandler: Session State: {}
+[2023-11-22 08:51:34,334] WARNING in streamlit_oauth: CallbackHandler: 'consent' not in session state
+[2023-11-22 08:53:25,209] DEBUG in streamlit_oauth: streamlit_app: Initiating OAuth flow
+[2023-11-22 08:53:25,210] DEBUG in streamlit_oauth: streamlit_app: Consent set in session state: <databricks.sdk.oauth.Consent object at 0x12ed5b750>
+[2023-11-22 08:53:26,107] DEBUG in connectionpool: Starting new HTTPS connection (1): plotly-customer-success.cloud.databricks.com:443
+[2023-11-22 08:53:26,329] DEBUG in connectionpool: https://plotly-customer-success.cloud.databricks.com:443 "GET /oidc/.well-known/oauth-authorization-server HTTP/1.1" 200 None
+[2023-11-22 08:53:26,335] DEBUG in streamlit_oauth: streamlit_app: Initiating OAuth flow
+[2023-11-22 08:53:26,336] DEBUG in streamlit_oauth: streamlit_app: Consent set in session state: <databricks.sdk.oauth.Consent object at 0x12ed43d90>
+[2023-11-22 08:53:27,102] DEBUG in connectionpool: Starting new HTTPS connection (1): plotly-customer-success.cloud.databricks.com:443
+[2023-11-22 08:53:27,113] DEBUG in connectionpool: Starting new HTTPS connection (1): plotly-customer-success.cloud.databricks.com:443
+[2023-11-22 08:53:27,346] DEBUG in connectionpool: https://plotly-customer-success.cloud.databricks.com:443 "GET /oidc/.well-known/oauth-authorization-server HTTP/1.1" 200 None
+[2023-11-22 08:53:27,349] DEBUG in streamlit_oauth: streamlit_app: Initiating OAuth flow
+[2023-11-22 08:53:27,349] DEBUG in streamlit_oauth: streamlit_app: Consent set in session state: <databricks.sdk.oauth.Consent object at 0x12edbfc90>
+[2023-11-22 08:53:27,377] DEBUG in connectionpool: https://plotly-customer-success.cloud.databricks.com:443 "GET /oidc/.well-known/oauth-authorization-server HTTP/1.1" 200 None
+[2023-11-22 08:53:27,379] DEBUG in streamlit_oauth: streamlit_app: Initiating OAuth flow
+[2023-11-22 08:53:27,379] DEBUG in streamlit_oauth: streamlit_app: Consent set in session state: <databricks.sdk.oauth.Consent object at 0x12edff210>
+[2023-11-22 08:53:28,110] DEBUG in connectionpool: Starting new HTTPS connection (1): plotly-customer-success.cloud.databricks.com:443
+[2023-11-22 08:53:28,119] DEBUG in connectionpool: Starting new HTTPS connection (1): plotly-customer-success.cloud.databricks.com:443
+[2023-11-22 08:53:28,341] DEBUG in connectionpool: https://plotly-customer-success.cloud.databricks.com:443 "GET /oidc/.well-known/oauth-authorization-server HTTP/1.1" 200 None
+[2023-11-22 08:53:28,346] DEBUG in connectionpool: https://plotly-customer-success.cloud.databricks.com:443 "GET /oidc/.well-known/oauth-authorization-server HTTP/1.1" 200 None
+[2023-11-22 08:53:28,348] DEBUG in streamlit_oauth: streamlit_app: Initiating OAuth flow
+[2023-11-22 08:53:28,349] DEBUG in streamlit_oauth: streamlit_app: Consent set in session state: <databricks.sdk.oauth.Consent object at 0x12ed427d0>
+[2023-11-22 08:53:28,386] DEBUG in streamlit_oauth: streamlit_app: Initiating OAuth flow
+[2023-11-22 08:53:28,386] DEBUG in streamlit_oauth: streamlit_app: Consent set in session state: <databricks.sdk.oauth.Consent object at 0x12ed5aa90>
+[2023-11-22 08:53:31,627] DEBUG in streamlit_oauth: CallbackHandler: Session State: {}
+[2023-11-22 08:53:31,627] WARNING in streamlit_oauth: CallbackHandler: 'consent' not in session state
+[2023-11-22 08:55:50,135] DEBUG in streamlit_oauth: streamlit_app: Initiating OAuth flow
+[2023-11-22 08:55:50,136] DEBUG in streamlit_oauth: streamlit_app: Consent set in session state: <databricks.sdk.oauth.Consent object at 0x127a43090>
+[2023-11-22 08:55:54,125] DEBUG in connectionpool: Starting new HTTPS connection (1): plotly-customer-success.cloud.databricks.com:443
+[2023-11-22 08:55:54,341] DEBUG in connectionpool: https://plotly-customer-success.cloud.databricks.com:443 "GET /oidc/.well-known/oauth-authorization-server HTTP/1.1" 200 None
+[2023-11-22 08:55:54,347] DEBUG in streamlit_oauth: streamlit_app: Initiating OAuth flow
+[2023-11-22 08:55:54,348] DEBUG in streamlit_oauth: streamlit_app: Consent set in session state: <databricks.sdk.oauth.Consent object at 0x127abb990>
+[2023-11-22 08:55:55,062] DEBUG in streamlit_oauth: CallbackHandler: Session State: {}
+[2023-11-22 08:55:55,062] WARNING in streamlit_oauth: CallbackHandler: 'consent' not in session state
+[2023-11-22 08:55:55,112] DEBUG in connectionpool: Starting new HTTPS connection (1): plotly-customer-success.cloud.databricks.com:443
+[2023-11-22 08:55:55,124] DEBUG in connectionpool: Starting new HTTPS connection (1): plotly-customer-success.cloud.databricks.com:443
+[2023-11-22 08:55:55,361] DEBUG in connectionpool: https://plotly-customer-success.cloud.databricks.com:443 "GET /oidc/.well-known/oauth-authorization-server HTTP/1.1" 200 None
+[2023-11-22 08:55:55,364] DEBUG in streamlit_oauth: streamlit_app: Initiating OAuth flow
+[2023-11-22 08:55:55,364] DEBUG in streamlit_oauth: streamlit_app: Consent set in session state: <databricks.sdk.oauth.Consent object at 0x127b0bf10>
+[2023-11-22 08:55:55,364] DEBUG in connectionpool: https://plotly-customer-success.cloud.databricks.com:443 "GET /oidc/.well-known/oauth-authorization-server HTTP/1.1" 200 None
+[2023-11-22 08:55:55,406] DEBUG in streamlit_oauth: streamlit_app: Initiating OAuth flow
+[2023-11-22 08:55:55,407] DEBUG in streamlit_oauth: streamlit_app: Consent set in session state: <databricks.sdk.oauth.Consent object at 0x12795fad0>
+[2023-11-22 08:55:58,119] DEBUG in connectionpool: Starting new HTTPS connection (1): plotly-customer-success.cloud.databricks.com:443
+[2023-11-22 08:55:58,336] DEBUG in connectionpool: https://plotly-customer-success.cloud.databricks.com:443 "GET /oidc/.well-known/oauth-authorization-server HTTP/1.1" 200 None
+[2023-11-22 08:55:58,340] DEBUG in streamlit_oauth: streamlit_app: Initiating OAuth flow
+[2023-11-22 08:55:58,340] DEBUG in streamlit_oauth: streamlit_app: Consent set in session state: <databricks.sdk.oauth.Consent object at 0x127a4ded0>
+[2023-11-22 08:56:48,152] DEBUG in connectionpool: Starting new HTTPS connection (1): plotly-customer-success.cloud.databricks.com:443
+[2023-11-22 08:56:48,380] DEBUG in connectionpool: https://plotly-customer-success.cloud.databricks.com:443 "GET /oidc/.well-known/oauth-authorization-server HTTP/1.1" 200 None
+[2023-11-22 08:56:48,383] DEBUG in streamlit_oauth: streamlit_app: Initiating OAuth flow
+[2023-11-22 08:56:48,384] DEBUG in streamlit_oauth: streamlit_app: Consent set in session state: <databricks.sdk.oauth.Consent object at 0x1279cff10>
+[2023-11-22 09:18:55,960] DEBUG in connectionpool: Starting new HTTPS connection (1): plotly-customer-success.cloud.databricks.com:443
+[2023-11-22 09:18:55,960] DEBUG in connectionpool: Starting new HTTPS connection (1): plotly-customer-success.cloud.databricks.com:443
+[2023-11-22 09:18:55,960] DEBUG in connectionpool: Starting new HTTPS connection (1): plotly-customer-success.cloud.databricks.com:443
+[2023-11-22 09:18:55,960] DEBUG in connectionpool: Starting new HTTPS connection (1): plotly-customer-success.cloud.databricks.com:443
+[2023-11-22 09:18:55,969] DEBUG in connectionpool: Starting new HTTPS connection (1): plotly-customer-success.cloud.databricks.com:443
+[2023-11-22 09:18:55,973] DEBUG in connectionpool: Starting new HTTPS connection (1): plotly-customer-success.cloud.databricks.com:443
+[2023-11-22 09:18:56,810] DEBUG in connectionpool: https://plotly-customer-success.cloud.databricks.com:443 "GET /oidc/.well-known/oauth-authorization-server HTTP/1.1" 200 None
+[2023-11-22 09:18:56,811] DEBUG in connectionpool: https://plotly-customer-success.cloud.databricks.com:443 "GET /oidc/.well-known/oauth-authorization-server HTTP/1.1" 200 None
+[2023-11-22 09:18:56,812] DEBUG in connectionpool: https://plotly-customer-success.cloud.databricks.com:443 "GET /oidc/.well-known/oauth-authorization-server HTTP/1.1" 200 None
+[2023-11-22 09:18:56,818] DEBUG in connectionpool: https://plotly-customer-success.cloud.databricks.com:443 "GET /oidc/.well-known/oauth-authorization-server HTTP/1.1" 200 None
+[2023-11-22 09:18:56,819] DEBUG in connectionpool: https://plotly-customer-success.cloud.databricks.com:443 "GET /oidc/.well-known/oauth-authorization-server HTTP/1.1" 200 None
+[2023-11-22 09:18:56,819] DEBUG in streamlit_oauth: streamlit_app: Consent already in session state
+[2023-11-22 09:18:56,819] DEBUG in streamlit_oauth: streamlit_app: Consent already in session state
+[2023-11-22 09:18:56,820] DEBUG in connectionpool: https://plotly-customer-success.cloud.databricks.com:443 "GET /oidc/.well-known/oauth-authorization-server HTTP/1.1" 200 None
+[2023-11-22 09:18:56,823] DEBUG in streamlit_oauth: streamlit_app: Consent already in session state
+[2023-11-22 09:18:56,819] DEBUG in streamlit_oauth: streamlit_app: Consent already in session state
+[2023-11-22 09:18:56,905] DEBUG in streamlit_oauth: streamlit_app: Consent already in session state
+[2023-11-22 09:18:56,928] DEBUG in streamlit_oauth: streamlit_app: Consent already in session state
